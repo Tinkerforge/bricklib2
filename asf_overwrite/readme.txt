@@ -1,0 +1,1 @@
+Here we put files from asf that we needed to change (because of bugs or similar). We don't want to touch the asf folder itself, so we can always update to a new asf version. It is also easy to diff asf and the overwrite folder after an update to find out if any of the bugs are fixed by Atmel.

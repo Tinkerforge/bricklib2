@@ -22,11 +22,17 @@
 #include "logging.h"
 #include "configs/config_logging.h"
 
-#include "usart.h"
-#include "stdio_serial.h"
+
+#include "stdio_usb.h"
 
 #ifdef LOGGING_SERIAL
+#include "usart.h"
+#include "stdio_serial.h"
 static struct usart_module logging_usart_instance;
+#endif
+
+#ifdef LOGGING_USB
+#include "stdio_usb.h"
 #endif
 
 void logging_init(void) {
@@ -43,6 +49,10 @@ void logging_init(void) {
 
 	stdio_serial_init(&logging_usart_instance, LOGGING_SERCOM, &config_usart);
 	usart_enable(&logging_usart_instance);
+#endif
+
+#ifdef LOGGING_USB
+	stdio_usb_init();
 #endif
 }
 

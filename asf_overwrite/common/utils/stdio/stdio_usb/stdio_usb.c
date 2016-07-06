@@ -49,11 +49,16 @@
 
 
 #include "stdio_usb.h"
+#include "udi_cdc.h"
 
 static bool stdio_usb_interface_enable = false;
 
 int stdio_usb_putchar (volatile void * unused, char data)
 {
+	if(!udi_cdc_is_tx_ready()) {
+		return 0;
+	}
+
 	/* A negative return value should be used to indicate that data
 	 * was not written, but this doesn't seem to work with GCC libc.
 	 */

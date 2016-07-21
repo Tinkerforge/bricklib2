@@ -36,7 +36,20 @@
 #define LOGGING_LEVEL LOGGING_NONE
 #endif
 
+#ifdef LOGGING_SDCARD
+#include "sdlog.h"
+#else
+#define sdlog_printf(...) {}
+#endif
+
 void logging_init(void);
+
+#define LOGGING_PRINT(...) \
+	do{ \
+		printf(__VA_ARGS__); \
+		sdlog_printf(__VA_ARGS__); \
+	} while(0)
+
 
 #if LOGGING_LEVEL <= LOGGING_DEBUG
 #define logd(str,  ...) do{ printf("<D %s:%d> " str, __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
@@ -47,24 +60,24 @@ void logging_init(void);
 #endif
 
 #if LOGGING_LEVEL <= LOGGING_INFO
-#define logi(str,  ...) do{ printf("<I %s:%d> " str, __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
-#define logwohi(str,  ...) do{ printf(str, ##__VA_ARGS__); }while(0)
+#define logi(str,  ...) do{ LOGGING_PRINT("<I %s:%d> " str, __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
+#define logwohi(str,  ...) do{ LOGGING_PRINT(str, ##__VA_ARGS__); }while(0)
 #else
 #define logi(str,  ...) {}
 #define logwohi(str,  ...) {}
 #endif
 
 #if LOGGING_LEVEL <= LOGGING_WARNING
-#define logw(str,  ...) do{ printf("<W %s:%d> " str, __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
-#define logwohw(str,  ...) do{ printf(str, ##__VA_ARGS__); }while(0)
+#define logw(str,  ...) do{ LOGGING_PRINT("<W %s:%d> " str, __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
+#define logwohw(str,  ...) do{ LOGGING_PRINT(str, ##__VA_ARGS__); }while(0)
 #else
 #define logw(str,  ...) {}
 #define logwohw(str,  ...) {}
 #endif
 
 #if LOGGING_LEVEL <= LOGGING_ERROR
-#define loge(str,  ...) do{ printf("<E %s:%d> " str, __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
-#define logwohe(str,  ...) do{ printf(str, ##__VA_ARGS__); }while(0)
+#define loge(str,  ...) do{ LOGGING_PRINT("<E %s:%d> " str, __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
+#define logwohe(str,  ...) do{ LOGGING_PRINT(str, ##__VA_ARGS__); }while(0)
 #else
 #define loge(str,  ...) {}
 #define logwohe(str,  ...) {}

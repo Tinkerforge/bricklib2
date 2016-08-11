@@ -44,12 +44,18 @@
 
 void logging_init(void);
 
+#ifdef COMPILE_FOR_RELEASE
+#define LOGGING_PRINT(...) \
+	do{ \
+		sdlog_printf(__VA_ARGS__); \
+	} while(0)
+#else
 #define LOGGING_PRINT(...) \
 	do{ \
 		printf(__VA_ARGS__); \
 		sdlog_printf(__VA_ARGS__); \
 	} while(0)
-
+#endif
 
 #if LOGGING_LEVEL <= LOGGING_DEBUG
 #define logd(str,  ...) do{ printf("<D %s:%d> " str, __FILE__, __LINE__, ##__VA_ARGS__); }while(0)

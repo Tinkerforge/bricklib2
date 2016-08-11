@@ -57,13 +57,17 @@ void logging_init(void);
 	} while(0)
 #endif
 
-#if LOGGING_LEVEL <= LOGGING_DEBUG
+#ifdef COMPILE_FOR_RELEASE
+#define logd(str,  ...) {}
+#define logwohd(str,  ...) {}
+#elif LOGGING_LEVEL <= LOGGING_DEBUG
 #define logd(str,  ...) do{ printf("<D %s:%d> " str, __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
 #define logwohd(str,  ...) do{ printf(str, ##__VA_ARGS__); }while(0)
 #else
 #define logd(str,  ...) {}
 #define logwohd(str,  ...) {}
 #endif
+
 
 #if LOGGING_LEVEL <= LOGGING_INFO
 #define logi(str,  ...) do{ LOGGING_PRINT("<I %s:%d> " str, __FILE__, __LINE__, ##__VA_ARGS__); }while(0)

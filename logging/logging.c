@@ -22,9 +22,6 @@
 #include "logging.h"
 #include "configs/config_logging.h"
 
-
-#include "stdio_usb.h"
-
 #ifdef LOGGING_SERIAL
 #include "usart.h"
 #include "stdio_serial.h"

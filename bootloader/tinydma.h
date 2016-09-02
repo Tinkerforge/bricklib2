@@ -27,7 +27,7 @@
 
 #include <compiler.h>
 
-#include "configs/config_tinydma.h"
+#include "configs/config.h"
 
 #define TINYDMA_SPITFP_RX_INDEX 0
 #define TINYDMA_SPITFP_TX_INDEX 1

@@ -26,7 +26,7 @@
 #include "bricklib2/protocols/tfp/tfp.h"
 #include "bricklib2/utility/ringbuffer.h"
 
-#include "configs/config_spitfp.h"
+#include "configs/config.h"
 #include "spi.h"
 
 #define SPITFP_PROTOCOL_OVERHEAD 3 // 3 byte overhead for Brick <-> Bricklet SPI protocol

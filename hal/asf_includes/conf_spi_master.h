@@ -1,1 +1,1 @@
-#include "configs/config_spi.h"
+#include <configs/config_spi.h>

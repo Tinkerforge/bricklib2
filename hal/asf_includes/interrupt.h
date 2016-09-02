@@ -1,1 +1,1 @@
-#include "bricklib2/asf/common/utils/interrupt.h"
+#include "interrupt/interrupt_sam_nvic.h"

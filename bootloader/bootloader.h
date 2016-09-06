@@ -36,13 +36,18 @@ typedef BootloaderHandleMessageReturn (* bootloader_firmware_handle_message_func
 
 typedef enum {
 	BOOT_MODE_BOOTLOADER = 0,
-	BOOT_MODE_FIRMWARE = 1
+	BOOT_MODE_FIRMWARE = 1,
+	BOOT_MODE_BOOTLOADER_WAIT_FOR_REBOOT = 2,
+	BOOT_MODE_FIRMWARE_WAIT_FOR_REBOOT = 3,
+	BOOT_MODE_FIRMWARE_WAIT_FOR_ERASE_AND_REBOOT = 4,
 } BootloaderBootMode;
 
 typedef struct {
 	bootloader_firmware_handle_message_func_t firmware_handle_message_func;
 	BootloaderBootMode boot_mode;
 	uint8_t status_led_config;
+	uint32_t system_timer_tick;
+	uint32_t reboot_started_at;
 
 	SPITFP st;
 } BootloaderStatus;

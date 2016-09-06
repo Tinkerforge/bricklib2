@@ -54,8 +54,8 @@ void tinynvm_erase_row(const uint32_t row_address) {
 	NVMCTRL->STATUS.reg = NVMCTRL_STATUS_MASK;
 
 	// Set address and command
-	// TODO: Is "/ 4" correct here? Shouldn't it be "/ 2"?
-	NVMCTRL->ADDR.reg  = (uintptr_t)&TINYNVM_MEMORY[row_address / 4];
+	// TODO: Was TINYNVM_MEMORY[row_address / 4]. Is this OK?
+	NVMCTRL->ADDR.reg  = row_address / 2;
 	NVMCTRL->CTRLA.reg = NVMCTRL_CTRLA_CMD_ER | NVMCTRL_CTRLA_CMDEX_KEY;
 
 	while(!tinynvm_is_ready());

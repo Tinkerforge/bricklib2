@@ -48,7 +48,7 @@ DmacDescriptor* tinydma_get_write_back_section(void) {
 
 #ifdef TINYDNA_MINIMAL_INTERRUPT_HANDLER
 void DMAC_Handler(void) {
-	system_interrupt_enter_critical_section();
+	cpu_irq_disable();
 
 	// Get Pending channel
 	const uint8_t active_channel =  DMAC->INTPEND.reg & DMAC_INTPEND_ID_Msk;
@@ -80,7 +80,7 @@ void DMAC_Handler(void) {
 		DMAC->CHINTFLAG.reg = DMAC_CHINTENCLR_SUSP;
 	}
 
-	system_interrupt_leave_critical_section();
+	cpu_irq_enable();
 }
 #endif
 
@@ -102,7 +102,7 @@ void tinydma_get_channel_config_defaults(TinyDmaChannelConfig *config) {
 }
 
 void tinydma_channel_init(const uint8_t channel_id, TinyDmaChannelConfig *config) {
-	system_interrupt_enter_critical_section();
+	cpu_irq_disable();
 
 	// Perform a reset for the allocated channel
 	DMAC->CHID.reg = DMAC_CHID_ID(channel_id);
@@ -135,20 +135,20 @@ void tinydma_channel_init(const uint8_t channel_id, TinyDmaChannelConfig *config
 	// Write config to CTRLB register
 	DMAC->CHCTRLB.reg = CHCTRLB_reg;
 
-	system_interrupt_leave_critical_section();
+	cpu_irq_enable();
 }
 
 void tinydma_abort_job(const uint8_t channel_id) {
-	system_interrupt_enter_critical_section();
+	cpu_irq_disable();
 
 	DMAC->CHID.reg = DMAC_CHID_ID(channel_id);
 	DMAC->CHCTRLA.reg = 0;
 
-	system_interrupt_leave_critical_section();
+	cpu_irq_enable();
 }
 
 void tinydma_suspend_job(const uint8_t channel_id) {
-	system_interrupt_enter_critical_section();
+	cpu_irq_disable();
 
 	// Select the channel
 	DMAC->CHID.reg = DMAC_CHID_ID(channel_id);
@@ -156,7 +156,7 @@ void tinydma_suspend_job(const uint8_t channel_id) {
 	//Send the suspend request
 	DMAC->CHCTRLB.reg |= DMAC_CHCTRLB_CMD_SUSPEND;
 
-	system_interrupt_leave_critical_section();
+	cpu_irq_enable();
 }
 
 
@@ -166,13 +166,13 @@ void tinydma_resume_job(const uint8_t channel_id) {
 
 	// Get bitmap of the allocated DMA channel
 	bitmap_channel = (1 << channel_id);
-	system_interrupt_enter_critical_section();
+	cpu_irq_disable();
 
 	// Send resume request
 	DMAC->CHID.reg = DMAC_CHID_ID(channel_id);
 	DMAC->CHCTRLB.reg |= DMAC_CHCTRLB_CMD_RESUME;
 
-	system_interrupt_leave_critical_section();
+	cpu_irq_enable();
 
 	// Check if transfer job resumed
 	for (count = 0; count < TINYDMA_MAX_JOB_RESUME_COUNT; count++) {
@@ -226,13 +226,13 @@ void tinydma_init(DmacDescriptor *descriptor_section, DmacDescriptor *write_back
 }
 
 void tinydma_start_transfer(const uint8_t channel_id) {
-	system_interrupt_enter_critical_section();
+	cpu_irq_disable();
 
 	// Enable transfer
 	DMAC->CHID.reg = DMAC_CHID_ID(channel_id);
 	DMAC->CHCTRLA.reg |= DMAC_CHCTRLA_ENABLE;
 
-	system_interrupt_leave_critical_section();
+	cpu_irq_enable();
 }
 
 void tinydma_trigger_transfer(const uint8_t channel_id) {

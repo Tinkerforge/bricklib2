@@ -25,11 +25,7 @@
 #include <stdint.h>
 
 void tinynvm_init(void);
-void tinynvm_erase_row(const uint32_t row_address);
-
-// Note: Compared to nvm_write_buffer in asf this function assumes that
-//   * All input is well-formed
-//   * Length equals to one full page size
-void tinynvm_write_buffer(const uint32_t destination_address, const uint8_t *buffer, const uint16_t length);
+void tinynvm_erase_row(const uint32_t address);
+void tinynvm_write_page(const uint32_t address, const uint8_t *page_buffer);
 
 #endif

@@ -27,7 +27,7 @@
 #define TINYNVM_PAGE_SIZE 64
 
 static inline bool tinynvm_is_ready(void) {
-	return NVMCTRL->INTFLAG.reg & NVMCTRL_INTFLAG_READY;
+	return NVMCTRL->INTFLAG.bit.READY;
 }
 
 void tinynvm_init(void) {

@@ -37,6 +37,10 @@ uint8_t tfp_get_fid_from_message(const void *message) {
 	return ((TFPMessageHeader*)message)->fid;
 }
 
+uint32_t tfp_get_uid_from_message(const void *message) {
+	return ((TFPMessageHeader*)message)->uid;
+}
+
 void tfp_uid_uint32_to_base58(uint32_t value, char *str) {
 	char reverse_str[TFP_BASE58_STR_SIZE] = {'\0'};
 	uint8_t i = 0;

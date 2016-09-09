@@ -48,6 +48,7 @@ typedef struct {
 bool tfp_is_return_expected(const void *message);
 uint8_t tfp_get_fid_from_message(const void *message);
 uint8_t tfp_get_length_from_message(const void *message);
+uint32_t tfp_get_uid_from_message(const void *message);
 void tfp_uid_uint32_to_base58(uint32_t value, char *str);
 
 #endif

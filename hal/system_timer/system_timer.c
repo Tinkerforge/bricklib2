@@ -25,7 +25,7 @@
 
 #include "bricklib2/logging/logging.h"
 
-static uint32_t system_timer_tick;
+static volatile uint32_t system_timer_tick;
 
 void SysTick_Handler(void) {
 	system_timer_tick++;
@@ -50,12 +50,31 @@ void system_timer_init(const uint32_t main_clock_frequency, const uint32_t syste
 	NVIC_EnableIRQ(SysTick_IRQn);
 }
 
-uint32_t system_timer_get_time(void) {
+uint32_t system_timer_get_ms(void) {
 	return system_timer_tick;
 }
 
-// This will work even with wraparound up to UIN32_MAX/2 difference.
+uint32_t system_timer_get_us(void) {
+	// TODO: This only works for main clock frequency 48MHz with timer frequency 1000Hz
+	return system_timer_tick*1000 + (48000 - SysTick->VAL)*1000/48000;
+}
+
+// This will work even with wrap-around up to UIN32_MAX/2 difference.
 // E.g.: end - start = 0x00000010 - 0xfffffff = 0x00000011 etc
-inline bool system_timer_is_time_elapsed(const uint32_t start_measurement, const uint32_t time_to_be_elapsed) {
-	return (system_timer_tick - start_measurement) >= time_to_be_elapsed;
+inline bool system_timer_is_time_elapsed_ms(const uint32_t start_measurement, const uint32_t time_to_be_elapsed) {
+	return (system_timer_get_ms() - start_measurement) >= time_to_be_elapsed;
+}
+
+inline bool system_timer_is_time_elapsed_us(const uint32_t start_measurement, const uint32_t time_to_be_elapsed) {
+	return (system_timer_get_us() - start_measurement) >= time_to_be_elapsed;
+}
+
+void system_timer_sleep_ms(const uint32_t sleep) {
+	const uint32_t time = system_timer_get_ms();
+	while(!system_timer_is_time_elapsed_ms(time, sleep));
+}
+
+void system_timer_sleep_us(const uint32_t sleep) {
+	const uint32_t time = system_timer_get_us();
+	while(!system_timer_is_time_elapsed_us(time, sleep));
 }

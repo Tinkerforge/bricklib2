@@ -23,6 +23,7 @@
 #define BOOTLOADER_H
 
 #include "bricklib2/protocols/spitfp/spitfp.h"
+#include "configs/config.h"
 #include "dsu_crc32.h"
 
 typedef enum {
@@ -32,7 +33,7 @@ typedef enum {
 	HANDLE_MESSAGE_RETURN_INVALID_PARAMETER = 3,
 } BootloaderHandleMessageReturn;
 
-typedef BootloaderHandleMessageReturn (* bootloader_firmware_handle_message_func_t)(const void *, const uint8_t );
+typedef BootloaderHandleMessageReturn (* bootloader_firmware_handle_message_func_t)(const void *, void *);
 
 typedef enum {
 	BOOT_MODE_BOOTLOADER = 0,
@@ -66,7 +67,7 @@ typedef struct {
 	enum status_code (*dsu_crc32_cal)(const uint32_t addr, const uint32_t len, uint32_t *pcrc32);
 } BootloaderFunctions;
 
-typedef void (*firmware_entry_func_t)(BootloaderFunctions *bf, BootloaderStatus *bs);
+typedef void (*bootloader_firmware_entry_func_t)(BootloaderFunctions *bf, BootloaderStatus *bs);
 
 #define BOOTLOADER_FLASH_SIZE (16*1024)
 
@@ -84,6 +85,20 @@ typedef void (*firmware_entry_func_t)(BootloaderFunctions *bf, BootloaderStatus 
 #define BOOTLOADER_FIRMWARE_MAGIC_NUMBER 0xDEADBEEF
 
 #define BOOTLOADER_FIRMWARE_ENTRY_FUNC_SIZE 64
-#define BOOTLOADER_FIRMWARE_ENTRY_FUNC ((firmware_entry_func_t)(BOOTLOADER_BOOTLOADER_START_POS + BOOTLOADER_BOOTLOADER_SIZE - BOOTLOADER_FIRMWARE_ENTRY_FUNC_SIZE + 1))
+#define BOOTLOADER_FIRMWARE_ENTRY_FUNC ((bootloader_firmware_entry_func_t)(BOOTLOADER_BOOTLOADER_START_POS + BOOTLOADER_BOOTLOADER_SIZE - BOOTLOADER_FIRMWARE_ENTRY_FUNC_SIZE + 1))
+
+// If we are not in bootloader
+#ifdef STARTUP_SYSTEM_INIT_ALREADY_DONE
+extern BootloaderStatus bootloader_status;
+
+void bootloader_spitfp_tick(BootloaderStatus *bootloader_status);
+void bootloader_spitfp_send_ack_and_message(SPITFP *st, uint8_t *data, const uint8_t length);
+bool bootloader_spitfp_is_send_possible(SPITFP *st);
+enum status_code bootloader_dsu_crc32_cal(const uint32_t addr, const uint32_t len, uint32_t *pcrc32);
+
+void bootloader_init(void);
+void bootloader_tick(void);
+
+#endif
 
 #endif

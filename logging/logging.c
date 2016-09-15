@@ -37,12 +37,13 @@ void logging_init(void) {
 	struct usart_config config_usart;
 	usart_get_config_defaults(&config_usart);
 
-	config_usart.baudrate    = LOGGING_BAUDRATE;
-	config_usart.mux_setting = LOGGING_MUX_SETTING;
-	config_usart.pinmux_pad0 = LOGGING_PINMUX_PAD0;
-	config_usart.pinmux_pad1 = LOGGING_PINMUX_PAD1;
-	config_usart.pinmux_pad2 = LOGGING_PINMUX_PAD2;
-	config_usart.pinmux_pad3 = LOGGING_PINMUX_PAD3;
+	config_usart.generator_source = LOGGING_CLK_GENERATOR;
+	config_usart.baudrate         = LOGGING_BAUDRATE;
+	config_usart.mux_setting      = LOGGING_MUX_SETTING;
+	config_usart.pinmux_pad0      = LOGGING_PINMUX_PAD0;
+	config_usart.pinmux_pad1      = LOGGING_PINMUX_PAD1;
+	config_usart.pinmux_pad2      = LOGGING_PINMUX_PAD2;
+	config_usart.pinmux_pad3      = LOGGING_PINMUX_PAD3;
 
 	stdio_serial_init(&logging_usart_instance, LOGGING_SERCOM, &config_usart);
 	usart_enable(&logging_usart_instance);

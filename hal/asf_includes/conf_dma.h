@@ -1,1 +1,1 @@
-#include <configs/config_tinydma.h>
+#include "configs/config_dma.h"

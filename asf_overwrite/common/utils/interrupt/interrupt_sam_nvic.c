@@ -48,6 +48,9 @@
 
 void cpu_irq_enter_critical(void)
 {
+#ifdef DISABLE_RECURSIVE_IRQ_HANDLING
+	cpu_irq_disable();
+#else
 	if (cpu_irq_critical_section_counter == 0) {
 		if (cpu_irq_is_enabled()) {
 			cpu_irq_disable();
@@ -60,10 +63,14 @@ void cpu_irq_enter_critical(void)
 	}
 
 	cpu_irq_critical_section_counter++;
+#endif
 }
 
 void cpu_irq_leave_critical(void)
 {
+#ifdef DISABLE_RECURSIVE_IRQ_HANDLING
+	cpu_irq_enable();
+#else
 	/* Check if the user is trying to leave a critical section when not in a critical section */
 	Assert(cpu_irq_critical_section_counter > 0);
 
@@ -74,5 +81,6 @@ void cpu_irq_leave_critical(void)
 	if ((cpu_irq_critical_section_counter == 0) && (cpu_irq_prev_interrupt_state)) {
 		cpu_irq_enable();
 	}
+#endif
 }
 

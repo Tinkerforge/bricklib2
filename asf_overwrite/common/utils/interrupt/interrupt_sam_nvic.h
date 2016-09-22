@@ -48,11 +48,17 @@
 #define UTILS_INTERRUPT_INTERRUPT_H
 
 #include <compiler.h>
+#if __has_include("configs/config_asf_overwrite.h")
+#include "configs/config_asf_overwrite.h"
+#endif
+
 #include <parts.h>
+
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 /**
  * \weakgroup interrupt_group
@@ -139,8 +145,11 @@ typedef uint32_t irqflags_t;
 
 #define cpu_irq_is_enabled()    (__get_PRIMASK() == 0)
 
+
+#ifndef DISABLE_RECURSIVE_IRQ_HANDLING
 static volatile uint32_t cpu_irq_critical_section_counter;
 static volatile bool     cpu_irq_prev_interrupt_state;
+#endif
 
 static inline irqflags_t cpu_irq_save(void)
 {

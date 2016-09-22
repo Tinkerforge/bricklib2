@@ -63,6 +63,7 @@ void samd09_entry(void) {
 	src = (uint32_t *) &_sfixed;
 	SCB->VTOR = ((uint32_t) src & SCB_VTOR_TBLOFF_Msk);
 
+#ifndef STARTUP_SYSTEM_INIT_ALREADY_DONE // In systems with bootloader and firmware it is OK to only do this in bootloader
 	// Change default QOS values to have the best performance
 	SBMATRIX->SFR[SBMATRIX_SLAVE_HMCRAMC0].reg = 2;
 	DMAC->QOSCTRL.bit.DQOS = 2;
@@ -71,13 +72,21 @@ void samd09_entry(void) {
 
 	// Overwriting the default value of the NVMCTRL.CTRLB.MANW bit (errata reference 13134)
 	NVMCTRL->CTRLB.bit.MANW = 1;
+#endif
 
 	// Initialize the C library
+#ifndef NOSTARTFILES // We only call __libc_init_array if -nostartfiles is not defined
 	__libc_init_array();
+#endif
 
 	// Initialize system (clocks, general hardware controllers etc)
 #ifndef STARTUP_SYSTEM_INIT_ALREADY_DONE // In systems with bootloader and firmware it is OK to only do this in bootloader
 	system_init();
+#endif
+
+	// We have to call bootloader_init before anything that does division!
+#ifdef STARTUP_SYSTEM_INIT_ALREADY_DONE
+	bootloader_init();
 #endif
 
 	// Branch to main function

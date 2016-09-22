@@ -44,8 +44,6 @@ typedef enum {
 typedef struct {
 	DmacDescriptor *descriptor_section;
 	DmacDescriptor *write_back_section;
-	DmacDescriptor *descriptor_tx_loop;
-	DmacDescriptor *descriptor_rx_loop;
 	DmacDescriptor descriptor_tx;
 	struct spi_module spi_module;
 

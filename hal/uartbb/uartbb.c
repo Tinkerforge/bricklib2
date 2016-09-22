@@ -21,10 +21,11 @@
 
 #include "uartbb.h"
 
+#include "configs/config.h"
 #include "port.h"
 
 #ifndef UARTBB_TX_PIN
-#define UARTBB_TX_PIN 22
+#define UARTBB_TX_PIN 17
 #endif
 
 #ifndef UARTBB_BIT_TIME
@@ -41,6 +42,17 @@ static inline void uartbb_wait_1bit(uint32_t start) {
 }
 
 void uartbb_init(void) {
+	// If we already use the port.c it is cheaper to use the
+	// port_ functions.
+	// Otherwise we can save 40 byte by doing it by hand.
+#ifdef UARTBB_USE_PORT_C
+	struct port_config pin_conf;
+	port_get_config_defaults(&pin_conf);
+	pin_conf.direction = PORT_PIN_DIR_OUTPUT;
+
+	port_pin_set_config(UARTBB_TX_PIN, &pin_conf);
+	port_pin_set_output_level(UARTBB_TX_PIN, true);
+#else
 	PortGroup *const port = &PORT->Group[0];
 	const uint32_t pin_mask = (1 << UARTBB_TX_PIN);
 
@@ -61,6 +73,7 @@ void uartbb_init(void) {
 
 	// Default high
 	port->OUTSET.reg = (1 << UARTBB_TX_PIN);
+#endif
 }
 
 void uartbb_tx(uint8_t value) {

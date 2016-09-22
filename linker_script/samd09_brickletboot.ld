@@ -101,7 +101,7 @@ SECTIONS
     . = ALIGN(4);
     _etext = .;
 
-    .firmware_entry_func 0x00001fc0 :
+    .firmware_entry_func 0x00001fe0 :
     {
         KEEP(*(.firmware_entry_func))
     } > rom

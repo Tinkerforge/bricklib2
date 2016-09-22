@@ -61,10 +61,65 @@ typedef struct {
 } __attribute__((__packed__)) BootloaderFirmwareConfiguration;
 
 typedef struct {
+#ifdef BOOTLOADER_FUNCTION_SPITFP_TICK
 	void (*spitfp_tick)(BootloaderStatus *bootloader_status);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_SEND_ACK_AND_MESSAGE
 	void (*spitfp_send_ack_and_message)(SPITFP *st, uint8_t *data, const uint8_t length);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_SPITFP_IS_SEND_POSSIBLE
 	bool (*spitfp_is_send_possible)(SPITFP *st);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_DSU_CRC32_CAL
 	enum status_code (*dsu_crc32_cal)(const uint32_t addr, const uint32_t len, uint32_t *pcrc32);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_SPI_INIT
+	enum status_code (*spi_init)(struct spi_module *const module, Sercom *const hw, const struct spi_config *const config);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_GET_CHANNEL_CONFIG_DEFAULTS
+	void (*tinydma_get_channel_config_defaults)(TinyDmaChannelConfig *config);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_INIT
+	void (*tinydma_init)(DmacDescriptor *descriptor_section, DmacDescriptor *write_back_section);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_START_TRANSFER
+	void (*tinydma_start_transfer)(const uint8_t channel_id);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_DESCRIPTOR_GET_CONFIG_DEFAULTS
+	void (*tinydma_descriptor_get_config_defaults)(TinyDmaDescriptorConfig *config);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_DESCRIPTOR_INIT
+	void (*tinydma_descriptor_init)(DmacDescriptor* descriptor, TinyDmaDescriptorConfig *config);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_CHANNEL_INIT
+	void (*tinydma_channel_init)(const uint8_t channel_id, TinyDmaChannelConfig *config);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_AEABI_IDIV
+	int (*__aeabi_idiv)(int a, int b);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_AEABI_UIDIV
+	unsigned int (*__aeabi_uidiv)(unsigned int a, unsigned int b);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_AEABI_IDIVMOD
+	uint64_t (*__aeabi_idivmod)(int a, int b);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_AEABI_UIDIVMOD
+	uint64_t (*__aeabi_uidivmod)(unsigned int a, unsigned int b);
+#endif
 } BootloaderFunctions;
 
 typedef void (*bootloader_firmware_entry_func_t)(BootloaderFunctions *bf, BootloaderStatus *bs);
@@ -82,22 +137,60 @@ typedef void (*bootloader_firmware_entry_func_t)(BootloaderFunctions *bf, Bootlo
 #define BOOTLOADER_FIRMWARE_CONFIGURATION_POINTER ((BootloaderFirmwareConfiguration*)(BOOTLOADER_FIRMWARE_START_POS + BOOTLOADER_FIRMWARE_SIZE - sizeof(BootloaderFirmwareConfiguration)))
 #define BOOTLOADER_FIRMWARE_FIRST_BYTES (*((uint32_t*)(BOOTLOADER_FIRMWARE_START_POS)))
 #define BOOTLOADER_FIRMWARE_FIRST_BYTES_DEFAULT 0xFFFFFFFF
-#define BOOTLOADER_FIRMWARE_MAGIC_NUMBER 0xDEADBEEF
 
-#define BOOTLOADER_FIRMWARE_ENTRY_FUNC_SIZE 64
+#define BOOTLOADER_FIRMWARE_ENTRY_FUNC_SIZE 32
 #define BOOTLOADER_FIRMWARE_ENTRY_FUNC ((bootloader_firmware_entry_func_t)(BOOTLOADER_BOOTLOADER_START_POS + BOOTLOADER_BOOTLOADER_SIZE - BOOTLOADER_FIRMWARE_ENTRY_FUNC_SIZE + 1))
 
 // If we are not in bootloader
 #ifdef STARTUP_SYSTEM_INIT_ALREADY_DONE
 extern BootloaderStatus bootloader_status;
 
-void bootloader_spitfp_tick(BootloaderStatus *bootloader_status);
-void bootloader_spitfp_send_ack_and_message(SPITFP *st, uint8_t *data, const uint8_t length);
-bool bootloader_spitfp_is_send_possible(SPITFP *st);
-enum status_code bootloader_dsu_crc32_cal(const uint32_t addr, const uint32_t len, uint32_t *pcrc32);
-
 void bootloader_init(void);
 void bootloader_tick(void);
+
+#ifdef BOOTLOADER_FUNCTION_SPITFP_TICK
+void bootloader_spitfp_tick(BootloaderStatus *bootloader_status);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_SEND_ACK_AND_MESSAGE
+void bootloader_spitfp_send_ack_and_message(SPITFP *st, uint8_t *data, const uint8_t length);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_SPITFP_IS_SEND_POSSIBLE
+bool bootloader_spitfp_is_send_possible(SPITFP *st);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_DSU_CRC32_CAL
+enum status_code bootloader_dsu_crc32_cal(const uint32_t addr, const uint32_t len, uint32_t *pcrc32);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_SPI_INIT
+enum status_code bootloader_spi_init(struct spi_module *const module, Sercom *const hw, const struct spi_config *const config);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_GET_CHANNEL_CONFIG_DEFAULTS
+void bootloader_tinydma_get_channel_config_defaults(TinyDmaChannelConfig *config);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_INIT
+void bootloader_tinydma_init(DmacDescriptor *descriptor_section, DmacDescriptor *write_back_section);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_START_TRANSFER
+void bootloader_tinydma_start_transfer(const uint8_t channel_id);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_DESCRIPTOR_GET_CONFIG_DEFAULTS
+void bootloader_tinydma_descriptor_get_config_defaults(TinyDmaDescriptorConfig *config);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_DESCRIPTOR_INIT
+void bootloader_tinydma_descriptor_init(DmacDescriptor* descriptor, TinyDmaDescriptorConfig *config);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_CHANNEL_INIT
+void bootloader_tinydma_channel_init(const uint8_t channel_id, TinyDmaChannelConfig *config);
+#endif
 
 #endif
 

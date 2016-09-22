@@ -22,6 +22,7 @@
 #include "bootloader.h"
 
 #include "bricklib2/hal/system_timer/system_timer.h"
+#include "bricklib2/hal/uartbb/uartbb.h"
 #include "communication.h"
 
 const uint32_t device_identifier __attribute__ ((section(".device_identifier"))) = BOOTLOADER_DEVICE_IDENTIFIER;
@@ -32,21 +33,72 @@ const bootloader_firmware_entry_func_t bootloader_firmware_entry =  BOOTLOADER_F
 BootloaderStatus bootloader_status;
 BootloaderFunctions bootloader_functions;
 
+#ifdef BOOTLOADER_FUNCTION_SPITFP_TICK
 void bootloader_spitfp_tick(BootloaderStatus *bootloader_status) {
 	bootloader_functions.spitfp_tick(bootloader_status);
 }
+#endif
 
+#ifdef BOOTLOADER_FUNCTION_SEND_ACK_AND_MESSAGE
 void bootloader_spitfp_send_ack_and_message(SPITFP *st, uint8_t *data, const uint8_t length) {
 	bootloader_functions.spitfp_send_ack_and_message(st, data, length);
 }
+#endif
 
+#ifdef BOOTLOADER_FUNCTION_SPITFP_IS_SEND_POSSIBLE
 bool bootloader_spitfp_is_send_possible(SPITFP *st) {
 	return bootloader_functions.spitfp_is_send_possible(st);
 }
+#endif
 
+#ifdef BOOTLOADER_FUNCTION_DSU_CRC32_CAL
 enum status_code bootloader_dsu_crc32_cal(const uint32_t addr, const uint32_t len, uint32_t *pcrc32) {
 	return bootloader_functions.dsu_crc32_cal(addr, len, pcrc32);
 }
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_SPI_INIT
+enum status_code bootloader_spi_init(struct spi_module *const module, Sercom *const hw, const struct spi_config *const config) {
+	return bootloader_functions.spi_init(module, hw, config);
+}
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_GET_CHANNEL_CONFIG_DEFAULTS
+void bootloader_tinydma_get_channel_config_defaults(TinyDmaChannelConfig *config) {
+	bootloader_functions.tinydma_get_channel_config_defaults(config);
+}
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_INIT
+void bootloader_tinydma_init(DmacDescriptor *descriptor_section, DmacDescriptor *write_back_section) {
+	bootloader_functions.tinydma_init(descriptor_section, write_back_section);
+}
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_START_TRANSFER
+void bootloader_tinydma_start_transfer(const uint8_t channel_id) {
+	bootloader_functions.tinydma_start_transfer(channel_id);
+}
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_DESCRIPTOR_GET_CONFIG_DEFAULTS
+void bootloader_tinydma_descriptor_get_config_defaults(TinyDmaDescriptorConfig *config) {
+	bootloader_functions.tinydma_descriptor_get_config_defaults(config);
+}
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_DESCRIPTOR_INIT
+void bootloader_tinydma_descriptor_init(DmacDescriptor* descriptor, TinyDmaDescriptorConfig *config) {
+	bootloader_functions.tinydma_descriptor_init(descriptor, config);
+}
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_TINYDMA_CHANNEL_INIT
+void bootloader_tinydma_channel_init(const uint8_t channel_id, TinyDmaChannelConfig *config) {
+	bootloader_functions.tinydma_channel_init(channel_id, config);
+}
+#endif
+
 
 void bootloader_init(void) {
 	bootloader_status.boot_mode = BOOT_MODE_FIRMWARE;

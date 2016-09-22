@@ -26,6 +26,8 @@
 #include "clock.h"
 #include "system_interrupt.h"
 
+#include "configs/config.h"
+
 
 // Maximum retry counter for resuming a job transfer
 #define TINYDMA_MAX_JOB_RESUME_COUNT    10000

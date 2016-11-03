@@ -22,12 +22,15 @@
 #ifndef SPITFP_H
 #define SPITFP_H
 
+#ifdef __SAM0__
+#include "spi.h"
 #include "bricklib2/bootloader/tinydma.h"
+#endif
+
 #include "bricklib2/protocols/tfp/tfp.h"
 #include "bricklib2/utility/ringbuffer.h"
 
 #include "configs/config.h"
-#include "spi.h"
 
 #define SPITFP_PROTOCOL_OVERHEAD 3 // 3 byte overhead for Brick <-> Bricklet SPI protocol
 
@@ -42,15 +45,20 @@ typedef enum {
 
 
 typedef struct {
+#if defined(__SAM0__)
 	DmacDescriptor *descriptor_section;
 	DmacDescriptor *write_back_section;
 	DmacDescriptor descriptor_tx;
 	struct spi_module spi_module;
+#elif defined(__XMC1__)
+	uint8_t buffer_send_index;
+#endif
 
 	uint8_t buffer_send_length;
 	uint16_t buffer_send_ack_timeout; // uint16 for testing, can be uint8 later on
 	uint8_t current_sequence_number;
 	uint8_t last_sequence_number_seen;
+	uint32_t last_send_started;
 
 	SPITFPState state;
 

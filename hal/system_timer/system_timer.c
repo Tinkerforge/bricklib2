@@ -21,19 +21,12 @@
 
 #include "system_timer.h"
 
-#include "configs/config_clocks.h"
-
-#include "bricklib2/logging/logging.h"
+#include "configs/config.h"
 
 static volatile uint32_t system_timer_tick;
 
 void SysTick_Handler(void) {
 	system_timer_tick++;
-	if(system_timer_tick % 2) {
-		PORT->Group[0].OUTSET.reg = (1 << BOOTLOADER_STATUS_LED_PIN);
-	} else {
-		PORT->Group[0].OUTCLR.reg = (1 << BOOTLOADER_STATUS_LED_PIN);
-	}
 }
 
 void system_timer_init(const uint32_t main_clock_frequency, const uint32_t system_timer_frequency) {
@@ -55,8 +48,8 @@ uint32_t system_timer_get_ms(void) {
 }
 
 uint32_t system_timer_get_us(void) {
-	// TODO: This only works for main clock frequency 48MHz with timer frequency 1000Hz
-	return system_timer_tick*1000 + (48000 - SysTick->VAL)*1000/48000;
+	// TODO: This only works for main clock frequency 32MHz with timer frequency 1000Hz
+	return system_timer_tick*1000 + (32000 - SysTick->VAL)*1000/32000;
 }
 
 // This will work even with wrap-around up to UIN32_MAX/2 difference.

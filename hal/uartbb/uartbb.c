@@ -22,26 +22,35 @@
 #include "uartbb.h"
 
 #include "configs/config.h"
+#if defined(__SAM0__)
 #include "port.h"
+#elif defined(__XMC1__)
+#include "xmc_gpio.h"
+#endif
+
+#include <stdlib.h>
 
 #ifndef UARTBB_TX_PIN
 #define UARTBB_TX_PIN 17
 #endif
 
 #ifndef UARTBB_BIT_TIME
-#define UARTBB_BIT_TIME 1250 // 48000000/38400 perfect
+//#define UARTBB_BIT_TIME 1250 // 48000000/38400 perfect
 //#define UARTBB_BIT_TIME 417 // 48000000/115200 rounded
 //#define UARTBB_BIT_TIME 5000 // 48000000/9600 perfect
 //#define UARTBB_BIT_TIME 833 // 8000000/9600 rounded
+
+//#define UARTBB_BIT_TIME 278 // 32000000/115200 rounded
+#define UARTBB_BIT_TIME 833 // 32000000/38400 rounded
 #endif
 
 static inline void uartbb_wait_1bit(uint32_t start) {
-    //while((((48000 - SysTick->VAL) - start) % 48000) < UARTBB_BIT_TIME);
-
     while((((48000 - SysTick->VAL) - start) % 48000) < UARTBB_BIT_TIME);
 }
 
 void uartbb_init(void) {
+#if defined(__SAM0__)
+
 	// If we already use the port.c it is cheaper to use the
 	// port_ functions.
 	// Otherwise we can save 40 byte by doing it by hand.
@@ -74,24 +83,47 @@ void uartbb_init(void) {
 	// Default high
 	port->OUTSET.reg = (1 << UARTBB_TX_PIN);
 #endif
+#elif defined(__XMC1__)
+	XMC_GPIO_SetMode(UARTBB_TX_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+#endif
 }
 
 void uartbb_tx(uint8_t value) {
+#if defined(__SAM0__)
 	PortGroup *const port = &PORT->Group[0];
+#elif defined(__XMC1__)
+#endif
+
     uint32_t start;
     uint8_t bit_count = 8;
 
+#if defined(__SAM0__)
 	cpu_irq_disable();
+#elif defined(__XMC1__)
+	__disable_irq();
+#endif
 
     start = 48000 - SysTick->VAL;
+#if defined(__SAM0__)
    	port->OUTCLR.reg = (1 << UARTBB_TX_PIN);
+#elif defined(__XMC1__)
+	XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
+#endif
    	uartbb_wait_1bit(start);
 
     do {
         if(value & 1) {
+#if defined(__SAM0__)
         	port->OUTSET.reg = (1 << UARTBB_TX_PIN);
+#elif defined(__XMC1__)
+	XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
+#endif
         } else {
+#if defined(__SAM0__)
         	port->OUTCLR.reg = (1 << UARTBB_TX_PIN);
+#elif defined(__XMC1__)
+	XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
+#endif
         }
         start += UARTBB_BIT_TIME;
         uartbb_wait_1bit(start);
@@ -99,8 +131,13 @@ void uartbb_tx(uint8_t value) {
         value >>= 1;
     } while (--bit_count);
 
+#if defined(__SAM0__)
     port->OUTSET.reg = (1 << UARTBB_TX_PIN);
 	cpu_irq_enable();
+#elif defined(__XMC1__)
+	XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
+	__enable_irq();
+#endif
 
 	// Wait for at least 30 bits (3 chars) here
     for(uint8_t i = 0; i < 30; i++) {

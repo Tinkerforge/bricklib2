@@ -21,8 +21,9 @@
 
 #include "bootloader.h"
 
+#include "configs/config.h"
+
 #include "bricklib2/hal/system_timer/system_timer.h"
-#include "bricklib2/hal/uartbb/uartbb.h"
 #include "communication.h"
 
 const uint32_t device_identifier __attribute__ ((section(".device_identifier"))) = BOOTLOADER_DEVICE_IDENTIFIER;
@@ -101,15 +102,22 @@ void bootloader_tinydma_channel_init(const uint8_t channel_id, TinyDmaChannelCon
 
 
 void bootloader_init(void) {
-	bootloader_status.boot_mode = BOOT_MODE_FIRMWARE;
-	bootloader_status.status_led_config = 1;
-	bootloader_status.firmware_handle_message_func = handle_message;
+#ifdef __SAM0__
 	bootloader_status.st.descriptor_section = tinydma_get_descriptor_section();
 	bootloader_status.st.write_back_section = tinydma_get_write_back_section();
+#endif
+
+	bootloader_status.boot_mode = BOOT_MODE_FIRMWARE;
+	bootloader_status.reboot_started_at = 0;
+	bootloader_status.status_led_config = 1;
+	bootloader_status.firmware_handle_message_func = handle_message;
+
 	bootloader_firmware_entry(&bootloader_functions, &bootloader_status);
 }
 
 void bootloader_tick(void) {
 	bootloader_status.system_timer_tick = system_timer_get_ms();
+#ifdef BOOTLOADER_FUNCTION_SPITFP_TICK
 	bootloader_spitfp_tick(&bootloader_status);
+#endif
 }

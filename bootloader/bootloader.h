@@ -24,7 +24,10 @@
 
 #include "bricklib2/protocols/spitfp/spitfp.h"
 #include "configs/config.h"
+
+#ifdef BOOTLOADER_FUNCTION_DSU_CRC32_CAL
 #include "dsu_crc32.h"
+#endif
 
 typedef enum {
 	HANDLE_MESSAGE_RETURN_NEW_MESSAGE = 0,
@@ -127,7 +130,11 @@ typedef void (*bootloader_firmware_entry_func_t)(BootloaderFunctions *bf, Bootlo
 #define BOOTLOADER_FLASH_SIZE (16*1024)
 
 #define BOOTLOADER_BOOTLOADER_SIZE (8*1024)
-#define BOOTLOADER_BOOTLOADER_START_POS 0
+#if defined(__SAM0__)
+	#define BOOTLOADER_BOOTLOADER_START_POS 0
+#elif defined(__XMC1__)
+	#define BOOTLOADER_BOOTLOADER_START_POS 0x10001000
+#endif
 #define BOOTLOADER_BOOTLOADER_BOOT_INFO_POS (BOOTLOADER_BOOTLOADER_START_POS + BOOTLOADER_BOOTLOADER_SIZE - sizeof(uint32_t))
 
 #define BOOTLOADER_FIRMWARE_SIZE (BOOTLOADER_FLASH_SIZE - BOOTLOADER_BOOTLOADER_SIZE)

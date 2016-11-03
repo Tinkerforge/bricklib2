@@ -108,7 +108,7 @@ SECTIONS
 
     .bootloader_version 0x00001ff4 :
   	{
-    	KEEP(*(.firmware_version))
+    	KEEP(*(.bootloader_version))
   	} > rom 
     
     .device_identifier 0x00001ff8 :

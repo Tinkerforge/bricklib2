@@ -82,7 +82,7 @@ uint8_t auto_negotiate_wait_counter = 0;
 
 /* Ethernet PHY operation max retry count */
 
-// Change max retry count to 10000.
+// Change max retry count to 20.
 // The original of 1000000 is much too high.
 #define ETH_PHY_RETRY_MAX 20
 

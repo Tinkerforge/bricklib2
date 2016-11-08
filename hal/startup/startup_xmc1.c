@@ -24,7 +24,9 @@
 #include "XMC1100.h"
 #include "system_XMC1100.h"
 
+#ifdef STARTUP_SYSTEM_INIT_ALREADY_DONE
 #include "bricklib2/bootloader/bootloader.h"
+#endif
 
 #define DCO1_FREQUENCY 64000000U
 

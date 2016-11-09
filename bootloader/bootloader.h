@@ -69,7 +69,7 @@ typedef struct {
 #endif
 
 #ifdef BOOTLOADER_FUNCTION_SEND_ACK_AND_MESSAGE
-	void (*spitfp_send_ack_and_message)(SPITFP *st, uint8_t *data, const uint8_t length);
+	void (*spitfp_send_ack_and_message)(BootloaderStatus *bootloader_status, uint8_t *data, const uint8_t length);
 #endif
 
 #ifdef BOOTLOADER_FUNCTION_SPITFP_IS_SEND_POSSIBLE

@@ -147,7 +147,7 @@ void uartbb_tx(uint8_t value) {
 
 }
 
-void uartbb_puts(char *str) {
+void uartbb_puts(const char *str) {
 	uint32_t i = 0;
 	while(str[i] != '\0') {
 		uartbb_tx(str[i]);
@@ -155,7 +155,7 @@ void uartbb_puts(char *str) {
 	}
 }
 
-void uartbb_puti(int32_t value) {
+void uartbb_puti(const int32_t value) {
 	char str[16] = {'\0'};
 	itoa(value, str, 10);
 	uint32_t i = 0;

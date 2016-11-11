@@ -26,8 +26,8 @@
 
 void uartbb_init(void);
 void uartbb_tx(uint8_t value);
-void uartbb_puts(char *str);
-void uartbb_puti(int32_t value);
+void uartbb_puts(const char *str);
+void uartbb_puti(const int32_t value);
 inline void uartbb_putnl(void) { uartbb_puts("\n\r"); }
 
 #endif

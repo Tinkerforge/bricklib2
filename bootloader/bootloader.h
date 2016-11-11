@@ -30,13 +30,13 @@
 #endif
 
 typedef enum {
-	HANDLE_MESSAGE_RETURN_NEW_MESSAGE = 0,
-	HANDLE_MESSAGE_RETURN_EMPTY = 1,
-	HANDLE_MESSAGE_RETURN_NOT_SUPPORTED = 2,
-	HANDLE_MESSAGE_RETURN_INVALID_PARAMETER = 3,
-} BootloaderHandleMessageReturn;
+	HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE = 0,
+	HANDLE_MESSAGE_RESPONSE_EMPTY = 1,
+	HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED = 2,
+	HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER = 3,
+} BootloaderHandleMessageResponse;
 
-typedef BootloaderHandleMessageReturn (* bootloader_firmware_handle_message_func_t)(const void *, void *);
+typedef BootloaderHandleMessageResponse (* bootloader_firmware_handle_message_func_t)(const void *, void *);
 
 typedef enum {
 	BOOT_MODE_BOOTLOADER = 0,

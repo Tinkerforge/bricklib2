@@ -32,15 +32,13 @@
 
 extern BootloaderStatus bootloader_status;
 void __attribute__((optimize("-O3"))) spitfp_tx_irq_handler(void) {
-	XMC_GPIO_SetOutputHigh(P0_0);
 	if(bootloader_status.st.buffer_send_index >= bootloader_status.st.buffer_send_length) {
-		XMC_USIC_CH_TXFIFO_DisableEvent(XMC_SPI0_CH0, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
-		XMC_GPIO_SetOutputLow(P0_0);
+		XMC_USIC_CH_TXFIFO_DisableEvent(SPITFP_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
 		return;
 	}
 
-	while(!XMC_USIC_CH_TXFIFO_IsFull(XMC_SPI0_CH0)) {
-		XMC_SPI0_CH0->IN[0] = bootloader_status.st.buffer_send[bootloader_status.st.buffer_send_index];
+	while(!XMC_USIC_CH_TXFIFO_IsFull(SPITFP_USIC)) {
+		SPITFP_USIC->IN[0] = bootloader_status.st.buffer_send[bootloader_status.st.buffer_send_index];
 		bootloader_status.st.buffer_send_index++;
 		if(bootloader_status.st.buffer_send_index == bootloader_status.st.buffer_send_length) {
 
@@ -48,23 +46,19 @@ void __attribute__((optimize("-O3"))) spitfp_tx_irq_handler(void) {
 			if(bootloader_status.st.buffer_send_length == SPITFP_PROTOCOL_OVERHEAD) {
 				bootloader_status.st.buffer_send_length = 0;
 			}
-			XMC_USIC_CH_TXFIFO_DisableEvent(XMC_SPI0_CH0, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
-			XMC_GPIO_SetOutputLow(P0_0);
+			XMC_USIC_CH_TXFIFO_DisableEvent(SPITFP_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
 			return;
 		}
 	}
-	XMC_GPIO_SetOutputLow(P0_0);
 }
 
 void __attribute__((optimize("-O3"))) spitfp_rx_irq_handler(void) {
-	XMC_GPIO_SetOutputHigh(P0_1);
-	while(!XMC_USIC_CH_RXFIFO_IsEmpty(XMC_SPI0_CH0)) {
-		bootloader_status.st.ringbuffer_recv.buffer[bootloader_status.st.ringbuffer_recv.end] = XMC_SPI_CH_GetReceivedData(XMC_SPI0_CH0);
+	while(!XMC_USIC_CH_RXFIFO_IsEmpty(SPITFP_USIC)) {
+		bootloader_status.st.ringbuffer_recv.buffer[bootloader_status.st.ringbuffer_recv.end] = SPITFP_USIC->OUTR;
 		bootloader_status.st.ringbuffer_recv.end = (bootloader_status.st.ringbuffer_recv.end + 1) & SPITFP_RECEIVE_BUFFER_MASK;
 
 		// The above is equivalent to
 		//   ringbuffer_add(&bootloader_status.st.ringbuffer_recv, data);
 		// without the check for buffer fullness if buffer size is power of two
 	}
-	XMC_GPIO_SetOutputLow(P0_1);
 }

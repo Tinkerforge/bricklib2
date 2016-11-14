@@ -21,14 +21,39 @@
 **/
 
 #include "configs/config.h"
-#include "XMC1100.h"
-#include "system_XMC1100.h"
+#include "xmc_device.h"
 
 #ifdef STARTUP_SYSTEM_INIT_ALREADY_DONE
 #include "bricklib2/bootloader/bootloader.h"
 #endif
 
+#if UC_SERIES == XMC11 || UC_SERIES == XMC12 || UC_SERIES == XMC13
 #define DCO1_FREQUENCY 64000000U
+#elif UC_SERIES == XMC14
+
+#define DCO1_FREQUENCY  48000000U
+#define OSCHP_FREQUENCY 20000000U // External crystal frequency [Hz]
+
+// DCLK clock source selection: "Internal oscillator DCO1 (48MHz)" or "External crystal oscillator"
+#define DCLK_CLOCK_SRC_DCO1 0
+#define DCLK_CLOCK_SRC_EXT_XTAL 1
+#define DCLK_CLOCK_SRC DCLK_CLOCK_SRC_DCO1
+
+// SCHP external oscillator mode: "Crystal mode" or "External clock direct input mode"
+#define OSCHP_MODE_XTAL 0
+#define OSCHP_MODE_DIRECT 1
+#define OSCHP_MODE OSCHP_MODE_XTAL
+
+// RTC clock source selection: "Internal oscillator DCO2 (32768Hz)" or "External crystal oscillator"
+#define RTC_CLOCK_SRC_DCO2 0
+#define RTC_CLOCK_SRC_EXT_XTAL 5
+#define RTC_CLOCK_SRC RTC_CLOCK_SRC_DCO2
+
+// PCLK clock source selection: MCLK or 2xMCLK
+#define PCLK_CLOCK_SRC_MCLK 0
+#define PCLK_CLOCK_SRC_2XMCLK 1
+#define PCLK_CLOCK_SRC PCLK_CLOCK_SRC_2XMCLK
+#endif
 
 uint32_t SystemCoreClock __attribute__((section(".no_init")));
 
@@ -42,10 +67,15 @@ void SystemInit(void) {
 }
 
 void SystemCoreSetup(void) {
+#if UC_SERIES == XMC11 || UC_SERIES == XMC12 || UC_SERIES == XMC13
 #ifndef USE_DYNAMIC_FLASH_WS
 	// Fix flash wait states to 1 cycle (see DS Addendum)
 	NVM->NVMCONF |= NVM_NVMCONF_WS_Msk;
 	NVM->CONFIG1 |= NVM_CONFIG1_FIXWS_Msk;
+#endif
+#elif UC_SERIES == XMC14
+	// Enable Prefetch unit
+	SCU_GENERAL->PFUCR &= ~SCU_GENERAL_PFUCR_PFUBYP_Msk;
 #endif
 }
 
@@ -54,6 +84,8 @@ void SystemCoreClockSetup(void) {
 	// MCLK = 32MHz, PCLK = 64MHz
 
 	SCU_GENERAL->PASSWD = 0x000000C0UL; // disable bit protection
+
+#if UC_SERIES == XMC11 || UC_SERIES == XMC12 || UC_SERIES == XMC13
 	SCU_CLK->CLKCR = (0 << SCU_CLK_CLKCR_FDIV_Pos) | // No fractional div
 	                 (1 << SCU_CLK_CLKCR_IDIV_Pos) | // Div by 1 => MCLK = 32MHz
 					 (1 << SCU_CLK_CLKCR_PCLKSEL_Pos) | // PCLK = 2x MCLK
@@ -63,6 +95,52 @@ void SystemCoreClockSetup(void) {
 					 (0 << SCU_CLK_CLKCR_VDDC2HIGH_Pos); // VDCC not too high
 
 	while((SCU_CLK->CLKCR & SCU_CLK_CLKCR_VDDC2LOW_Msk));
+#elif UC_SERIES == XMC14
+#if DCLK_CLOCK_SRC != DCLK_CLOCK_SRC_DCO1
+	if(OSCHP_GetFrequency() > 20000000U) {
+		SCU_ANALOG->ANAOSCHPCTRL |= SCU_ANALOG_ANAOSCHPCTRL_HYSCTRL_Msk;
+	}
+
+	// OSCHP source selection - OSC mode
+	SCU_ANALOG->ANAOSCHPCTRL = (SCU_ANALOG->ANAOSCHPCTRL & ~SCU_ANALOG_ANAOSCHPCTRL_MODE_Msk) |
+	                           (OSCHP_MODE << SCU_ANALOG_ANAOSCHPCTRL_MODE_Pos);
+
+	// Enable OSC_HP oscillator watchdog
+	SCU_CLK->OSCCSR |= SCU_CLK_OSCCSR_XOWDEN_Msk;
+
+	do {
+		// Restart OSC_HP oscillator watchdog
+		SCU_INTERRUPT->SRCLR1 = SCU_INTERRUPT_SRCLR1_LOECI_Msk;
+		SCU_CLK->OSCCSR |= SCU_CLK_OSCCSR_XOWDRES_Msk;
+
+		// Wait a few DCO2 cycles for the update of the clock detection result
+		for(uint32_t cycles = 0; cycles < 2500; cycles++) {
+			__NOP();
+		}
+
+	// check if clock is ok
+	} while(SCU_INTERRUPT->SRRAW1 & SCU_INTERRUPT_SRRAW1_LOECI_Msk);
+
+	// DCLK source using OSC_HP
+	SCU_CLK->CLKCR1 |= SCU_CLK_CLKCR1_DCLKSEL_Msk;
+#else
+	// DCLK source using DCO1
+	SCU_CLK->CLKCR1 &= ~SCU_CLK_CLKCR1_DCLKSEL_Msk;
+#endif
+
+#if RTC_CLOCK_SRC == RTC_CLOCK_SRC_EXT_XTAL
+	// Enable OSC_LP
+	SCU_ANALOG->ANAOSCLPCTRL &= ~SCU_ANALOG_ANAOSCLPCTRL_MODE_Msk;
+#endif
+
+	// Update PCLK selection mux.
+	// Fractional divider enabled, MCLK frequency equal DCO1 frequency or external crystal frequency
+	SCU_CLK->CLKCR = (1023UL <<SCU_CLK_CLKCR_CNTADJ_Pos) |
+	                 (RTC_CLOCK_SRC << SCU_CLK_CLKCR_RTCCLKSEL_Pos) |
+	                 (PCLK_CLOCK_SRC << SCU_CLK_CLKCR_PCLKSEL_Pos) |
+	                 0x100U; // IDIV = 1
+#endif
+
 	SCU_GENERAL->PASSWD = 0x000000C3UL; // enable bit protection
 
 	SystemCoreClockUpdate();
@@ -73,10 +151,30 @@ void SystemCoreClockUpdate(void) {
 	uint32_t FDIV = ((SCU_CLK->CLKCR) & SCU_CLK_CLKCR_FDIV_Msk) >> SCU_CLK_CLKCR_FDIV_Pos;
 
 	if(IDIV != 0) {
+#if UC_SERIES == XMC11 || UC_SERIES == XMC12 || UC_SERIES == XMC13
 		// Fractional divider is enabled and used
 		SystemCoreClock = ((DCO1_FREQUENCY << 6U) / ((IDIV << 8) + FDIV)) << 1U;
+#elif UC_SERIES == XMC14
+		FDIV |= ((SCU_CLK->CLKCR1) & SCU_CLK_CLKCR1_FDIV_Msk) << 8;
+
+		// Fractional divider is enabled and used
+		if(((SCU_CLK->CLKCR1) & SCU_CLK_CLKCR1_DCLKSEL_Msk) == 0U) {
+			SystemCoreClock = ((uint32_t)((DCO1_FREQUENCY << 6U) / ((IDIV << 10) + FDIV))) << 4U;
+		} else {
+			SystemCoreClock = ((uint32_t)((OSCHP_FREQUENCY << 6U) / ((IDIV << 10) + FDIV))) << 4U;
+		}
+#endif
 	} else {
+#if UC_SERIES == XMC11 || UC_SERIES == XMC12 || UC_SERIES == XMC13
 		// Fractional divider bypassed. Simply divide DCO_DCLK by 2
 		SystemCoreClock = DCO1_FREQUENCY >> 1U;
+#elif UC_SERIES == XMC14
+		// Fractional divider bypassed.
+		if (((SCU_CLK->CLKCR1) & SCU_CLK_CLKCR1_DCLKSEL_Msk) == 0U) {
+			SystemCoreClock = DCO1_FREQUENCY;
+		} else {
+			SystemCoreClock = OSCHP_FREQUENCY;
+		}
+#endif
 	}
 }

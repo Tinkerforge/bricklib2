@@ -41,8 +41,8 @@ void bootloader_spitfp_tick(BootloaderStatus *bootloader_status) {
 #endif
 
 #ifdef BOOTLOADER_FUNCTION_SEND_ACK_AND_MESSAGE
-void bootloader_spitfp_send_ack_and_message(SPITFP *st, uint8_t *data, const uint8_t length) {
-	bootloader_functions.spitfp_send_ack_and_message(st, data, length);
+void bootloader_spitfp_send_ack_and_message(BootloaderStatus * bootloader_status, uint8_t *data, const uint8_t length) {
+	bootloader_functions.spitfp_send_ack_and_message(bootloader_status, data, length);
 }
 #endif
 

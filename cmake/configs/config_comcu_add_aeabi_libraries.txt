@@ -1,0 +1,17 @@
+# add library aeabi_idiv
+ADD_LIBRARY(aeabi_idiv "${PROJECT_SOURCE_DIR}/src/bricklib2/bootloader/libgcc/aeabi_idiv.c")
+SET_TARGET_PROPERTIES(aeabi_idiv PROPERTIES COMPILE_FLAGS "-mcpu=${MCU} -O${OPTIMIZATION_LEVEL}")
+
+# add library aeabi_uidiv
+ADD_LIBRARY(aeabi_uidiv "${PROJECT_SOURCE_DIR}/src/bricklib2/bootloader/libgcc/aeabi_uidiv.c")
+SET_TARGET_PROPERTIES(aeabi_uidiv PROPERTIES COMPILE_FLAGS "-mcpu=${MCU} -O${OPTIMIZATION_LEVEL}")
+
+# add library aeabi_idivmod
+ADD_LIBRARY(aeabi_idivmod "${PROJECT_SOURCE_DIR}/src/bricklib2/bootloader/libgcc/aeabi_idivmod.c")
+SET_TARGET_PROPERTIES(aeabi_idivmod PROPERTIES COMPILE_FLAGS "-mcpu=${MCU} -O${OPTIMIZATION_LEVEL}")
+
+# add library aeabi_uidivmod
+ADD_LIBRARY(aeabi_uidivmod "${PROJECT_SOURCE_DIR}/src/bricklib2/bootloader/libgcc/aeabi_uidivmod.c")
+SET_TARGET_PROPERTIES(aeabi_uidivmod PROPERTIES COMPILE_FLAGS "-mcpu=${MCU} -O${OPTIMIZATION_LEVEL}")
+
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}.elf aeabi_idiv aeabi_uidiv aeabi_idivmod aeabi_uidivmod)

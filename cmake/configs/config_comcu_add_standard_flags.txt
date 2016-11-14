@@ -5,7 +5,24 @@ SET_TARGET_PROPERTIES(${PROJECT_NAME}.elf PROPERTIES COMPILE_FLAGS
 	"${DEBUG} -mcpu=${MCU} -std=gnu99  -Wall --specs=nano.specs -mlong-calls -ffunction-sections -fdata-sections -O${OPTIMIZATION_LEVEL}"
 )
 
-#define linker flags
+# Add defines for linker script (default is with standard start address of flash and sram with 16kb flash)
+if(NOT FLASH_ORIGIN)
+SET(FLASH_ORIGIN 0x10001000)
+endif()
+
+if(NOT FLASH_LENGTH)
+SET(FLASH_LENGTH 0x4000)
+endif()
+
+if(NOT SRAM_ORIGIN)
+SET(SRAM_ORIGIN  0x20000000)
+endif()
+
+if(NOT SRAM_LENGTH)
+SET(SRAM_LENGTH  0x4000)
+endif()
+
+# define linker flags
 SET_TARGET_PROPERTIES(${PROJECT_NAME}.elf PROPERTIES LINK_FLAGS
-	"-nostartfiles -mcpu=${MCU} -Wl,--gc-sections -T\"${PROJECT_SOURCE_DIR}/src/bricklib2/linker_script/${LINKER_SCRIPT_NAME}\" "
+	"-nostartfiles -mcpu=${MCU} -Wl,--gc-sections -T\"${PROJECT_SOURCE_DIR}/src/bricklib2/linker_script/${LINKER_SCRIPT_NAME}\" -Wl,--defsym,FLASH_ORIGIN=${FLASH_ORIGIN} -Wl,--defsym,FLASH_LENGTH=${FLASH_LENGTH} -Wl,--defsym,SRAM_ORIGIN=${SRAM_ORIGIN} -Wl,--defsym,SRAM_LENGTH=${SRAM_LENGTH}" 
 )

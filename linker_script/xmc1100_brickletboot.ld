@@ -26,9 +26,10 @@ ENTRY(Reset_Handler)
 
 MEMORY
 {
-    FLASH(RX) : ORIGIN = 0x10001000, LENGTH = 0x2000
-    SRAM(!RX) : ORIGIN = 0x20000000, LENGTH = 0x4000
+    FLASH(RX) : ORIGIN = FLASH_ORIGIN, LENGTH = FLASH_LENGTH
+    SRAM(!RX) : ORIGIN = SRAM_ORIGIN, LENGTH = SRAM_LENGTH
 }
+
 
 /* We use all available ram for stack, stack size does not have to be defined */
 /* stack_size = DEFINED(stack_size) ? stack_size : 1024; */

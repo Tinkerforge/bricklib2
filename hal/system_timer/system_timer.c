@@ -48,8 +48,11 @@ uint32_t system_timer_get_ms(void) {
 }
 
 uint32_t system_timer_get_us(void) {
-	// TODO: This only works for main clock frequency 32MHz with timer frequency 1000Hz
-	return system_timer_tick*1000 + (32000 - SysTick->VAL)*1000/32000;
+#ifdef __XMC1__
+	return system_timer_tick*1000 + (((SystemCoreClock/1000) - SysTick->VAL)*1000)/(SystemCoreClock/1000);
+#else
+	return 0; // Implement for other MCUs here
+#endif
 }
 
 // This will work even with wrap-around up to UIN32_MAX/2 difference.

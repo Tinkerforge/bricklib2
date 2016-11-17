@@ -41,7 +41,8 @@
 //#define UARTBB_BIT_TIME 833 // 8000000/9600 rounded
 
 //#define UARTBB_BIT_TIME 278 // 32000000/115200 rounded
-#define UARTBB_BIT_TIME 833 // 32000000/38400 rounded
+//#define UARTBB_BIT_TIME 833 // 32000000/38400 rounded
+#define UARTBB_BIT_TIME 1250 // 48000000/38400 perfect
 #endif
 
 static inline void uartbb_wait_1bit(uint32_t start) {

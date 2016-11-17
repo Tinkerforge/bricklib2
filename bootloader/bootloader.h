@@ -127,7 +127,9 @@ typedef struct {
 
 typedef void (*bootloader_firmware_entry_func_t)(BootloaderFunctions *bf, BootloaderStatus *bs);
 
+#ifndef BOOTLOADER_FLASH_SIZE
 #define BOOTLOADER_FLASH_SIZE (16*1024)
+#endif
 
 #define BOOTLOADER_BOOTLOADER_SIZE (8*1024)
 #if defined(__SAM0__)

@@ -25,6 +25,7 @@
 
 #ifdef STARTUP_SYSTEM_INIT_ALREADY_DONE
 #include "bricklib2/bootloader/bootloader.h"
+#include "bricklib2/hal/system_timer/system_timer.h"
 #endif
 
 #if UC_SERIES == XMC11 || UC_SERIES == XMC12 || UC_SERIES == XMC13
@@ -60,6 +61,7 @@ uint32_t SystemCoreClock __attribute__((section(".no_init")));
 void SystemInit(void) {
 #ifdef STARTUP_SYSTEM_INIT_ALREADY_DONE
 	bootloader_init();
+	system_timer_init(SystemCoreClock, SYSTEM_TIMER_FREQUENCY);
 #else
 	SystemCoreSetup();
 	SystemCoreClockSetup();

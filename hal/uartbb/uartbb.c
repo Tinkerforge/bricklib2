@@ -85,7 +85,10 @@ void uartbb_init(void) {
 	port->OUTSET.reg = (1 << UARTBB_TX_PIN);
 #endif
 #elif defined(__XMC1__)
-	XMC_GPIO_SetMode(UARTBB_TX_PIN, XMC_GPIO_MODE_OUTPUT_PUSH_PULL);
+	XMC_GPIO_CONFIG_t uartbb_pin;
+	uartbb_pin.mode = XMC_GPIO_MODE_OUTPUT_PUSH_PULL;
+	uartbb_pin.output_level = XMC_GPIO_OUTPUT_LEVEL_HIGH;
+	XMC_GPIO_Init(UARTBB_TX_PIN, &uartbb_pin);
 #endif
 }
 

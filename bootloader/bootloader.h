@@ -23,6 +23,7 @@
 #define BOOTLOADER_H
 
 #include "bricklib2/protocols/spitfp/spitfp.h"
+#include "bricklib2/utility/led_flicker.h"
 #include "configs/config.h"
 
 #ifdef BOOTLOADER_FUNCTION_DSU_CRC32_CAL
@@ -49,9 +50,10 @@ typedef enum {
 typedef struct {
 	bootloader_firmware_handle_message_func_t firmware_handle_message_func;
 	BootloaderBootMode boot_mode;
-	uint8_t status_led_config;
 	uint32_t system_timer_tick;
 	uint32_t reboot_started_at;
+
+	LEDFlickerState led_flicker_state;
 
 	SPITFP st;
 } BootloaderStatus;

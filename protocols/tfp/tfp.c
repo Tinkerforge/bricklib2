@@ -61,3 +61,15 @@ void tfp_uid_uint32_to_base58(uint32_t value, char *str) {
 		str[j] = '\0';
 	}
 }
+
+void tfp_make_default_header(TFPMessageHeader *header, const uint32_t uid, const uint8_t length, const uint8_t fid) {
+	header->uid              = uid;
+	header->length           = length;
+	header->fid              = fid;
+	header->sequence_num     = 0; // Sequence number for callback is 0
+	header->return_expected  = 1;
+	header->authentication   = 0; // TODO
+	header->other_options    = 0;
+	header->error            = 0;
+	header->future_use       = 0;
+}

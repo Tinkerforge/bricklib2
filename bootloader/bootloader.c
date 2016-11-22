@@ -52,6 +52,12 @@ bool bootloader_spitfp_is_send_possible(SPITFP *st) {
 }
 #endif
 
+#ifdef BOOTLOADER_FUNCTION_GET_UID
+uint32_t bootloader_get_uid(void) {
+	return bootloader_functions.get_uid();
+}
+#endif
+
 #ifdef BOOTLOADER_FUNCTION_DSU_CRC32_CAL
 enum status_code bootloader_dsu_crc32_cal(const uint32_t addr, const uint32_t len, uint32_t *pcrc32) {
 	return bootloader_functions.dsu_crc32_cal(addr, len, pcrc32);

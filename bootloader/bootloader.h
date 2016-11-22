@@ -76,6 +76,10 @@ typedef struct {
 	bool (*spitfp_is_send_possible)(SPITFP *st);
 #endif
 
+#ifdef BOOTLOADER_FUNCTION_GET_UID
+	uint32_t (*get_uid)(void);
+#endif
+
 #ifdef BOOTLOADER_FUNCTION_DSU_CRC32_CAL
 	enum status_code (*dsu_crc32_cal)(const uint32_t addr, const uint32_t len, uint32_t *pcrc32);
 #endif
@@ -167,6 +171,10 @@ void bootloader_spitfp_send_ack_and_message(BootloaderStatus * bootloader_status
 
 #ifdef BOOTLOADER_FUNCTION_SPITFP_IS_SEND_POSSIBLE
 bool bootloader_spitfp_is_send_possible(SPITFP *st);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_GET_UID
+uint32_t bootloader_get_uid(void);
 #endif
 
 #ifdef BOOTLOADER_FUNCTION_DSU_CRC32_CAL

@@ -27,7 +27,8 @@
 #include "xmc_gpio.h"
 
 #define LED_FLICKER_CONFIG_OFF    0
-#define LED_FLICKER_CONFIG_ACTIVE 1
+#define LED_FLICKER_CONFIG_ON     1
+#define LED_FLICKER_CONFIG_ACTIVE 2
 #define LED_FLICKER_COUNTER_MAX   40 // flicker for every 40 packets
 #define LED_FLICKER_OFFTIME_MAX   35 // flicker off for 35ms
 

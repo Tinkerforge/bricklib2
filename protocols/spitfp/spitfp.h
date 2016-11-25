@@ -60,8 +60,6 @@ typedef struct {
 	uint8_t last_sequence_number_seen;
 	uint32_t last_send_started;
 
-	SPITFPState state;
-
 	uint8_t buffer_recv[SPITFP_RECEIVE_BUFFER_SIZE];
 	uint8_t buffer_send[TFP_MESSAGE_MAX_LENGTH + SPITFP_PROTOCOL_OVERHEAD*2]; // *2 for send message overhead and additional ACK
 	Ringbuffer ringbuffer_recv;

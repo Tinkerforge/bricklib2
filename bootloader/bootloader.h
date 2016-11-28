@@ -48,12 +48,20 @@ typedef enum {
 } BootloaderBootMode;
 
 typedef struct {
+	uint32_t error_count_ack_checksum;
+	uint32_t error_count_message_checksum;
+	uint32_t error_count_frame;
+	uint32_t error_count_overflow;
+} BootloaderErrorCount;
+
+typedef struct {
 	bootloader_firmware_handle_message_func_t firmware_handle_message_func;
 	BootloaderBootMode boot_mode;
 	uint32_t system_timer_tick;
 	uint32_t reboot_started_at;
 
 	LEDFlickerState led_flicker_state;
+	BootloaderErrorCount error_count;
 
 	SPITFP st;
 } BootloaderStatus;

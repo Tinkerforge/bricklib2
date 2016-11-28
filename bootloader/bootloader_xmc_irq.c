@@ -57,8 +57,15 @@ void __attribute__((optimize("-O3"))) spitfp_rx_irq_handler(void) {
 		bootloader_status.st.ringbuffer_recv.buffer[bootloader_status.st.ringbuffer_recv.end] = SPITFP_USIC->OUTR;
 		bootloader_status.st.ringbuffer_recv.end = (bootloader_status.st.ringbuffer_recv.end + 1) & SPITFP_RECEIVE_BUFFER_MASK;
 
-		// The above is equivalent to
-		//   ringbuffer_add(&bootloader_status.st.ringbuffer_recv, data);
-		// without the check for buffer fullness if buffer size is power of two
+		// Without this "if" the interrupt takes 1.39us, including the "if" it takes 1.75us
+		// TODO: Do we want to keep it?
+		//       Without the "if" it still works, but we loose the overflow counter,
+		//       we will get frame/checksum errors instead
+
+		// Tell GCC that this branch is unlikely to occur => __builtin_expect(value, 0)
+		if(__builtin_expect((bootloader_status.st.ringbuffer_recv.end == bootloader_status.st.ringbuffer_recv.start), 0)) {
+			bootloader_status.error_count.error_count_overflow++;
+			bootloader_status.st.ringbuffer_recv.end = (bootloader_status.st.ringbuffer_recv.end - 1) & SPITFP_RECEIVE_BUFFER_MASK;
+		}
 	}
 }

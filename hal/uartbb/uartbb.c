@@ -168,3 +168,13 @@ void uartbb_puti(const int32_t value) {
 		i++;
 	}
 }
+
+void uartbb_putu(const uint32_t value) {
+	char str[16] = {'\0'};
+	utoa(value, str, 10);
+	uint32_t i = 0;
+	while(str[i] != '\0') {
+		uartbb_tx(str[i]);
+		i++;
+	}
+}

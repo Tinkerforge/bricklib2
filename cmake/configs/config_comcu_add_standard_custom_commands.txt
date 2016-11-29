@@ -49,6 +49,10 @@ ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
                    POST_BUILD
                    COMMAND cat ${PROJECT_SOURCE_DIR}/../../brickletboot_xmc/software/build/brickletboot-with-checksum.bin ${PROJECT_NAME}-with-checksum.bin > ${PROJECT_NAME}-with-bootloader.bin)
 
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD
+                   COMMAND cp ${PROJECT_SOURCE_DIR}/../../brickletboot_xmc/software/build/brickletboot-with-checksum.bin ${PROJECT_NAME}-bootloader.bin)
+
 
 
 # Make bootstrapper for firmware

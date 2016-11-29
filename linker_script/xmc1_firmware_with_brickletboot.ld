@@ -95,7 +95,7 @@ SECTIONS
 
     .firmware_version ORIGIN(FLASH) + LENGTH(FLASH) - 12 :
   	{
-    	KEEP(*(.bootloader_version))
+    	KEEP(*(.firmware_version))
   	} > FLASH 
     
     .device_identifier ORIGIN(FLASH) + LENGTH(FLASH) - 8 :

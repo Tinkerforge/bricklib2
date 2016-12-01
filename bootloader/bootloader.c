@@ -27,7 +27,7 @@
 #include "communication.h"
 
 const uint32_t device_identifier __attribute__ ((section(".device_identifier"))) = BOOTLOADER_DEVICE_IDENTIFIER;
-const uint32_t firmware_version __attribute__ ((section(".firmware_version"))) = (FIRMWARE_VERSION_MAJOR << 16) | (FIRMWARE_VERSION_MINOR << 8) | (FIRMWARE_VERSION_REVISION << 0);
+const uint32_t firmware_version  __attribute__ ((section(".firmware_version")))  = (FIRMWARE_VERSION_MAJOR << 16) | (FIRMWARE_VERSION_MINOR << 8) | (FIRMWARE_VERSION_REVISION << 0);
 
 const bootloader_firmware_entry_func_t bootloader_firmware_entry =  BOOTLOADER_FIRMWARE_ENTRY_FUNC;
 

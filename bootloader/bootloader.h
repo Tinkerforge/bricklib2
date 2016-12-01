@@ -59,6 +59,7 @@ typedef struct {
 	BootloaderBootMode boot_mode;
 	uint32_t system_timer_tick;
 	uint32_t reboot_started_at;
+	uint32_t hotplug_time;
 
 	LEDFlickerState led_flicker_state;
 	BootloaderErrorCount error_count;

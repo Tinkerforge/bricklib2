@@ -24,16 +24,49 @@
 #include "bricklib2/hal/system_timer/system_timer.h"
 
 void led_flicker_tick(LEDFlickerState *led_flicker_state, uint32_t current_time, XMC_GPIO_PORT_t *const port, const uint8_t pin) {
-	if(led_flicker_state->config == LED_FLICKER_CONFIG_ACTIVE) {
+	if(led_flicker_state->config == LED_FLICKER_CONFIG_STATUS) {
 		if(led_flicker_state->start > 0) {
-			if((current_time - led_flicker_state->start) >= LED_FLICKER_OFFTIME_MAX) {
+			if((current_time - led_flicker_state->start) >= LED_FLICKER_STATUS_OFFTIME_MAX) {
 				XMC_GPIO_SetOutputLow(port, pin);
 				led_flicker_state->start = 0;
 			}
-		} else if(led_flicker_state->counter > LED_FLICKER_COUNTER_MAX) {
+		} else if(led_flicker_state->counter > LED_FLICKER_STATUS_COUNTER_MAX) {
 			XMC_GPIO_SetOutputHigh(port, pin);
 			led_flicker_state->start = current_time;
 			led_flicker_state->counter = 0;
 		}
+	} else if(led_flicker_state->config == LED_FLICKER_CONFIG_HEARTBEAT) {
+		if(led_flicker_state->counter > 2) {
+			if((current_time - led_flicker_state->start) >= LED_FLICKER_HEARTBEAT_DURATION) {
+				XMC_GPIO_SetOutputLow(port, pin);
+				led_flicker_state->start = current_time;
+				led_flicker_state->counter = 0;
+			}
+		} else {
+			if(led_flicker_state->counter == 0 || led_flicker_state->counter == 2) {
+				if((current_time - led_flicker_state->start) >= LED_FLICKER_HEARTBEAT_ONTIME) {
+					XMC_GPIO_SetOutputHigh(port, pin);
+					led_flicker_state->start = current_time;
+					if(led_flicker_state->counter == 0) {
+						led_flicker_state->counter = 1;
+					} else {
+						led_flicker_state->counter = 3;
+					}
+				}
+			} else {
+				if((current_time - led_flicker_state->start) >= LED_FLICKER_HEARTBEAT_OFFTIME) {
+					XMC_GPIO_SetOutputLow(port, pin);
+					led_flicker_state->start = current_time;
+					led_flicker_state->counter = 2;
+				}
+			}
+		}
+
+	}
+}
+
+void led_flicker_increase_counter(LEDFlickerState *led_flicker_state) {
+	if(led_flicker_state->config == LED_FLICKER_CONFIG_STATUS) {
+		led_flicker_state->counter++;
 	}
 }

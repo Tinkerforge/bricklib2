@@ -26,11 +26,16 @@
 
 #include "xmc_gpio.h"
 
-#define LED_FLICKER_CONFIG_OFF    0
-#define LED_FLICKER_CONFIG_ON     1
-#define LED_FLICKER_CONFIG_ACTIVE 2
-#define LED_FLICKER_COUNTER_MAX   40 // flicker for every 40 packets
-#define LED_FLICKER_OFFTIME_MAX   35 // flicker off for 35ms
+#define LED_FLICKER_CONFIG_OFF          0
+#define LED_FLICKER_CONFIG_ON           1
+#define LED_FLICKER_CONFIG_STATUS       2
+#define LED_FLICKER_CONFIG_HEARTBEAT    3
+#define LED_FLICKER_CONFIG_EXTERNAL     4
+#define LED_FLICKER_STATUS_COUNTER_MAX  40 // flicker for every 40 packets
+#define LED_FLICKER_STATUS_OFFTIME_MAX  35 // flicker off for 35ms
+#define LED_FLICKER_HEARTBEAT_DURATION  1000 // heartbeat once per second
+#define LED_FLICKER_HEARTBEAT_ONTIME    100  // ontime of heartbeat 100ms
+#define LED_FLICKER_HEARTBEAT_OFFTIME   60   // offtime of heartbeat 60ms
 
 typedef struct {
 	uint32_t start;
@@ -39,5 +44,6 @@ typedef struct {
 } LEDFlickerState;
 
 void led_flicker_tick(LEDFlickerState *led_flicker_state, uint32_t current_time, XMC_GPIO_PORT_t *const port, const uint8_t pin);
+void led_flicker_increase_counter(LEDFlickerState *led_flicker_state);
 
 #endif

@@ -115,7 +115,10 @@ void bootloader_init(void) {
 
 	bootloader_status.boot_mode = BOOT_MODE_FIRMWARE;
 	bootloader_status.reboot_started_at = 0;
-	bootloader_status.led_flicker_state.config = 1;
+	bootloader_status.hotplug_time = 0;
+	bootloader_status.led_flicker_state.config  = LED_FLICKER_CONFIG_STATUS;
+	bootloader_status.led_flicker_state.counter = 0;
+	bootloader_status.led_flicker_state.start   = 0;
 	bootloader_status.firmware_handle_message_func = handle_message;
 
 	bootloader_firmware_entry(&bootloader_functions, &bootloader_status);

@@ -70,7 +70,7 @@
 #define DCO1_CAL_SRC_NONE 0
 #define DCO1_CAL_SRC_EXT  1
 #ifndef DCO1_CAL_SRC
-#define DCO1_CAL_SRC DCO1_CAL_SRC_EXT
+#define DCO1_CAL_SRC DCO1_CAL_SRC_NONE
 #endif
 
 // Prescaler 1000 and syn preload 3000 = 16MHz external reference

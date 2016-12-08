@@ -190,8 +190,10 @@ void SystemCoreClockSetup(void) {
 
 	SystemCoreClockUpdate();
 
+#if UC_SERIES == XMC14
 #if DCO1_CAL_SRC == DCO1_CAL_SRC_EXT
 	XMC_SCU_CLOCK_EnableDCO1ExtRefCalibration(XMC_SCU_CLOCK_SYNC_CLKSRC_OSCHP, EXT_REF_PRESCALER, EXT_REF_SYN_PRELOAD);
+#endif
 #endif
 }
 

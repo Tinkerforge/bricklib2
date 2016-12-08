@@ -23,11 +23,9 @@
 
 #include "bricklib2/hal/system_timer/system_timer.h"
 
-static CommunicationCallbackListNode communication_callback_list_nodes[COMMUNICATION_CALLBACK_HANDLER_NUM] = {
+static communication_callback_handler_t communication_callbacks[COMMUNICATION_CALLBACK_HANDLER_NUM] = {
 	COMMUNICATION_CALLBACK_LIST_INIT
 };
-
-static CommunicationCallbackListNode *communication_callback_list_start = &communication_callback_list_nodes[0];
 
 void communication_callback_tick(void) {
 	static uint32_t last_tick = 0;
@@ -37,68 +35,20 @@ void communication_callback_tick(void) {
 	}
 	last_tick = system_timer_get_ms();
 
-	// Start with start node
-	CommunicationCallbackListNode *current = communication_callback_list_start;
-
-	// Here we save the first node that was moved to the end.
-	// We stop as soon as we see this node. If we don't move any nodes
-	// we stop as soon as we see NULL, which is correct
-	CommunicationCallbackListNode *end_of_orig_list = NULL;
-
-	do {
-		// Save next of current node
-		CommunicationCallbackListNode *next = current->next;
-
-		if(current->handler()) {
-			// If the callback handler did send a message, we try to
-			// move the handler to the end of the list
-
-			// If we are the start node, the next node will be the start node
-			// from now on
-			if(communication_callback_list_start == current) {
-				communication_callback_list_start = next;
-				next->prev = NULL;
+	uint32_t cb_index = 0;
+	for(uint32_t _ = 0; _ < COMMUNICATION_CALLBACK_HANDLER_NUM; _++) {
+		if(communication_callbacks[cb_index]()) {
+			communication_callback_handler_t current = communication_callbacks[cb_index];
+			for(uint32_t i = cb_index; i < COMMUNICATION_CALLBACK_HANDLER_NUM-1; i++) {
+				communication_callbacks[i] = communication_callbacks[i+1];
 			}
-
-			// Find the end of the whole list
-			CommunicationCallbackListNode *end = current;
-			while(end->next != NULL) {
-				end = end->next;
-			}
-
-			// If we already are at the end, there is nothing to do
-			if(end != current) {
-				// If we didn't move anything to the end before, the current node
-				// will be the end of the outer loop
-				if(end_of_orig_list == NULL) {
-					end_of_orig_list = current;
-				}
-
-				// Otherwise we put the current node at the end
-				end->next = current;
-
-				// If we had a prev node, we have to update the next node of it
-				if(current->prev != NULL) {
-					current->prev->next = current->next;
-				}
-
-				// Update the next and prev node of the current node (now end node)
-				current->next = NULL;
-				current->prev = end;
-			}
+			communication_callbacks[COMMUNICATION_CALLBACK_HANDLER_NUM-1] = current;
+		} else {
+			cb_index++;
 		}
-
-		current = next;
-
-	} while(current != end_of_orig_list);
+	}
 }
 
 void communication_callback_init(void) {
-	for(uint32_t i = 0; i < COMMUNICATION_CALLBACK_HANDLER_NUM-1; i++) {
-		communication_callback_list_nodes[i].next = &communication_callback_list_nodes[i+1];
-		communication_callback_list_nodes[i+1].prev = &communication_callback_list_nodes[i];
-	}
 
-	communication_callback_list_nodes[0].prev = NULL;
-	communication_callback_list_nodes[COMMUNICATION_CALLBACK_HANDLER_NUM-1].next = NULL;
 }

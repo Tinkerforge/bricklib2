@@ -26,12 +26,6 @@
 
 typedef bool (*communication_callback_handler_t)(void);
 
-typedef struct CommunicationCallbackListNode_ {
-	struct CommunicationCallbackListNode_ *next;
-	struct CommunicationCallbackListNode_ *prev;
-	communication_callback_handler_t handler;
-} CommunicationCallbackListNode;
-
 void communication_callback_tick(void);
 void communication_callback_init(void);
 

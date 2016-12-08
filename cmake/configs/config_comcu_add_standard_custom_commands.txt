@@ -34,8 +34,18 @@ ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
 
 ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
                    POST_BUILD 
+                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../../brickletboot_xmc/software/
+                   COMMAND rm -rf build/)
+                   
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD 
+                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../../brickletboot_xmc/software/
+                   COMMAND ./generate_makefile)
+                   
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD 
                    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../../brickletboot_xmc/software/build
-                   COMMAND make clean && make)
+                   COMMAND make)
 
 ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
                    POST_BUILD
@@ -65,9 +75,19 @@ ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
                    COMMAND cp ${PROJECT_SOURCE_DIR}/cmake_config_custom.txt ${PROJECT_SOURCE_DIR}/../../bootstrapper_xmc/software/)
 
 ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
-                   POST_BUILD
+                   POST_BUILD 
+                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../../bootstrapper_xmc/software/
+                   COMMAND rm -rf build/)
+                   
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD 
+                   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../../bootstrapper_xmc/software/
+                   COMMAND ./generate_makefile)
+                   
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD 
                    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}/../../bootstrapper_xmc/software/build
-                   COMMAND make clean && make)
+                   COMMAND make)
 
 ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
                    POST_BUILD

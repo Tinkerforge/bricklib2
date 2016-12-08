@@ -57,6 +57,7 @@ void communication_callback_tick(void) {
 			// from now on
 			if(communication_callback_list_start == current) {
 				communication_callback_list_start = next;
+				next->prev = NULL;
 			}
 
 			// Find the end of the whole list

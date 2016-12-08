@@ -65,7 +65,8 @@
  *   <o0.31>      do not move CLK_VAL1 to SCU_CLKCR[0..19]
  * </h>
  *****************************************************************************/
-#define CLKVAL1_SSW 0x00041800
+#define CLKVAL1_SSW 0x40400 /* Use DIV 1 */
+#define WAIT_ASBSL_SSW 0x1  /* use smallest timeout possible */
 
 /*****************************************************************************
  *  <h> CLK_VAL2 Configuration
@@ -126,8 +127,8 @@ __Vectors:
     .long   HardFault_Handler           /* Hard Fault Handler           */
     .long   CLKVAL1_SSW                 /* Reserved                     */
     .long   CLKVAL2_SSW                 /* Reserved                     */
+    .long   WAIT_ASBSL_SSW              /* Reserved                     */
 #ifdef RETAIN_VECTOR_TABLE
-    .long   0                           /* Reserved                     */
     .long   0                           /* Reserved                     */
     .long   0                           /* Reserved                     */
     .long   0                           /* Reserved                     */

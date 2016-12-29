@@ -170,6 +170,17 @@ SECTIONS
     __ram_code_load = LOADADDR (.ram_code);
     __ram_code_size = __ram_code_end - __ram_code_start;
     
+    /* Put magic number at the very end of regular flash, so we know we only have to
+       write data up to here into flash (and the firmware version, device identifier etc at the end) */
+    .end_of_regular_firmware_magic_number : AT(DataLoadAddr + __data_size + __ram_code_size)
+    {
+        . = ALIGN(4);
+        KEEP(*(.end_of_regular_firmware_magic_number))
+        . = ALIGN(4);
+    } > FLASH
+
+    . = ALIGN(4);
+
     /* BSS section */
     .bss (NOLOAD) :
     {

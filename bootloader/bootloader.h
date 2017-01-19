@@ -138,6 +138,14 @@ typedef struct {
 #ifdef BOOTLOADER_FUNCTION_AEABI_UIDIVMOD
 	uint64_t (*__aeabi_uidivmod)(unsigned int a, unsigned int b);
 #endif
+
+#ifdef BOOTLOADER_FUNCTION_READ_EEPROM_PAGE
+	void (*read_eeprom_page)(const uint32_t page_num, uint32_t *data);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_WRITE_EEPROM_PAGE
+	bool (*write_eeprom_page)(const uint32_t page_num, uint32_t *data);
+#endif
 } BootloaderFunctions;
 
 typedef void (*bootloader_firmware_entry_func_t)(BootloaderFunctions *bf, BootloaderStatus *bs);
@@ -218,6 +226,14 @@ void bootloader_tinydma_descriptor_init(DmacDescriptor* descriptor, TinyDmaDescr
 
 #ifdef BOOTLOADER_FUNCTION_TINYDMA_CHANNEL_INIT
 void bootloader_tinydma_channel_init(const uint8_t channel_id, TinyDmaChannelConfig *config);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_READ_EEPROM_PAGE
+void read_eeprom_page(const uint32_t page_num, uint32_t *data);
+#endif
+
+#ifdef BOOTLOADER_FUNCTION_WRITE_EEPROM_PAGE
+bool write_eeprom_page(const uint32_t page_num, uint32_t *data);
 #endif
 
 #endif

@@ -46,7 +46,17 @@
 #endif
 
 static inline void uartbb_wait_1bit(uint32_t start) {
-    while((((48000 - SysTick->VAL) - start) % 48000) < UARTBB_BIT_TIME);
+  while(true) {
+    int32_t current = 48000 - SysTick->VAL;
+    int32_t result = current - start;
+    if(result < 0) {
+      result += 48000;
+    }
+
+    if(result >= UARTBB_BIT_TIME) {
+      break;
+    }
+  }
 }
 
 void uartbb_init(void) {
@@ -98,8 +108,10 @@ void uartbb_tx(uint8_t value) {
 #elif defined(__XMC1__)
 #endif
 
-    uint32_t start;
-    uint8_t bit_count = 8;
+  uint16_t value16 = 0 | (value << 1) | 1 << 9;
+
+  uint32_t start;
+  uint8_t bit_count = 10;
 
 #if defined(__SAM0__)
 	cpu_irq_disable();
@@ -107,48 +119,34 @@ void uartbb_tx(uint8_t value) {
 	__disable_irq();
 #endif
 
-    start = 48000 - SysTick->VAL;
-#if defined(__SAM0__)
-   	port->OUTCLR.reg = (1 << UARTBB_TX_PIN);
-#elif defined(__XMC1__)
-	XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
-#endif
-   	uartbb_wait_1bit(start);
+  start = 48000 - SysTick->VAL;
 
-    do {
-        if(value & 1) {
+  do {
+    if(value16 & 1) {
 #if defined(__SAM0__)
-        	port->OUTSET.reg = (1 << UARTBB_TX_PIN);
+      port->OUTSET.reg = (1 << UARTBB_TX_PIN);
 #elif defined(__XMC1__)
 	XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
 #endif
-        } else {
+    } else {
 #if defined(__SAM0__)
-        	port->OUTCLR.reg = (1 << UARTBB_TX_PIN);
+      port->OUTCLR.reg = (1 << UARTBB_TX_PIN);
 #elif defined(__XMC1__)
-	XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
+      XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 #endif
-        }
-        start += UARTBB_BIT_TIME;
-        uartbb_wait_1bit(start);
-
-        value >>= 1;
-    } while (--bit_count);
-
-#if defined(__SAM0__)
-    port->OUTSET.reg = (1 << UARTBB_TX_PIN);
-	cpu_irq_enable();
-#elif defined(__XMC1__)
-	XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
-	__enable_irq();
-#endif
-
-	// Wait for at least 30 bits (3 chars) here
-    for(uint8_t i = 0; i < 30; i++) {
-		start += UARTBB_BIT_TIME;
-		uartbb_wait_1bit(start);
     }
 
+    uartbb_wait_1bit(start);
+    start += UARTBB_BIT_TIME;
+
+    value16 >>= 1;
+  } while (--bit_count);
+
+#if defined(__SAM0__)
+	cpu_irq_enable();
+#elif defined(__XMC1__)
+	__enable_irq();
+#endif
 }
 
 void uartbb_puts(const char *str) {
@@ -177,4 +175,8 @@ void uartbb_putu(const uint32_t value) {
 		uartbb_tx(str[i]);
 		i++;
 	}
+}
+
+void uartbb_putnl(void) {
+  uartbb_puts("\n\r");
 }

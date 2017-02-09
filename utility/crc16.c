@@ -19,9 +19,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#include <string.h>
+
 #include "crc16.h"
 
-uint16_t crc16(uint8_t *buffer, uint32_t length) {
+void crc16(uint8_t *buffer, uint32_t length, uint8_t *checksum) {
   uint16_t crc = 0xFFFF;
 
   for(uint32_t position = 0; position < length; position++) {
@@ -38,5 +40,5 @@ uint16_t crc16(uint8_t *buffer, uint32_t length) {
     }
   }
 
-  return crc;
+  memcpy(checksum, &crc, 2);
 }

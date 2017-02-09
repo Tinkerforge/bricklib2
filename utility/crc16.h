@@ -24,6 +24,6 @@
 
 #include <stdint.h>
 
-uint16_t crc16(uint8_t *buffer, uint32_t length);
+void crc16(uint8_t *buffer, uint32_t length, uint8_t *checksum);
 
 #endif

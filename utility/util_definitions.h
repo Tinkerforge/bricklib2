@@ -38,4 +38,23 @@
 #define SCALE(val_a, min_a, max_a, min_b, max_b) \
 	(((((val_a) - (min_a))*((max_b) - (min_b)))/((max_a) - (min_a))) + (min_b))
 
+#ifndef HTONS
+	#define HTONS(x) ( ((x) << 8) | (((x) >> 8) & 0xFF) )
+#endif
+
+#ifndef NTOHS
+	#define NTOHS(x) HTONS(x)
+#endif
+
+#ifndef HTONL
+	#define HTONL(x) ( ((x) << 24 & 0xFF000000UL) | \
+	                   ((x) << 8 & 0x00FF0000UL) | \
+	                   ((x) >> 8 & 0x0000FF00UL) | \
+	                   ((x) >> 24 & 0x000000FFUL) )
+#endif
+
+#ifndef NTOHL
+	#define NTOHL(x) HTONL(x)
+#endif
+
 #endif

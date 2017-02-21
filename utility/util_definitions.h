@@ -1,5 +1,6 @@
 /* bricklib2
  * Copyright (C) 2010-2016 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2017 Ishraq Ibne Ashraf <ishraq@tinkerforge.com>
  *
  * util_definitions.h: General useful macros
  *
@@ -39,7 +40,7 @@
 	(((((val_a) - (min_a))*((max_b) - (min_b)))/((max_a) - (min_a))) + (min_b))
 
 #ifndef HTONS
-	#define HTONS(x) ( ((x) << 8) | (((x) >> 8) & 0xFF) )
+	#define HTONS(x) ( ((x & 0xFF) << 8) | (((x) >> 8) & 0xFF) )
 #endif
 
 #ifndef NTOHS

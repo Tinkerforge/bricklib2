@@ -50,18 +50,19 @@ typedef struct {
 	DmacDescriptor *write_back_section;
 	DmacDescriptor descriptor_tx;
 	struct spi_module spi_module;
-#elif defined(__XMC1__)
-	uint8_t buffer_send_index;
 #endif
 
-	uint8_t buffer_send_length;
 	uint16_t buffer_send_ack_timeout; // uint16 for testing, can be uint8 later on
 	uint8_t current_sequence_number;
 	uint8_t last_sequence_number_seen;
 	uint32_t last_send_started;
 
 	uint8_t buffer_recv[SPITFP_RECEIVE_BUFFER_SIZE];
+	uint8_t buffer_recv_tmp[TFP_MESSAGE_MAX_LENGTH + SPITFP_PROTOCOL_OVERHEAD*2];
+	uint8_t buffer_recv_tmp_length;
 	uint8_t buffer_send[TFP_MESSAGE_MAX_LENGTH + SPITFP_PROTOCOL_OVERHEAD*2]; // *2 for send message overhead and additional ACK
+	uint8_t *buffer_send_pointer;
+	uint8_t *buffer_send_pointer_end;
 	Ringbuffer ringbuffer_recv;
 } SPITFP;
 

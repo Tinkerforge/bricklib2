@@ -1,5 +1,6 @@
 /* bricklib2
  * Copyright (C) 2017 Ishraq Ibne Ashraf <ishraq@tinkerforge.com>
+ * Copyright (C) 2017 Olaf Lüke <olaf@tinkerforge.com>
  *
  * crc16.h: Implementation of CRC16 checksum calculation
  *
@@ -22,8 +23,16 @@
 #ifndef CRC16_H
 #define CRC16_H
 
+#include "configs/config.h"
+
 #include <stdint.h>
 
-void crc16(uint8_t *buffer, uint32_t length, uint8_t *checksum);
+#ifdef CRC16_USE_MODBUS
+uint16_t crc16_modbus(uint8_t *buffer, uint32_t length);
+#endif
+
+#ifdef CRC16_USE_CCITT
+uint16_t crc16_ccitt(uint8_t *buffer, uint32_t length);
+#endif
 
 #endif

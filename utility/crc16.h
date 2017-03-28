@@ -32,7 +32,8 @@ uint16_t crc16_modbus(uint8_t *buffer, uint32_t length);
 #endif
 
 #ifdef CRC16_USE_CCITT
-uint16_t crc16_ccitt(uint8_t *buffer, uint32_t length);
+uint16_t crc16_ccitt_8in(uint8_t *buffer, uint32_t length);
+uint16_t crc16_ccitt_16in(uint16_t *buffer, uint32_t length);
 #endif
 
 #endif

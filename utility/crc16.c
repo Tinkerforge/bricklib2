@@ -109,12 +109,24 @@ static const uint16_t crc16_ccitt_table[] = {
 	0x6E17, 0x7E36, 0x4E55, 0x5E74, 0x2E93, 0x3EB2, 0x0ED1, 0x1EF0
 };
 
-uint16_t crc16_ccitt(uint8_t *buffer, uint32_t length) {
+uint16_t crc16_ccitt_8in(uint8_t *buffer, uint32_t length) {
     uint16_t crc = 0;
 
     while(length--) {
         uint8_t value = *buffer++;
-        crc = ((crc << 8) ^  crc16_ccitt_table[((crc >> 8) ^ value) & 255]);
+        crc = ((crc << 8) ^  crc16_ccitt_table[((crc >> 8) ^ value) & 0xFF]);
+    }
+
+    return crc;
+}
+
+uint16_t crc16_ccitt_16in(uint16_t *buffer, uint32_t length) {
+    uint16_t crc = 0;
+
+    while(length--) {
+        uint16_t value = *buffer++;
+        crc = ((crc << 8) ^  crc16_ccitt_table[((crc >> 8) ^ (value >> 8))   & 0xFF]);
+        crc = ((crc << 8) ^  crc16_ccitt_table[((crc >> 8) ^ (value & 0xFF)) & 0xFF]);
     }
 
     return crc;

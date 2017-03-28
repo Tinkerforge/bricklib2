@@ -45,18 +45,25 @@
 #define UARTBB_BIT_TIME 1250 // 48000000/38400 perfect
 #endif
 
-static inline void uartbb_wait_1bit(uint32_t start) {
-  while(true) {
-    int32_t current = 48000 - SysTick->VAL;
-    int32_t result = current - start;
-    if(result < 0) {
-      result += 48000;
-    }
+#if UC_SERIES == XMC14
+#define UARTBB_COUNT_TO_IN_1MS 48000
+#else
+#define UARTBB_COUNT_TO_IN_1MS 32000
+#endif
 
-    if(result >= UARTBB_BIT_TIME) {
-      break;
-    }
-  }
+
+static inline void uartbb_wait_1bit(uint32_t start) {
+	while(true) {
+		int32_t current = UARTBB_COUNT_TO_IN_1MS - SysTick->VAL;
+		int32_t result = current - start;
+		if(result < 0) {
+			result += UARTBB_COUNT_TO_IN_1MS;
+		}
+
+		if(result >= UARTBB_BIT_TIME) {
+			break;
+		}
+	}
 }
 
 void uartbb_init(void) {
@@ -119,7 +126,7 @@ void uartbb_tx(uint8_t value) {
 	__disable_irq();
 #endif
 
-  start = 48000 - SysTick->VAL;
+  start = UARTBB_COUNT_TO_IN_1MS - SysTick->VAL;
 
   do {
     if(value16 & 1) {

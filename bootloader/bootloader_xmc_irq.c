@@ -57,6 +57,9 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spi
 				buffer_send_pointer_end = buffer_send_pointer_start;
 			}
 			XMC_USIC_CH_TXFIFO_DisableEvent(SPITFP_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+			XMC_USIC_CH_TXFIFO_ClearEvent(SPITFP_USIC, USIC_CH_TRBSCR_CSTBI_Msk);
+			NVIC_ClearPendingIRQ(SPITFP_IRQ_TX);
+
 			break;
 		}
 		buffer_send_pointer++;

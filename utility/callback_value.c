@@ -65,7 +65,7 @@ BootloaderHandleMessageResponse set_callback_value_callback_configuration(const 
 		callback_value->threshold_max = CALLBACK_VALUE_MAX;
 	} else if(data->option == '>') {
 		callback_value->threshold_option = 'o';
-		callback_value->threshold_min = -CALLBACK_VALUE_MIN;
+		callback_value->threshold_min = CALLBACK_VALUE_MIN;
 		callback_value->threshold_max = data->min;
 	} else {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;

@@ -33,6 +33,7 @@
 #define LED_FLICKER_CONFIG_EXTERNAL     4
 
 #define LED_FLICKER_STATUS_COUNTER_MAX  40 // flicker for every 40 packets
+#define LED_FLICKER_STATUS_ONTIME_MIN   35 // flicker off for 35ms
 #define LED_FLICKER_STATUS_OFFTIME_MAX  35 // flicker off for 35ms
 
 #define LED_FLICKER_HEARTBEAT_DURATION  1000 // heartbeat once per second

@@ -25,12 +25,13 @@
 
 void led_flicker_tick(LEDFlickerState *led_flicker_state, uint32_t current_time, XMC_GPIO_PORT_t *const port, const uint8_t pin) {
 	if(led_flicker_state->config == LED_FLICKER_CONFIG_STATUS) {
-		if(led_flicker_state->start > 0) {
+		if(XMC_GPIO_GetInput(port, pin)) {
 			if((current_time - led_flicker_state->start) >= LED_FLICKER_STATUS_OFFTIME_MAX) {
 				XMC_GPIO_SetOutputLow(port, pin);
-				led_flicker_state->start = 0;
+				led_flicker_state->start = current_time;
+				led_flicker_state->counter = 0;
 			}
-		} else if(led_flicker_state->counter > LED_FLICKER_STATUS_COUNTER_MAX) {
+		} else if((led_flicker_state->counter > LED_FLICKER_STATUS_COUNTER_MAX) && (current_time - led_flicker_state->start) >= LED_FLICKER_STATUS_ONTIME_MIN) {
 			XMC_GPIO_SetOutputHigh(port, pin);
 			led_flicker_state->start = current_time;
 			led_flicker_state->counter = 0;

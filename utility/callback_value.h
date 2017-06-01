@@ -46,7 +46,7 @@ typedef int8_t callback_value_t;
 #define CALLBACK_VALUE_MAX INT8_MAX
 #elif CALLBACK_VALUE_TYPE == CALLBACK_VALUE_TYPE_UINT8
 typedef uint8_t callback_value_t;
-#define CALLBACK_VALUE_MIN UINT8_MIN
+#define CALLBACK_VALUE_MIN 0
 #define CALLBACK_VALUE_MAX UINT8_MAX
 #elif CALLBACK_VALUE_TYPE == CALLBACK_VALUE_TYPE_INT16
 typedef int16_t callback_value_t;
@@ -54,7 +54,7 @@ typedef int16_t callback_value_t;
 #define CALLBACK_VALUE_MAX INT16_MAX
 #elif CALLBACK_VALUE_TYPE == CALLBACK_VALUE_TYPE_UINT16
 typedef uint16_t callback_value_t;
-#define CALLBACK_VALUE_MIN UINT16_MIN
+#define CALLBACK_VALUE_MIN 0
 #define CALLBACK_VALUE_MAX UINT16_MAX
 #elif CALLBACK_VALUE_TYPE == CALLBACK_VALUE_TYPE_INT32
 typedef int32_t callback_value_t;
@@ -62,7 +62,7 @@ typedef int32_t callback_value_t;
 #define CALLBACK_VALUE_MAX INT32_MAX
 #elif CALLBACK_VALUE_TYPE == CALLBACK_VALUE_TYPE_UINT32
 typedef uint32_t callback_value_t;
-#define CALLBACK_VALUE_MIN UINT32_MIN
+#define CALLBACK_VALUE_MIN 0
 #define CALLBACK_VALUE_MAX UINT32_MAX
 #endif
 

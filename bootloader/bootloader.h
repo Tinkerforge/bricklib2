@@ -229,11 +229,17 @@ void bootloader_tinydma_channel_init(const uint8_t channel_id, TinyDmaChannelCon
 #endif
 
 #ifdef BOOTLOADER_FUNCTION_READ_EEPROM_PAGE
-void read_eeprom_page(const uint32_t page_num, uint32_t *data);
+#ifndef EEPROM_PAGE_SIZE
+#define EEPROM_PAGE_SIZE 256
+#endif
+void bootloader_read_eeprom_page(const uint32_t page_num, uint32_t *data);
 #endif
 
 #ifdef BOOTLOADER_FUNCTION_WRITE_EEPROM_PAGE
-bool write_eeprom_page(const uint32_t page_num, uint32_t *data);
+#ifndef EEPROM_PAGE_SIZE
+#define EEPROM_PAGE_SIZE 256
+#endif
+bool bootloader_write_eeprom_page(const uint32_t page_num, uint32_t *data);
 #endif
 
 #endif

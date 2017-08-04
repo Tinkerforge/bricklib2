@@ -31,5 +31,6 @@ void uartbb_puts(const char *str);
 void uartbb_puti(const int32_t value);
 void uartbb_putu(const uint32_t value);
 void uartbb_putnl(void);
+void uartbb_printf(char const *fmt, ...);
 
 #endif

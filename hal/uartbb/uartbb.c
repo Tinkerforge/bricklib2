@@ -29,6 +29,7 @@
 #endif
 
 #include <stdlib.h>
+#include <stdarg.h>
 
 #ifndef UARTBB_TX_PIN
 #define UARTBB_TX_PIN 17
@@ -194,4 +195,66 @@ void uartbb_putu(const uint32_t value) {
 
 void uartbb_putnl(void) {
 	uartbb_puts("\n\r");
+}
+
+// Very minimalistic printf: No padding, no l-modifier or similar, no float
+void uartbb_printf(char const *fmt, ...) {
+    va_list va;
+    va_start(va, fmt);
+
+	char buffer[32];
+	char character;
+
+	while((character = *(fmt++))) {
+		if(character != '%') {
+			uartbb_tx(character);
+		} else {
+			character = *(fmt++);
+			switch(character) {
+				case '\0': {
+					return;
+				}
+
+				case 'u': {
+					uint32_t value = va_arg(va, uint32_t);
+
+					utoa(value, buffer, 10);
+					uartbb_puts(buffer);
+					break;
+				}
+
+				case 'd': {
+					uint32_t value = va_arg(va, uint32_t);
+
+					itoa(value, buffer, 10);
+					uartbb_puts(buffer);
+					break;
+				}
+
+				case 'x': {
+					uint32_t value = va_arg(va, uint32_t);
+
+					itoa(value, buffer, 16);
+					uartbb_puts(buffer);
+					break;
+				}
+
+				case 'c' : {
+					uartbb_tx((char)(va_arg(va, int)));
+					break;
+				}
+
+				case 's' : {
+					uartbb_puts(va_arg(va, char*));
+					break;
+				}
+
+				default:
+					uartbb_tx(character);
+					break;
+			}
+		}
+	}
+
+    va_end(va);
 }

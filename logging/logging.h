@@ -24,6 +24,7 @@
 
 #include "configs/config_logging.h"
 #include <stdio.h>
+#include <string.h>
 
 #define LOGGING_DEBUG    0
 #define LOGGING_INFO     1
@@ -42,6 +43,13 @@
 #define sdlog_printf(...) {}
 #endif
 
+#ifdef LOGGING_UARTBB
+#include "bricklib2/hal/uartbb/uartbb.h"
+#define platform_printf uartbb_printf
+#else
+#define platform_printf printf
+#endif
+
 void logging_init(void);
 
 #ifdef COMPILE_FOR_RELEASE
@@ -52,14 +60,22 @@ void logging_init(void);
 #else
 #define LOGGING_PRINT(...) \
 	do{ \
-		printf(__VA_ARGS__); \
+		platform_printf(__VA_ARGS__); \
 		sdlog_printf(__VA_ARGS__); \
 	} while(0)
 #endif
 
+#ifdef LOGGING_USE_BASENAME
+#define LOGGING_BASENAME(X) strrchr(X, '/') + 1
+#else
+#define LOGGING_BASENAME(X) X
+#endif
+
 #ifdef LOGGING_HAVE_SYSTEM_TIME
 #include LOGGING_SYSTEM_TIME_HEADER
+#ifndef LOGGING_TIMESTAMP_FORMAT
 #define LOGGING_TIMESTAMP_FORMAT "%lu "
+#endif
 #define LOGGING_TIMESTAMP_VALUE LOGGING_SYSTEM_TIME_FUNCTION(),
 #else
 #define LOGGING_TIMESTAMP_FORMAT ""
@@ -70,15 +86,15 @@ void logging_init(void);
 #define logd(str,  ...) {}
 #define logwohd(str,  ...) {}
 #elif LOGGING_LEVEL <= LOGGING_DEBUG
-#define logd(str,  ...) do{ printf("<" LOGGING_TIMESTAMP_FORMAT "D %s:%d> " str, LOGGING_TIMESTAMP_VALUE __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
-#define logwohd(str,  ...) do{ printf(str, ##__VA_ARGS__); }while(0)
+#define logd(str,  ...) do{ LOGGING_PRINT("<" LOGGING_TIMESTAMP_FORMAT "D %s:%d> " str, LOGGING_TIMESTAMP_VALUE LOGGING_BASENAME(__FILE__), __LINE__, ##__VA_ARGS__); }while(0)
+#define logwohd(str,  ...) do{ LOGGING_PRINT(str, ##__VA_ARGS__); }while(0)
 #else
 #define logd(str,  ...) {}
 #define logwohd(str,  ...) {}
 #endif
 
 #if LOGGING_LEVEL <= LOGGING_INFO
-#define logi(str,  ...) do{ LOGGING_PRINT("<" LOGGING_TIMESTAMP_FORMAT "I %s:%d> " str, LOGGING_TIMESTAMP_VALUE __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
+#define logi(str,  ...) do{ LOGGING_PRINT("<" LOGGING_TIMESTAMP_FORMAT "I %s:%d> " str, LOGGING_TIMESTAMP_VALUE LOGGING_BASENAME(__FILE__), __LINE__, ##__VA_ARGS__); }while(0)
 #define logwohi(str,  ...) do{ LOGGING_PRINT(str, ##__VA_ARGS__); }while(0)
 #else
 #define logi(str,  ...) {}
@@ -86,7 +102,7 @@ void logging_init(void);
 #endif
 
 #if LOGGING_LEVEL <= LOGGING_WARNING
-#define logw(str,  ...) do{ LOGGING_PRINT("<" LOGGING_TIMESTAMP_FORMAT "W %s:%d> " str, LOGGING_TIMESTAMP_VALUE __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
+#define logw(str,  ...) do{ LOGGING_PRINT("<" LOGGING_TIMESTAMP_FORMAT "W %s:%d> " str, LOGGING_TIMESTAMP_VALUE LOGGING_BASENAME(__FILE__), __LINE__, ##__VA_ARGS__); }while(0)
 #define logwohw(str,  ...) do{ LOGGING_PRINT(str, ##__VA_ARGS__); }while(0)
 #else
 #define logw(str,  ...) {}
@@ -94,7 +110,7 @@ void logging_init(void);
 #endif
 
 #if LOGGING_LEVEL <= LOGGING_ERROR
-#define loge(str,  ...) do{ LOGGING_PRINT("<" LOGGING_TIMESTAMP_FORMAT "E %s:%d> " str, LOGGING_TIMESTAMP_VALUE __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
+#define loge(str,  ...) do{ LOGGING_PRINT("<" LOGGING_TIMESTAMP_FORMAT "E %s:%d> " str, LOGGING_TIMESTAMP_VALUE LOGGING_BASENAME(__FILE__), __LINE__, ##__VA_ARGS__); }while(0)
 #define logwohe(str,  ...) do{ LOGGING_PRINT(str, ##__VA_ARGS__); }while(0)
 #else
 #define loge(str,  ...) {}
@@ -102,7 +118,7 @@ void logging_init(void);
 #endif
 
 #if LOGGING_LEVEL <= LOGGING_FATAL
-#define logf(str,  ...) do{ LOGGING_PRINT("<" LOGGING_TIMESTAMP_FORMAT "F %s:%d> " str, LOGGING_TIMESTAMP_VALUE __FILE__, __LINE__, ##__VA_ARGS__); }while(0)
+#define logf(str,  ...) do{ LOGGING_PRINT("<" LOGGING_TIMESTAMP_FORMAT "F %s:%d> " str, LOGGING_TIMESTAMP_VALUE LOGGING_BASENAME(__FILE__), __LINE__, ##__VA_ARGS__); }while(0)
 #define logwohf(str,  ...) do{ LOGGING_PRINT(str, ##__VA_ARGS__); }while(0)
 #else
 #define logf(str,  ...) {}

@@ -22,6 +22,10 @@
 #include "logging.h"
 #include "configs/config_logging.h"
 
+#ifdef LOGGING_UARTBB
+#include "bricklib2/hal/uartbb/uartbb.h"
+#endif
+
 #ifdef LOGGING_SERIAL
 #include "usart.h"
 #include "stdio_serial.h"
@@ -33,6 +37,10 @@ static struct usart_module logging_usart_instance;
 #endif
 
 void logging_init(void) {
+#ifdef LOGGING_UARTBB
+	uartbb_init();
+#endif
+
 #ifdef LOGGING_SERIAL
 	struct usart_config config_usart;
 	usart_get_config_defaults(&config_usart);

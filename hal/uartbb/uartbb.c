@@ -193,5 +193,5 @@ void uartbb_putu(const uint32_t value) {
 }
 
 void uartbb_putnl(void) {
-  uartbb_puts("\n\r");
+	uartbb_puts("\n\r");
 }

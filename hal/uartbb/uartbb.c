@@ -156,6 +156,14 @@ void uartbb_tx(uint8_t value) {
 #endif
 }
 
+void uartbb_putarru8(const char *name, const uint8_t *data, const uint32_t length) {
+	uartbb_puts(name); uartbb_puts(": ");
+	for(uint32_t i = 0; i < length; i++) {
+		uartbb_putu(data[i]); uartbb_puts(", ");
+	}
+	uartbb_putnl();
+}
+
 void uartbb_puts(const char *str) {
 	uint32_t i = 0;
 	while(str[i] != '\0') {

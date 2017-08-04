@@ -109,7 +109,7 @@ void uartbb_init(void) {
 #endif
 }
 
-void uartbb_tx(uint8_t value) {
+void uartbb_tx(const uint8_t value) {
 #if defined(__SAM0__)
 	PortGroup *const port = &PORT->Group[0];
 #elif defined(__XMC1__)

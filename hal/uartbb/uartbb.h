@@ -25,7 +25,7 @@
 #include <stdint.h>
 
 void uartbb_init(void);
-void uartbb_tx(uint8_t value);
+void uartbb_tx(const uint8_t value);
 void uartbb_putarru8(const char *name, const uint8_t *data, const uint32_t length);
 void uartbb_puts(const char *str);
 void uartbb_puti(const int32_t value);

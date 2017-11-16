@@ -223,6 +223,14 @@ void uartbb_printf(char const *fmt, ...) {
 					break;
 				}
 
+				case 'b': {
+					uint32_t value = va_arg(va, uint32_t);
+
+					utoa(value, buffer, 2);
+					uartbb_puts(buffer);
+					break;
+				}
+
 				case 'd': {
 					uint32_t value = va_arg(va, uint32_t);
 

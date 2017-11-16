@@ -41,9 +41,17 @@
 //#define UARTBB_BIT_TIME 5000 // 48000000/9600 perfect
 //#define UARTBB_BIT_TIME 833 // 8000000/9600 rounded
 
+//#define UARTBB_BIT_TIME 320
 //#define UARTBB_BIT_TIME 278 // 32000000/115200 rounded
 //#define UARTBB_BIT_TIME 833 // 32000000/38400 rounded
-#define UARTBB_BIT_TIME 1250 // 48000000/38400 perfect
+//#define UARTBB_BIT_TIME 1250 // 48000000/38400 perfect
+
+// Differentiate between XMC1400 and XMC1100/XMC1300
+#ifdef OSCHP_FREQUENCY
+#define UARTBB_BIT_TIME 417 // 48000000/115200 rounded
+#else
+#define UARTBB_BIT_TIME 278 // 32000000/115200 rounded
+#endif
 #endif
 
 #if UC_SERIES == XMC14

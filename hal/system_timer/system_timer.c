@@ -25,8 +25,15 @@
 
 static volatile uint32_t system_timer_tick;
 
+#ifdef SYSTEM_TIMER_CALLBACK_ENABLED
+void system_timer_callback();
+#endif
+
 void SysTick_Handler(void) {
 	system_timer_tick++;
+#ifdef SYSTEM_TIMER_CALLBACK_ENABLED
+	system_timer_callback();
+#endif
 }
 
 void system_timer_init(const uint32_t main_clock_frequency, const uint32_t system_timer_frequency) {

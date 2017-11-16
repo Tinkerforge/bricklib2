@@ -45,12 +45,9 @@ static void coop_task_default_return_from_task(void) {
 	while(true);
 }
 
-extern uint32_t count;
-
 void coop_task_sleep_ms(const uint32_t sleep) {
 	const uint32_t time = system_timer_get_ms();
 	while(!system_timer_is_time_elapsed_ms(time, sleep)) {
-		count++;
 		coop_task_yield();
 	}
 }

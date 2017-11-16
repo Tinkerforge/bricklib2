@@ -140,5 +140,6 @@ void logging_init(void);
 #endif
 
 void log_array_u8(const uint8_t *arr, const int32_t length, const bool end_of_line);
+void log_array_u16(const uint16_t *arr, const int32_t length, const bool end_of_line);
 
 #endif

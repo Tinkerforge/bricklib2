@@ -75,3 +75,17 @@ void log_array_u8(const uint8_t *arr, const int32_t length, const bool end_of_li
 		LOGGING_PRINT("\n\r");
 	}
 }
+
+void log_array_u16(const uint16_t *arr, const int32_t length, const bool end_of_line) {
+	LOGGING_PRINT("[");
+	for(int32_t i = 0; i < length-1; i++) {
+		LOGGING_PRINT("%d, ", arr[i]);
+	}
+	if(length > 0) {
+		LOGGING_PRINT("%d", arr[length-1]);
+	}
+	LOGGING_PRINT("]");
+	if(end_of_line) {
+		LOGGING_PRINT("\n\r");
+	}
+}

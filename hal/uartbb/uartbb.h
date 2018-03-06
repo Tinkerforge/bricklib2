@@ -1,7 +1,7 @@
 /* bricklib2
  * Copyright (C) 2016 Olaf Lüke <olaf@tinkerforge.com>
  *
- * uartbb.h: Small driver for bit-banged uart
+ * uartbb.h: Small driver for bit-banged UART
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

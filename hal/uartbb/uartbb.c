@@ -1,7 +1,8 @@
 /* bricklib2
  * Copyright (C) 2016 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2018 Matthias Bolte <matthias@tinkerforge.com>
  *
- * uartbb.c: Small driver for bit-banged uart
+ * uartbb.c: Small driver for bit-banged UART
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,6 +27,10 @@
 #include "port.h"
 #elif defined(__XMC1__)
 #include "xmc_gpio.h"
+#endif
+
+#ifdef UARTBB_PRINTF_ADVANCED
+#include "bricklib2/utility/util_definitions.h"
 #endif
 
 #include <stdlib.h>
@@ -181,6 +186,53 @@ void uartbb_puts(const char *str) {
 	}
 }
 
+#ifdef UARTBB_PRINTF_ADVANCED
+
+void uartbb_puts_advanced(const char *str, const uint32_t zero_padding, const uint32_t grouping) {
+	uint32_t i;
+	uint32_t k = grouping + 1;
+
+	if(zero_padding > 0) {
+		uint32_t str_length = strlen(str);
+		uint32_t padding_length = str_length < zero_padding ? zero_padding - str_length : 0;
+
+		if(grouping > 0) {
+			k -= grouping - (MAX(str_length, zero_padding) % grouping);
+
+			if(k <= 1) {
+				k = grouping + 1;
+			}
+		}
+
+		for(i = 0; i < padding_length; i++) {
+			if(grouping > 0 && --k == 0) {
+				k = grouping;
+				uartbb_tx('_');
+			}
+
+			uartbb_tx('0');
+		}
+
+	} else if(grouping > 0) {
+		k -= grouping - (strlen(str) % grouping);
+
+		if(k <= 1) {
+			k = grouping + 1;
+		}
+	}
+
+	for(i = 0; str[i] != '\0'; ++i) {
+		if(grouping > 0 && --k == 0) {
+			k = grouping;
+			uartbb_tx('_');
+		}
+
+		uartbb_tx(str[i]);
+	}
+}
+
+#endif
+
 void uartbb_puti(const int32_t value) {
 	char str[16] = {'\0'};
 	itoa(value, str, 10);
@@ -205,19 +257,48 @@ void uartbb_putnl(void) {
 	uartbb_puts("\n\r");
 }
 
-// Very minimalistic printf: No padding, no l-modifier or similar, no float
+// Very minimalistic printf: optional zero-padding and grouping, but no l-modifier or similar and no float
 void uartbb_printf(char const *fmt, ...) {
-    va_list va;
-    va_start(va, fmt);
+	va_list va;
+	va_start(va, fmt);
 
 	char buffer[32];
 	char character;
+#ifdef UARTBB_PRINTF_ADVANCED
+	uint32_t zero_padding;
+	uint32_t grouping;
+#endif
 
 	while((character = *(fmt++))) {
 		if(character != '%') {
 			uartbb_tx(character);
 		} else {
 			character = *(fmt++);
+
+#ifdef UARTBB_PRINTF_ADVANCED
+			zero_padding = 0;
+
+			if(character == '0') {
+				character = *(fmt++);
+
+				while(character >= '0' && character <= '9') {
+					zero_padding = zero_padding * 10 + (character - '0');
+					character = *(fmt++);
+				}
+			}
+
+			grouping = 0;
+
+			if(character == '_') {
+				character = *(fmt++);
+
+				while(character >= '0' && character <= '9') {
+					grouping = grouping * 10 + (character - '0');
+					character = *(fmt++);
+				}
+			}
+#endif
+
 			switch(character) {
 				case '\0': {
 					return;
@@ -227,7 +308,11 @@ void uartbb_printf(char const *fmt, ...) {
 					uint32_t value = va_arg(va, uint32_t);
 
 					utoa(value, buffer, 10);
+#ifdef UARTBB_PRINTF_ADVANCED
+					uartbb_puts_advanced(buffer, zero_padding, grouping);
+#else
 					uartbb_puts(buffer);
+#endif
 					break;
 				}
 
@@ -235,7 +320,11 @@ void uartbb_printf(char const *fmt, ...) {
 					uint32_t value = va_arg(va, uint32_t);
 
 					utoa(value, buffer, 2);
+#ifdef UARTBB_PRINTF_ADVANCED
+					uartbb_puts_advanced(buffer, zero_padding, grouping);
+#else
 					uartbb_puts(buffer);
+#endif
 					break;
 				}
 
@@ -243,7 +332,11 @@ void uartbb_printf(char const *fmt, ...) {
 					uint32_t value = va_arg(va, uint32_t);
 
 					itoa(value, buffer, 10);
+#ifdef UARTBB_PRINTF_ADVANCED
+					uartbb_puts_advanced(buffer, zero_padding, grouping);
+#else
 					uartbb_puts(buffer);
+#endif
 					break;
 				}
 
@@ -251,7 +344,11 @@ void uartbb_printf(char const *fmt, ...) {
 					uint32_t value = va_arg(va, uint32_t);
 
 					itoa(value, buffer, 16);
+#ifdef UARTBB_PRINTF_ADVANCED
+					uartbb_puts_advanced(buffer, zero_padding, grouping);
+#else
 					uartbb_puts(buffer);
+#endif
 					break;
 				}
 

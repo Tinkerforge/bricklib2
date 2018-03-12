@@ -52,19 +52,14 @@
 //#define UARTBB_BIT_TIME 1250 // 48000000/38400 perfect
 
 // Differentiate between XMC1400 and XMC1100/XMC1300
-#ifdef OSCHP_FREQUENCY
-#define UARTBB_BIT_TIME 417 // 48000000/115200 rounded
-#else
-#define UARTBB_BIT_TIME 278 // 32000000/115200 rounded
-#endif
-#endif
-
 #if UC_SERIES == XMC14
+#define UARTBB_BIT_TIME 417 // 48000000/115200 rounded
 #define UARTBB_COUNT_TO_IN_1MS 48000
 #else
+#define UARTBB_BIT_TIME 278 // 32000000/115200 rounded
 #define UARTBB_COUNT_TO_IN_1MS 32000
 #endif
-
+#endif
 
 static inline void uartbb_wait_1bit(uint32_t start) {
 	while(true) {

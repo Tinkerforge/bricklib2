@@ -1,8 +1,8 @@
 /* bricklib2
  * Copyright (C) 2016 Olaf Lüke <olaf@tinkerforge.com>
  *
- * startup_samd09.c: Startup functions for xmc1
- *                   System entry is done in startup_XMC1100.S
+ * startup_xmc1.c: Startup functions for xmc1
+ *                 System entry is done in startup_XMC1100.S
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public

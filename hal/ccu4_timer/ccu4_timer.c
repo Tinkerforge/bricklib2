@@ -59,7 +59,7 @@ void ccu4_timer_init(const XMC_CCU4_SLICE_PRESCALER_t prescaler, const uint16_t 
 
 	XMC_CCU4_SLICE_COMPARE_CONFIG_t timer123_config = {
 		.timer_mode          = XMC_CCU4_SLICE_TIMER_COUNT_MODE_EA,
-		.monoshot            = XMC_CCU4_SLICE_TIMER_REPEAT_MODE_SINGLE,
+		.monoshot            = XMC_CCU4_SLICE_TIMER_REPEAT_MODE_REPEAT,
 		.shadow_xfer_clear   = false,
 		.dither_timer_period = false,
 		.dither_duty_cycle   = false,

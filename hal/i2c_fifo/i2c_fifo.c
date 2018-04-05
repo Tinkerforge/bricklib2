@@ -119,7 +119,7 @@ void i2c_fifo_read_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t
 	i2c_fifo->i2c->IN[0] = XMC_I2C_CH_TDF_MASTER_STOP;
 }
 
-void i2c_fifo_read_direct(I2CFifo *i2c_fifo, const uint32_t length) {
+void i2c_fifo_read_direct(I2CFifo *i2c_fifo, const uint32_t length, const bool restart) {
 	if(!i2c_fifo_ready_or_idle(i2c_fifo)) {
 		i2c_fifo->state = I2C_FIFO_STATE_READ_DIRECT_ERROR;
 		return;
@@ -129,7 +129,7 @@ void i2c_fifo_read_direct(I2CFifo *i2c_fifo, const uint32_t length) {
 	i2c_fifo->expected_fifo_level = length;
 
 	// I2C Master start
-	i2c_fifo->i2c->IN[0] = XMC_I2C_CH_TDF_MASTER_START | XMC_I2C_CH_CMD_READ | (i2c_fifo->address << 1) ;
+	i2c_fifo->i2c->IN[0] = (restart ? XMC_I2C_CH_TDF_MASTER_RESTART : XMC_I2C_CH_TDF_MASTER_START) | XMC_I2C_CH_CMD_READ | (i2c_fifo->address << 1) ;
 
 	// I2C Master send ACK/NACK
 	if(length != 0) {
@@ -176,7 +176,6 @@ void i2c_fifo_init(I2CFifo *i2c_fifo) {
 
 	WR_REG(i2c_fifo->i2c->FMR, USIC_CH_FMR_MTDV_Msk, USIC_CH_FMR_MTDV_Pos, 2);
 
-
 	const XMC_I2C_CH_CONFIG_t master_channel_config = {
 		.baudrate = i2c_fifo->baudrate,
 		.address  = 0
@@ -210,11 +209,11 @@ I2CFifoState i2c_fifo_next_state(I2CFifo *i2c_fifo) {
 	switch(i2c_fifo->state) {
 		case I2C_FIFO_STATE_WRITE_REGISTER:
 		case I2C_FIFO_STATE_WRITE_DIRECT: {
-			const uint32_t status = XMC_I2C_CH_GetStatusFlag(i2c_fifo->i2c);
-			if(status & (XMC_I2C_CH_STATUS_FLAG_NACK_RECEIVED |
-			             XMC_I2C_CH_STATUS_FLAG_ARBITRATION_LOST |
-			             XMC_I2C_CH_STATUS_FLAG_ERROR |
-			             XMC_I2C_CH_STATUS_FLAG_WRONG_TDF_CODE_FOUND)) {
+			i2c_fifo->i2c_status = XMC_I2C_CH_GetStatusFlag(i2c_fifo->i2c);
+			if(i2c_fifo->i2c_status & (XMC_I2C_CH_STATUS_FLAG_NACK_RECEIVED |
+			                           XMC_I2C_CH_STATUS_FLAG_ARBITRATION_LOST |
+			                           XMC_I2C_CH_STATUS_FLAG_ERROR |
+			                           XMC_I2C_CH_STATUS_FLAG_WRONG_TDF_CODE_FOUND)) {
 				XMC_I2C_CH_ClearStatusFlag(i2c_fifo->i2c, 0xFFFFFFFF);
 				i2c_fifo->state |= I2C_FIFO_STATE_ERROR;
 			} else if(XMC_USIC_CH_TXFIFO_IsEmpty(i2c_fifo->i2c)) {
@@ -226,11 +225,11 @@ I2CFifoState i2c_fifo_next_state(I2CFifo *i2c_fifo) {
 
 		case I2C_FIFO_STATE_READ_REGISTER:
 		case I2C_FIFO_STATE_READ_DIRECT: {
-			const uint32_t status = XMC_I2C_CH_GetStatusFlag(i2c_fifo->i2c);
-			if(status & (XMC_I2C_CH_STATUS_FLAG_NACK_RECEIVED |
-			             XMC_I2C_CH_STATUS_FLAG_ARBITRATION_LOST |
-			             XMC_I2C_CH_STATUS_FLAG_ERROR |
-			             XMC_I2C_CH_STATUS_FLAG_WRONG_TDF_CODE_FOUND)) {
+			i2c_fifo->i2c_status = XMC_I2C_CH_GetStatusFlag(i2c_fifo->i2c);
+			if(i2c_fifo->i2c_status & (XMC_I2C_CH_STATUS_FLAG_NACK_RECEIVED |
+			                           XMC_I2C_CH_STATUS_FLAG_ARBITRATION_LOST |
+			                           XMC_I2C_CH_STATUS_FLAG_ERROR |
+			                           XMC_I2C_CH_STATUS_FLAG_WRONG_TDF_CODE_FOUND)) {
 				XMC_I2C_CH_ClearStatusFlag(i2c_fifo->i2c, 0xFFFFFFFF);
 				i2c_fifo->expected_fifo_level = 0;
 				i2c_fifo->state |= I2C_FIFO_STATE_ERROR;

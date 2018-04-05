@@ -83,13 +83,14 @@ typedef struct {
 
 	uint8_t expected_fifo_level;
 	I2CFifoState state;
+	uint32_t i2c_status;
 } I2CFifo;
 
 
 void i2c_fifo_write_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint16_t length, const uint8_t *data, const bool send_stop);
 void i2c_fifo_write_direct(I2CFifo *i2c_fifo, const uint16_t length, const uint8_t *data, const bool send_stop);
 void i2c_fifo_read_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t length);
-void i2c_fifo_read_direct(I2CFifo *i2c_fifo, const uint32_t length);
+void i2c_fifo_read_direct(I2CFifo *i2c_fifo, const uint32_t length, const bool restart);
 uint8_t i2c_fifo_read_fifo(I2CFifo *i2c_fifo, uint8_t *buffer, const uint8_t buffer_length);
 void i2c_fifo_init(I2CFifo *i2c_fifo);
 I2CFifoState i2c_fifo_next_state(I2CFifo *i2c_fifo);

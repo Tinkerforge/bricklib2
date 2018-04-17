@@ -64,3 +64,24 @@ void system_timer_sleep_ms(const uint32_t sleep) {
 	const uint32_t time = system_timer_get_ms();
 	while(!system_timer_is_time_elapsed_ms(time, sleep));
 }
+
+// Only works for sleep values <= 500
+// TODO: Make sure this supports sleep times > 500 by counting overflows
+//       and/or using system_timer_sleep_ms additionally.
+void system_timer_sleep_us(const uint32_t sleep) {
+	// We have about 5us function overhead, remove them from the sleep time
+	const uint32_t sleep_value = sleep <= 5 ? SysTick->LOAD/1000 : (sleep-5)*(SysTick->LOAD/1000);
+	const uint16_t start_value = (SysTick->LOAD - SysTick->VAL);
+	while(true) {
+		const uint16_t new_value = (SysTick->LOAD - SysTick->VAL);
+		if(new_value > start_value) {
+			if((new_value - start_value) > sleep_value) {
+				return;
+			}
+		} else {
+			if((new_value + SysTick->LOAD - start_value) > sleep_value) {
+				return;
+			}
+		}
+	}
+}

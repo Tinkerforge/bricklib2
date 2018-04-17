@@ -29,7 +29,11 @@
 #include "configs/config.h"
 
 #ifndef I2C_FIFO_TIMEOUT
-#define I2C_FIFO_TIMEOUT 10
+#define I2C_FIFO_TIMEOUT 10 // in ms
+#endif
+
+#ifndef I2C_FIFO_CLEAR_SLEEP
+#define I2C_FIFO_CLEAR_SLEEP 10 // in us
 #endif
 
 typedef enum XMC_I2C_CH_TDF {
@@ -41,6 +45,41 @@ typedef enum XMC_I2C_CH_TDF {
 	XMC_I2C_CH_TDF_MASTER_RESTART      = 5 << 8,
 	XMC_I2C_CH_TDF_MASTER_STOP         = 6 << 8
 } XMC_I2C_CH_TDF_t;
+
+static void i2c_fifo_clear_bus_low(XMC_GPIO_PORT_t *port, uint8_t pin) {
+	XMC_GPIO_SetOutputLow(port, pin);
+	system_timer_sleep_us(I2C_FIFO_CLEAR_SLEEP);
+}
+
+static void i2c_fifo_clear_bus_high(XMC_GPIO_PORT_t *port, uint8_t pin) {
+	XMC_GPIO_SetOutputHigh(port, pin);
+	system_timer_sleep_us(I2C_FIFO_CLEAR_SLEEP);
+}
+
+static void __attribute__((optimize("-Os"))) i2c_fifo_clear_bus(XMC_GPIO_PORT_t *sda_port, uint8_t sda_pin, XMC_GPIO_PORT_t *scl_port, uint8_t scl_pin) {
+	const XMC_GPIO_CONFIG_t config_open_drain =  {
+		.mode         = XMC_GPIO_MODE_OUTPUT_OPEN_DRAIN,
+		.output_level = XMC_GPIO_OUTPUT_LEVEL_HIGH,
+	};
+	XMC_GPIO_Init(sda_port, sda_pin, &config_open_drain);
+	system_timer_sleep_us(I2C_FIFO_CLEAR_SLEEP);
+	XMC_GPIO_Init(scl_port, scl_pin, &config_open_drain);
+	system_timer_sleep_us(I2C_FIFO_CLEAR_SLEEP);
+
+	// Generate clock for 9 bits (maximum number of stuck bits)
+	for(uint8_t i = 0; i < 9; i++) {
+		i2c_fifo_clear_bus_low(scl_port, scl_pin);
+		i2c_fifo_clear_bus_high(scl_port, scl_pin);
+	}
+
+	// After all data is clocked trough, we generate a stop condition
+	i2c_fifo_clear_bus_high(sda_port, sda_pin);
+	i2c_fifo_clear_bus_high(scl_port, scl_pin);
+	i2c_fifo_clear_bus_low(sda_port, sda_pin);
+	i2c_fifo_clear_bus_low(scl_port, scl_pin);
+	i2c_fifo_clear_bus_high(scl_port, scl_pin);
+	i2c_fifo_clear_bus_high(sda_port, sda_pin);
+}
 
 static bool i2c_fifo_ready_or_idle(I2CFifo *i2c_fifo) {
 	return (i2c_fifo->state == I2C_FIFO_STATE_IDLE) || (i2c_fifo->state & I2C_FIFO_STATE_READY);
@@ -177,6 +216,12 @@ void i2c_fifo_init(I2CFifo *i2c_fifo) {
 	// this function as i2c reset
 
 	XMC_I2C_CH_Stop(i2c_fifo->i2c);
+
+	if(i2c_fifo->i2c_status == I2C_FIFO_STATUS_TIMEOUT) {
+		XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
+		i2c_fifo_clear_bus(i2c_fifo->sda_port, i2c_fifo->sda_pin, i2c_fifo->scl_port, i2c_fifo->scl_pin);
+		XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
+	}
 
 	const XMC_GPIO_CONFIG_t config_reset =  {
 		.mode             = XMC_GPIO_MODE_INPUT_PULL_UP,

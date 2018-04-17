@@ -25,6 +25,13 @@
 #include "xmc_gpio.h"
 #include "xmc_usic.h"
 
+#include "bricklib2/hal/system_timer/system_timer.h"
+#include "configs/config.h"
+
+#ifndef I2C_FIFO_TIMEOUT
+#define I2C_FIFO_TIMEOUT 10
+#endif
+
 typedef enum XMC_I2C_CH_TDF {
 	XMC_I2C_CH_TDF_MASTER_SEND         = 0,
 	XMC_I2C_CH_TDF_SLAVE_SEND          = 1 << 8,
@@ -45,6 +52,8 @@ void i2c_fifo_write_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint16_
 		i2c_fifo->state = I2C_FIFO_STATE_WRITE_REGISTER_ERROR;
 		return;
 	}
+
+	i2c_fifo->last_activity = system_timer_get_ms();
 
 	// If we don't send stop we will read directly afterwards, so the state will change to read
 	if(send_stop) {
@@ -73,6 +82,8 @@ void i2c_fifo_write_direct(I2CFifo *i2c_fifo, const uint16_t length, const uint8
 		return;
 	}
 
+	i2c_fifo->last_activity = system_timer_get_ms();
+
 	// If we don't send stop we will read directly afterwards, so the state will change to read
 	if(send_stop) {
 		i2c_fifo->state = I2C_FIFO_STATE_WRITE_DIRECT;
@@ -100,6 +111,8 @@ void i2c_fifo_read_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t
 		return;
 	}
 
+	i2c_fifo->last_activity = system_timer_get_ms();
+
 	i2c_fifo->state = I2C_FIFO_STATE_READ_REGISTER;
 	i2c_fifo->expected_fifo_level = length;
 
@@ -124,6 +137,8 @@ void i2c_fifo_read_direct(I2CFifo *i2c_fifo, const uint32_t length, const bool r
 		i2c_fifo->state = I2C_FIFO_STATE_READ_DIRECT_ERROR;
 		return;
 	}
+
+	i2c_fifo->last_activity = system_timer_get_ms();
 
 	i2c_fifo->state = I2C_FIFO_STATE_READ_DIRECT;
 	i2c_fifo->expected_fifo_level = length;
@@ -218,6 +233,9 @@ I2CFifoState i2c_fifo_next_state(I2CFifo *i2c_fifo) {
 				i2c_fifo->state |= I2C_FIFO_STATE_ERROR;
 			} else if(XMC_USIC_CH_TXFIFO_IsEmpty(i2c_fifo->i2c)) {
 				i2c_fifo->state |= I2C_FIFO_STATE_READY;
+			} else if(system_timer_is_time_elapsed_ms(i2c_fifo->last_activity, I2C_FIFO_TIMEOUT)) {
+				i2c_fifo->state |= I2C_FIFO_STATE_ERROR;
+				i2c_fifo->i2c_status = I2C_FIFO_STATUS_TIMEOUT;
 			}
 
 			break;
@@ -236,6 +254,9 @@ I2CFifoState i2c_fifo_next_state(I2CFifo *i2c_fifo) {
 			} else if(XMC_USIC_CH_RXFIFO_GetLevel(i2c_fifo->i2c) >= i2c_fifo->expected_fifo_level) {
 				i2c_fifo->expected_fifo_level = 0;
 				i2c_fifo->state |= I2C_FIFO_STATE_READY;
+			} else if(system_timer_is_time_elapsed_ms(i2c_fifo->last_activity, I2C_FIFO_TIMEOUT)) {
+				i2c_fifo->state |= I2C_FIFO_STATE_ERROR;
+				i2c_fifo->i2c_status = I2C_FIFO_STATUS_TIMEOUT;
 			}
 
 			break;

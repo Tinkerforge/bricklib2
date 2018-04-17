@@ -35,6 +35,8 @@
 #include "xmc_usic.h"
 #include "xmc_gpio.h"
 
+#define I2C_FIFO_STATUS_TIMEOUT 0xFFFFFFFF
+
 typedef enum {
 	I2C_FIFO_STATE_IDLE                 = 0,
 	I2C_FIFO_STATE_READY                = 1 << 6,
@@ -84,6 +86,8 @@ typedef struct {
 	uint8_t expected_fifo_level;
 	I2CFifoState state;
 	uint32_t i2c_status;
+
+	uint32_t last_activity;
 } I2CFifo;
 
 

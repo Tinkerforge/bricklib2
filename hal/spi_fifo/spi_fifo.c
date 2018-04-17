@@ -31,6 +31,12 @@
 
 #include "spi_fifo.h"
 
+#include "bricklib2/hal/system_timer/system_timer.h"
+
+#ifndef SPI_FIFO_TIMEOUT
+#define SPI_FIFO_TIMEOUT 10 // in ms
+#endif
+
 static bool spi_fifo_ready_or_idle(SPIFifo *spi_fifo) {
 	return (spi_fifo->state == SPI_FIFO_STATE_IDLE) || (spi_fifo->state & SPI_FIFO_STATE_READY);
 }
@@ -40,6 +46,8 @@ void spi_fifo_transceive(SPIFifo *spi_fifo,  const uint16_t length, const uint8_
 		spi_fifo->state = SPI_FIFO_STATE_TRANSCEIVE_ERROR;
 		return;
 	}
+
+	spi_fifo->last_activity = system_timer_get_ms();
 
 	XMC_SPI_CH_EnableSlaveSelect(spi_fifo->channel, spi_fifo->slave);
 
@@ -157,6 +165,9 @@ SPIFifoState spi_fifo_next_state(SPIFifo *spi_fifo) {
 		} else if(XMC_USIC_CH_RXFIFO_GetLevel(spi_fifo->channel) >= spi_fifo->expected_fifo_level) {
 			XMC_SPI_CH_DisableSlaveSelect(spi_fifo->channel);
 			spi_fifo->state = SPI_FIFO_STATE_TRANSCEIVE_READY;
+		} else if(system_timer_is_time_elapsed_ms(spi_fifo->last_activity, SPI_FIFO_TIMEOUT)) {
+			spi_fifo->state = SPI_FIFO_STATE_TRANSCEIVE_ERROR;
+			spi_fifo->spi_status = SPI_FIFO_STATUS_TIMEOUT;
 		}
 	}
 

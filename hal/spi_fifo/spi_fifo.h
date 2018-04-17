@@ -26,6 +26,8 @@
 #include "xmc_spi.h"
 #include "xmc_gpio.h"
 
+#define SPI_FIFO_STATUS_TIMEOUT 0xFFFFFFFF
+
 typedef enum {
 	SPI_FIFO_STATE_IDLE                 = 0,
 	SPI_FIFO_STATE_READY                = 1 << 6,
@@ -74,6 +76,8 @@ typedef struct {
 	uint8_t expected_fifo_level;
 	SPIFifoState state;
 	uint32_t spi_status;
+
+	uint32_t last_activity;
 } SPIFifo;
 
 // data_send and data_receive can be the same pointer

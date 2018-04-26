@@ -1,5 +1,6 @@
 /* bricklib2
  * Copyright (C) 2017 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2018 Ishraq Ibne Ashraf <ishraq@tinkerforge.com>
  *
  * callback_value.h: Helper functions for Bricklet communication
  *
@@ -27,7 +28,6 @@
 #include "bricklib2/protocols/tfp/tfp.h"
 #include "bricklib2/bootloader/bootloader.h"
 
-
 #define CALLBACK_VALUE_TYPE_INT8   0
 #define CALLBACK_VALUE_TYPE_UINT8  1
 #define CALLBACK_VALUE_TYPE_INT16  2
@@ -38,7 +38,6 @@
 #ifndef CALLBACK_VALUE_TYPE
 #define CALLBACK_VALUE_TYPE CALLBACK_VALUE_TYPE_INT16
 #endif
-
 
 #if CALLBACK_VALUE_TYPE == CALLBACK_VALUE_TYPE_INT8
 typedef int8_t callback_value_t;
@@ -68,8 +67,17 @@ typedef uint32_t callback_value_t;
 
 typedef callback_value_t (*CallbackValueGetter)(void);
 
+#ifdef ON_CHANNEL_COUNT
+	typedef callback_value_t (*OnChannelCallbackValueGetter)(uint8_t channel);
+#endif
+
 typedef struct {
 	CallbackValueGetter get_callback_value;
+
+	#ifdef ON_CHANNEL_COUNT
+		OnChannelCallbackValueGetter on_channel_get_callback_value;
+	#endif
+
 	callback_value_t value_last;
 
 	uint32_t period;
@@ -85,7 +93,6 @@ typedef struct {
 	char threshold_option_user;
 } CallbackValue;
 
-
 typedef struct {
 	TFPMessageHeader header;
 	uint32_t debounce;
@@ -99,7 +106,6 @@ typedef struct {
 	TFPMessageHeader header;
 	uint32_t debounce;
 } __attribute__((__packed__)) GetDebouncePeriod_Response;
-
 
 typedef struct {
 	TFPMessageHeader header;
@@ -137,7 +143,6 @@ typedef struct {
 	callback_value_t value;
 } __attribute__((__packed__)) CallbackValue_Callback;
 
-
 void callback_value_init(CallbackValue *callback_value, CallbackValueGetter callback_value_getter);
 
 BootloaderHandleMessageResponse set_debounce_period(const SetDebouncePeriod *data);
@@ -148,5 +153,49 @@ BootloaderHandleMessageResponse set_callback_value_callback_configuration(const 
 BootloaderHandleMessageResponse get_callback_value_callback_configuration(const GetCallbackValueCallbackConfiguration *data, GetCallbackValueCallbackConfiguration_Response *response, CallbackValue *callback_value);
 
 bool handle_callback_value_callback(CallbackValue *callback_value, const uint8_t fid);
+
+#ifdef ON_CHANNEL_COUNT
+	typedef struct {
+		TFPMessageHeader header;
+		uint8_t channel;
+	} __attribute__((__packed__)) OnChannelGetCallbackValue;
+
+	typedef struct {
+		TFPMessageHeader header;
+		uint32_t period;
+		bool value_has_to_change;
+		char option;
+		uint16_t min;
+		uint16_t max;
+		uint8_t channel;
+	} __attribute__((__packed__)) OnChannelSetCallbackValueCallbackConfiguration;
+
+	typedef struct {
+		TFPMessageHeader header;
+		uint8_t channel;
+	} __attribute__((__packed__)) OnChannelGetCallbackValueCallbackConfiguration;
+
+	typedef struct {
+		TFPMessageHeader header;
+		callback_value_t value;
+		uint8_t channel;
+	} __attribute__((__packed__)) OnChannelCallbackValue_Callback;
+
+	void on_channel_callback_value_init(CallbackValue *callback_value,
+	                                    OnChannelCallbackValueGetter callback_value_getter);
+
+	BootloaderHandleMessageResponse on_channel_get_callback_value(const OnChannelGetCallbackValue *data,
+	                                                              GetCallbackValue_Response *response,
+	                                                              CallbackValue *callback_value);
+
+	BootloaderHandleMessageResponse on_channel_set_callback_value_callback_configuration(const OnChannelSetCallbackValueCallbackConfiguration *data,
+	                                                                                    CallbackValue *callback_value);
+
+	BootloaderHandleMessageResponse on_channel_get_callback_value_callback_configuration(const OnChannelGetCallbackValueCallbackConfiguration *data,
+	                                                                                     GetCallbackValueCallbackConfiguration_Response *response,
+	                                                                                     CallbackValue *callback_value);
+
+	bool on_channel_handle_callback_value_callback(CallbackValue *callback_value, const uint8_t fid, const uint8_t channel);
+#endif
 
 #endif

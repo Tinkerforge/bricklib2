@@ -67,15 +67,15 @@ typedef uint32_t callback_value_t;
 
 typedef callback_value_t (*CallbackValueGetter)(void);
 
-#ifdef ON_CHANNEL_COUNT
+#ifdef CHANNEL_BASED
 	typedef callback_value_t (*OnChannelCallbackValueGetter)(uint8_t channel);
 #endif
 
 typedef struct {
 	CallbackValueGetter get_callback_value;
 
-	#ifdef ON_CHANNEL_COUNT
-		OnChannelCallbackValueGetter on_channel_get_callback_value;
+	#ifdef CHANNEL_BASED
+		OnChannelCallbackValueGetter channel_based_get_callback_value;
 	#endif
 
 	callback_value_t value_last;
@@ -154,7 +154,7 @@ BootloaderHandleMessageResponse get_callback_value_callback_configuration(const 
 
 bool handle_callback_value_callback(CallbackValue *callback_value, const uint8_t fid);
 
-#ifdef ON_CHANNEL_COUNT
+#ifdef CHANNEL_BASED
 	typedef struct {
 		TFPMessageHeader header;
 		uint8_t channel;
@@ -181,21 +181,21 @@ bool handle_callback_value_callback(CallbackValue *callback_value, const uint8_t
 		uint8_t channel;
 	} __attribute__((__packed__)) OnChannelCallbackValue_Callback;
 
-	void on_channel_callback_value_init(CallbackValue *callback_value,
-	                                    OnChannelCallbackValueGetter callback_value_getter);
+	void channel_based_callback_value_init(CallbackValue *callback_value,
+	                                       OnChannelCallbackValueGetter callback_value_getter);
 
-	BootloaderHandleMessageResponse on_channel_get_callback_value(const OnChannelGetCallbackValue *data,
-	                                                              GetCallbackValue_Response *response,
-	                                                              CallbackValue *callback_value);
+	BootloaderHandleMessageResponse channel_based_get_callback_value(const OnChannelGetCallbackValue *data,
+	                                                                 GetCallbackValue_Response *response,
+	                                                                 CallbackValue *callback_value);
 
-	BootloaderHandleMessageResponse on_channel_set_callback_value_callback_configuration(const OnChannelSetCallbackValueCallbackConfiguration *data,
-	                                                                                    CallbackValue *callback_value);
+	BootloaderHandleMessageResponse channel_based_set_callback_value_callback_configuration(const OnChannelSetCallbackValueCallbackConfiguration *data,
+	                                                                                        CallbackValue *callback_value);
 
-	BootloaderHandleMessageResponse on_channel_get_callback_value_callback_configuration(const OnChannelGetCallbackValueCallbackConfiguration *data,
-	                                                                                     GetCallbackValueCallbackConfiguration_Response *response,
-	                                                                                     CallbackValue *callback_value);
+	BootloaderHandleMessageResponse channel_based_get_callback_value_callback_configuration(const OnChannelGetCallbackValueCallbackConfiguration *data,
+	                                                                                        GetCallbackValueCallbackConfiguration_Response *response,
+	                                                                                        CallbackValue *callback_value);
 
-	bool on_channel_handle_callback_value_callback(CallbackValue *callback_value, const uint8_t fid, const uint8_t channel);
+	bool channel_based_handle_callback_value_callback(CallbackValue *callback_value, const uint8_t fid, const uint8_t channel);
 #endif
 
 #endif

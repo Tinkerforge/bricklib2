@@ -150,9 +150,9 @@ bool handle_callback_value_callback(CallbackValue *callback_value, const uint8_t
 	return false;
 }
 
-#ifdef ON_CHANNEL_COUNT
-	void on_channel_callback_value_init(CallbackValue *callback_value, OnChannelCallbackValueGetter callback_value_getter) {
-		callback_value->on_channel_get_callback_value = callback_value_getter;
+#ifdef CHANNEL_BASED
+	void channel_based_callback_value_init(CallbackValue *callback_value, OnChannelCallbackValueGetter callback_value_getter) {
+		callback_value->channel_based_get_callback_value = callback_value_getter;
 		callback_value->value_last                    = CALLBACK_VALUE_MAX;
 
 		callback_value->period                        = 0;
@@ -168,10 +168,10 @@ bool handle_callback_value_callback(CallbackValue *callback_value, const uint8_t
 		callback_value->threshold_option_user         = 'x';
 	}
 
-	BootloaderHandleMessageResponse on_channel_get_callback_value(const OnChannelGetCallbackValue *data,
-	                                                              GetCallbackValue_Response *response,
-	                                                              CallbackValue *callback_value) {
-		const callback_value_t value_current = callback_value->on_channel_get_callback_value(data->channel);
+	BootloaderHandleMessageResponse channel_based_get_callback_value(const OnChannelGetCallbackValue *data,
+	                                                                 GetCallbackValue_Response *response,
+	                                                                 CallbackValue *callback_value) {
+		const callback_value_t value_current = callback_value->channel_based_get_callback_value(data->channel);
 
 		response->header.length = sizeof(GetCallbackValue_Response);
 		response->value = value_current;
@@ -179,8 +179,8 @@ bool handle_callback_value_callback(CallbackValue *callback_value, const uint8_t
 		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 	}
 
-	BootloaderHandleMessageResponse on_channel_set_callback_value_callback_configuration(const OnChannelSetCallbackValueCallbackConfiguration *data,
-	                                                                                     CallbackValue *callback_value) {
+	BootloaderHandleMessageResponse channel_based_set_callback_value_callback_configuration(const OnChannelSetCallbackValueCallbackConfiguration *data,
+	                                                                                        CallbackValue *callback_value) {
 		if(data->option == 'o' || data->option == 'i' || data->option == 'x') {
 			callback_value->threshold_option = data->option;
 			callback_value->threshold_min = data->min;
@@ -211,9 +211,9 @@ bool handle_callback_value_callback(CallbackValue *callback_value, const uint8_t
 		return HANDLE_MESSAGE_RESPONSE_EMPTY;
 	}
 
-	BootloaderHandleMessageResponse on_channel_get_callback_value_callback_configuration(const OnChannelGetCallbackValueCallbackConfiguration *data,
-	                                                                                     GetCallbackValueCallbackConfiguration_Response *response,
-	                                                                                     CallbackValue *callback_value) {
+	BootloaderHandleMessageResponse channel_based_get_callback_value_callback_configuration(const OnChannelGetCallbackValueCallbackConfiguration *data,
+	                                                                                        GetCallbackValueCallbackConfiguration_Response *response,
+	                                                                                        CallbackValue *callback_value) {
 		response->header.length = sizeof(GetCallbackValueCallbackConfiguration_Response);
 		response->period = callback_value->period;
 		response->value_has_to_change = callback_value->value_has_to_change;
@@ -224,12 +224,12 @@ bool handle_callback_value_callback(CallbackValue *callback_value, const uint8_t
 		return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 	}
 
-	bool on_channel_handle_callback_value_callback(CallbackValue *callback_value, const uint8_t fid, const uint8_t channel) {
+	bool channel_based_handle_callback_value_callback(CallbackValue *callback_value, const uint8_t fid, const uint8_t channel) {
 		static bool is_buffered = false;
 		static OnChannelCallbackValue_Callback cb;
 
 		if(!is_buffered) {
-			const callback_value_t value_current = callback_value->on_channel_get_callback_value(channel);
+			const callback_value_t value_current = callback_value->channel_based_get_callback_value(channel);
 
 			tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(OnChannelCallbackValue_Callback), fid);
 

@@ -80,7 +80,7 @@ typedef uint32_t moving_average_sum_t;
 #endif
 
 typedef struct {
-	uint32_t length;
+	int32_t length;
 	uint32_t index;
 
 	moving_average_sum_t sum;

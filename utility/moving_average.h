@@ -1,5 +1,6 @@
 /* bricklib2
  * Copyright (C) 2017 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2018 Ishraq Ibne Ashraf <ishraq@tinkerforge.com>
  *
  * moving_average.h: Simple moving average implementation
  *
@@ -41,6 +42,8 @@
 #define MOVING_AVERAGE_TYPE_UINT16 3
 #define MOVING_AVERAGE_TYPE_INT32  4
 #define MOVING_AVERAGE_TYPE_UINT32 5
+#define MOVING_AVERAGE_TYPE_INT64  6
+#define MOVING_AVERAGE_TYPE_UINT64 7
 
 #ifndef MOVING_AVERAGE_TYPE
 #define MOVING_AVERAGE_TYPE MOVING_AVERAGE_TYPE_INT16
@@ -58,6 +61,11 @@ typedef uint16_t moving_average_t;
 typedef int32_t moving_average_t;
 #elif MOVING_AVERAGE_TYPE == MOVING_AVERAGE_TYPE_UINT32
 typedef uint32_t moving_average_t;
+#elif MOVING_AVERAGE_TYPE == MOVING_AVERAGE_TYPE_INT64
+typedef int64_t moving_average_t;
+#elif MOVING_AVERAGE_TYPE == MOVING_AVERAGE_TYPE_UINT64
+typedef uint64_t moving_average_t;
+
 #endif
 
 
@@ -77,6 +85,10 @@ typedef uint16_t moving_average_sum_t;
 typedef int32_t moving_average_sum_t;
 #elif MOVING_AVERAGE_SUM_TYPE == MOVING_AVERAGE_TYPE_UINT32
 typedef uint32_t moving_average_sum_t;
+#elif MOVING_AVERAGE_SUM_TYPE == MOVING_AVERAGE_TYPE_INT64
+typedef int64_t moving_average_sum_t;
+#elif MOVING_AVERAGE_SUM_TYPE == MOVING_AVERAGE_TYPE_UINT64
+typedef uint64_t moving_average_sum_t;
 #endif
 
 typedef struct {

@@ -35,6 +35,7 @@ typedef enum {
 	HANDLE_MESSAGE_RESPONSE_EMPTY = 1,
 	HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED = 2,
 	HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER = 3,
+	HANDLE_MESSAGE_RESPONSE_NONE = 4,
 } BootloaderHandleMessageResponse;
 
 typedef BootloaderHandleMessageResponse (* bootloader_firmware_handle_message_func_t)(const void *, void *);

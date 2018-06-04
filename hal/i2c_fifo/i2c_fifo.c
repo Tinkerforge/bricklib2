@@ -218,9 +218,7 @@ void i2c_fifo_init(I2CFifo *i2c_fifo) {
 	XMC_I2C_CH_Stop(i2c_fifo->i2c);
 
 	if(i2c_fifo->i2c_status == I2C_FIFO_STATUS_TIMEOUT) {
-		XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
 		i2c_fifo_clear_bus(i2c_fifo->sda_port, i2c_fifo->sda_pin, i2c_fifo->scl_port, i2c_fifo->scl_pin);
-		XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
 	}
 
 	const XMC_GPIO_CONFIG_t config_reset =  {

@@ -28,6 +28,11 @@ XMC_CCU4_SLICE_t *const slice[4] = {
 	CCU40_CC43,
 };
 
+// Changes period. This does not do shadow transfer, always call set_duty_cycle afterwards!
+void ccu4_pwm_set_period(const uint8_t ccu4_slice_number, const uint16_t period_value) {
+    XMC_CCU4_SLICE_SetTimerPeriodMatch(slice[ccu4_slice_number], period_value);
+}
+
 // Compare value is a value from 0 to period_value (^= 0 to 100% duty cycle)
 void ccu4_pwm_set_duty_cycle(const uint8_t ccu4_slice_number, const uint16_t compare_value) {
 	XMC_CCU4_SLICE_SetTimerCompareMatch(slice[ccu4_slice_number], compare_value);

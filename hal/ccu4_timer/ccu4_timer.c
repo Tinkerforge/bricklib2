@@ -23,6 +23,18 @@
 
 #include "xmc_ccu4.h"
 
+uint32_t ccu4_timer_get_value_32bit(void) {
+	uint16_t t1 = XMC_CCU4_SLICE_GetTimerValue(CCU40_CC41);
+	uint16_t t0 = XMC_CCU4_SLICE_GetTimerValue(CCU40_CC40);
+
+	while(t1 != XMC_CCU4_SLICE_GetTimerValue(CCU40_CC41)) {
+		t1 = XMC_CCU4_SLICE_GetTimerValue(CCU40_CC41);
+		t0 = XMC_CCU4_SLICE_GetTimerValue(CCU40_CC40);
+	}
+
+	return (((uint64_t)t1) << 16) | (((uint64_t)t0) << 0);
+}
+
 uint64_t ccu4_timer_get_value_64bit(void) {
 	uint16_t t3 = XMC_CCU4_SLICE_GetTimerValue(CCU40_CC43);
 	uint16_t t2 = XMC_CCU4_SLICE_GetTimerValue(CCU40_CC42);
@@ -39,6 +51,14 @@ uint64_t ccu4_timer_get_value_64bit(void) {
 	}
 
 	return (((uint64_t)t3) << 48) | (((uint64_t)t2) << 32) | (((uint64_t)t1) << 16) | (((uint64_t)t0) << 0);
+}
+
+bool ccu4_timer_is_time_elapsed_64bit(const uint64_t start_measurement, const uint64_t time_to_be_elapsed) {
+	return (uint64_t)(ccu4_timer_get_value_64bit() - start_measurement) >= time_to_be_elapsed;
+}
+
+bool ccu4_timer_is_time_elapsed_32bit(const uint32_t start_measurement, const uint32_t time_to_be_elapsed) {
+	return (uint32_t)(ccu4_timer_get_value_32bit() - start_measurement) >= time_to_be_elapsed;
 }
 
 void ccu4_timer_init(const XMC_CCU4_SLICE_PRESCALER_t prescaler, const uint16_t first_slice_period_match) {

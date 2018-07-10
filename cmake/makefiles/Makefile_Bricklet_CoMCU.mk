@@ -14,7 +14,6 @@ BOOTSTRAPPER_XMC_BRICKLIB2_PATH := $(realpath $(BOOTSTRAPPER_XMC_PATH)/software/
 all $(MAKECMDGOALS): check cmake make
 
 check:
-	@echo "$(XMCLIB_PATH), $(BRICKLETBOOT_XMC_PATH), $(BRICKLETBOOT_XMC_BRICKLIB2_PATH), $(BOOTSTRAPPER_XMC_PATH), $(BOOTSTRAPPER_XMC_BRICKLIB2_PATH)"
 # First we check if the BUILDING_IN_DOCKER temporary file is there and delete it.
 # It might still be there if a PC crashed mid build or similar
 	@if [ -f "$(DOCKER_LOCK_FILE)" ]; then \

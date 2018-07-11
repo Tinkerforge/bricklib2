@@ -55,7 +55,7 @@ check:
 			-v $(BRICKLETBOOT_XMC_BRICKLIB2_PATH)/:$(BRICKLETBOOT_XMC_BRICKLIB2_PATH)/: -u $$(id -u):$$(id -g) \
 			-v $(BOOTSTRAPPER_XMC_PATH)/:$(BOOTSTRAPPER_XMC_PATH)/: -u $$(id -u):$$(id -g) \
 			-v $(BOOTSTRAPPER_XMC_BRICKLIB2_PATH)/:$(BOOTSTRAPPER_XMC_BRICKLIB2_PATH)/: -u $$(id -u):$$(id -g) \
-			-ti tinkerforge/build_environment_c /bin/bash \
+			tinkerforge/build_environment_c /bin/bash \
 			-c "cd $(ROOT_DIR) ; make $(MAKECMDGOALS)"; \
 			touch $(DOCKER_LOCK_FILE); \
 		else \

@@ -43,7 +43,7 @@ check:
 	fi
 # Then we check if xmclib is installed in bricklib2
 	@if [ ! -d "$(XMCLIB_PATH)" ]; then \
-		echo "Could not find xmclib n bricklib2. Please download xmclib from infineon and synlink it into the bricklib2/ folder."; \
+		echo "Could not find xmclib in bricklib2. Please download xmclib from infineon and symlink it into the bricklib2/ folder."; \
 		exit 1; \
 	fi
 # Then we check if docker is available and if the build_environment_c container

@@ -1,5 +1,5 @@
 DOCKER_LOCK_FILE                := $(ROOT_DIR)/DOCKER_LOCK
-XMCLIB_PATH                     := $(BRICKLIB2_PATH)/xmclib
+XMCLIB_PATH                     := $(realpath $(BRICKLIB2_PATH)/xmclib)
 BRICKLETBOOT_XMC_PATH           := $(ROOT_DIR)/../../brickletboot_xmc
 BRICKLETBOOT_XMC_BRICKLIB2_PATH := $(realpath $(BRICKLETBOOT_XMC_PATH)/software/src/bricklib2)
 BOOTSTRAPPER_XMC_PATH           := $(ROOT_DIR)/../../bootstrapper_xmc
@@ -39,6 +39,11 @@ check:
 	fi
 	@if [ ! -d "$(BOOTSTRAPPER_XMC_PATH)/software/src/bricklib2" ]; then \
 		echo "Could not find bricklib2 in bootstrapper. Please symlink bricklib2 into src/ folder of bootstrapper."; \
+		exit 1; \
+	fi
+# Then we check if xmclib is installed in bricklib2
+	@if [ ! -d "$(XMCLIB_PATH)" ]; then \
+		echo "Could not find xmclib n bricklib2. Please download xmclib from infineon and synlink it into the bricklib2/ folder."; \
 		exit 1; \
 	fi
 # Then we check if docker is available and if the build_environment_c container

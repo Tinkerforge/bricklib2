@@ -61,7 +61,7 @@ check:
 			-v $(BOOTSTRAPPER_XMC_PATH)/:$(BOOTSTRAPPER_XMC_PATH)/: -u $$(id -u):$$(id -g) \
 			-v $(BOOTSTRAPPER_XMC_BRICKLIB2_PATH)/:$(BOOTSTRAPPER_XMC_BRICKLIB2_PATH)/: -u $$(id -u):$$(id -g) \
 			tinkerforge/build_environment_c /bin/bash \
-			-c "cd $(ROOT_DIR) ; make $(MAKECMDGOALS)"; \
+			-c "cd $(ROOT_DIR) ; make $(MAKECMDGOALS)" && \
 			touch $(DOCKER_LOCK_FILE); \
 		else \
 			echo "No docker image found, using local toolchain."; \

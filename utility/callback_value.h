@@ -258,7 +258,7 @@ CALLBACK_VALUE_SUFFIX(get_callback_value_callback_configuration)(const CALLBACK_
 	response->value_has_to_change = callback_value->value_has_to_change;
 	response->option              = callback_value->threshold_option_user;
 	response->min                 = callback_value->threshold_min_user;
-	response->max                 = callback_value->threshold_min_user;
+	response->max                 = callback_value->threshold_max_user;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }

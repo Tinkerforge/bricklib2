@@ -66,20 +66,29 @@
 #define PCLK_CLOCK_SRC PCLK_CLOCK_SRC_2XMCLK
 #endif
 
-// DCO1 calibration selection: None or External clock
+// DCO1 calibration selection: None or External clock (16MHz) or RTC clock (32khz)
 #define DCO1_CAL_SRC_NONE 0
 #define DCO1_CAL_SRC_EXT  1
+#define DCO1_CAL_SRC_RTC  2
 #ifndef DCO1_CAL_SRC
 #define DCO1_CAL_SRC DCO1_CAL_SRC_NONE
 #endif
 
 // Prescaler 1000 and syn preload 3000 = 16MHz external reference
 #ifndef EXT_REF_PRESCALER
+#if DCO1_CAL_SRC == DCO1_CAL_SRC_RTC
+#define EXT_REF_PRESCALER 0x6
+#else
 #define EXT_REF_PRESCALER 1000
+#endif
 #endif
 
 #ifndef EXT_REF_SYN_PRELOAD
+#if DCO1_CAL_SRC == DCO1_CAL_SRC_RTC
+#define EXT_REF_SYN_PRELOAD 0x2256
+#else
 #define EXT_REF_SYN_PRELOAD 3000
+#endif
 #endif
 #endif
 
@@ -193,6 +202,8 @@ void SystemCoreClockSetup(void) {
 #if UC_SERIES == XMC14
 #if DCO1_CAL_SRC == DCO1_CAL_SRC_EXT
 	XMC_SCU_CLOCK_EnableDCO1ExtRefCalibration(XMC_SCU_CLOCK_SYNC_CLKSRC_OSCHP, EXT_REF_PRESCALER, EXT_REF_SYN_PRELOAD);
+#elif DCO1_CAL_SRC == DCO1_CAL_SRC_RTC
+	XMC_SCU_CLOCK_EnableDCO1ExtRefCalibration(XMC_SCU_CLOCK_SYNC_CLKSRC_OSCLP, EXT_REF_PRESCALER, EXT_REF_SYN_PRELOAD);
 #endif
 #endif
 }

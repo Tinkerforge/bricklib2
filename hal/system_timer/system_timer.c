@@ -29,7 +29,11 @@ static volatile uint32_t system_timer_tick;
 void system_timer_callback();
 #endif
 
-void SysTick_Handler(void) {
+void
+#ifdef SYSTEM_TIMER_IS_RAMFUNC
+__attribute__ ((section (".ram_code")))
+#endif
+SysTick_Handler(void) {
 	system_timer_tick++;
 #ifdef SYSTEM_TIMER_CALLBACK_ENABLED
 	system_timer_callback();
@@ -50,13 +54,21 @@ void system_timer_init(const uint32_t main_clock_frequency, const uint32_t syste
 	NVIC_EnableIRQ(SysTick_IRQn);
 }
 
-uint32_t system_timer_get_ms(void) {
+uint32_t
+#ifdef SYSTEM_TIMER_IS_RAMFUNC
+__attribute__ ((section (".ram_code")))
+#endif
+system_timer_get_ms(void) {
 	return system_timer_tick;
 }
 
 // This will work even with wrap-around up to UIN32_MAX/2 difference.
 // E.g.: end - start = 0x00000010 - 0xfffffff = 0x00000011 etc
-inline bool system_timer_is_time_elapsed_ms(const uint32_t start_measurement, const uint32_t time_to_be_elapsed) {
+inline bool
+#ifdef SYSTEM_TIMER_IS_RAMFUNC
+__attribute__ ((section (".ram_code")))
+#endif
+ system_timer_is_time_elapsed_ms(const uint32_t start_measurement, const uint32_t time_to_be_elapsed) {
 	return (uint32_t)(system_timer_get_ms() - start_measurement) >= time_to_be_elapsed;
 }
 

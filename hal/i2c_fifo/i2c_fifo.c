@@ -26,7 +26,7 @@
 #include "xmc_usic.h"
 
 #include "bricklib2/hal/system_timer/system_timer.h"
-#include "configs/config.h"
+#include "bricklib2/logging/logging.h"
 
 #ifndef I2C_FIFO_TIMEOUT
 #define I2C_FIFO_TIMEOUT 10 // in ms
@@ -312,3 +312,49 @@ I2CFifoState i2c_fifo_next_state(I2CFifo *i2c_fifo) {
 
 	return i2c_fifo->state;
 }
+
+
+
+#ifdef I2C_FIFO_COOP_ENABLE
+uint32_t i2c_fifo_coop_read_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t length, uint8_t *data) {
+	i2c_fifo_read_register(i2c_fifo, reg, length);
+
+	while(true) {
+		I2CFifoState state = i2c_fifo_next_state(i2c_fifo);
+		if(state & I2C_FIFO_STATE_ERROR) {
+			loge("I2C FIFO COOP I2C error %d (state %d)\n\r", i2c_fifo->i2c_status, state);
+			return i2c_fifo->i2c_status;
+		}
+		if(state != I2C_FIFO_STATE_READ_REGISTER_READY) {
+			coop_task_yield();
+			continue;
+		}
+
+		uint8_t length_read = i2c_fifo_read_fifo(i2c_fifo, data, length);
+		if(length_read != length) {
+			loge("I2C FIFO COOP unexpected I2C read length: %d vs %d\n\r", length_read, length);
+			return XMC_I2C_CH_STATUS_FLAG_DATA_LOST_INDICATION;
+		}
+
+		return 0;
+	}
+}
+
+uint32_t i2c_fifo_coop_write_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t length, const uint8_t *data, const bool send_stop) {
+	i2c_fifo_write_register(i2c_fifo, reg, length, data, send_stop);
+
+	while(true) {
+		I2CFifoState state = i2c_fifo_next_state(i2c_fifo);
+		if(state & I2C_FIFO_STATE_ERROR) {
+			loge("I2C FIFO COOP I2C error %d (state %d)\n\r", i2c_fifo->i2c_status, state);
+			return i2c_fifo->i2c_status;
+		}
+		if(state != I2C_FIFO_STATE_WRITE_REGISTER_READY) {
+			coop_task_yield();
+			continue;
+		}
+
+		return 0;
+	}
+}
+#endif

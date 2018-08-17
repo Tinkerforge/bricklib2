@@ -35,6 +35,12 @@
 #include "xmc_usic.h"
 #include "xmc_gpio.h"
 
+#include "configs/config.h"
+
+#ifdef I2C_FIFO_COOP_ENABLE
+#include "bricklib2/os/coop_task.h"
+#endif
+
 #define I2C_FIFO_STATUS_TIMEOUT 0xFFFFFFFF
 
 typedef enum {
@@ -99,5 +105,9 @@ uint8_t i2c_fifo_read_fifo(I2CFifo *i2c_fifo, uint8_t *buffer, const uint8_t buf
 void i2c_fifo_init(I2CFifo *i2c_fifo);
 I2CFifoState i2c_fifo_next_state(I2CFifo *i2c_fifo);
 
+#ifdef I2C_FIFO_COOP_ENABLE
+uint32_t i2c_fifo_coop_read_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t length, uint8_t *data);
+uint32_t i2c_fifo_coop_write_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t length, const uint8_t *data, const bool send_stop);
+#endif
 
 #endif

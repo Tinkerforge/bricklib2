@@ -1,5 +1,12 @@
 DOCKER_LOCK_FILE := "$(ROOT_DIR)/DOCKER_LOCK"
 ASFLIB_PATH      := $(realpath $(BRICKLIB2_PATH)/asf)
+INTERACTIVE      := $(shell [ -t 0 ] && echo 1)
+
+ifdef INTERACTIVE
+DOCKER_FLAGS     := -it
+else
+DOCKER_FLAGS     :=
+endif
 
 .PHONY: $(MAKECMDGOALS) check cmake make clean
 
@@ -31,7 +38,7 @@ check:
 	@if command -v docker >/dev/null 2>&1 ; then \
 		if [ $$(/usr/bin/docker images -q tinkerforge/build_environment_c) ]; then \
 			echo "Using docker image to build."; \
-			docker run \
+			docker run $(DOCKER_FLAGS) \
 			-v $(ROOT_DIR)/../:/$(ROOT_DIR)/../ -u $$(id -u):$$(id -g) \
 			-v $(BRICKLIB2_PATH)/:$(BRICKLIB2_PATH)/: -u $$(id -u):$$(id -g) \
 			-v $(ASFLIB_PATH)/:$(ASFLIB_PATH)/: -u $$(id -u):$$(id -g) \

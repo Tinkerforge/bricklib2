@@ -4,6 +4,13 @@ BRICKLETBOOT_XMC_PATH           := $(ROOT_DIR)/../../brickletboot_xmc
 BRICKLETBOOT_XMC_BRICKLIB2_PATH := $(realpath $(BRICKLETBOOT_XMC_PATH)/software/src/bricklib2)
 BOOTSTRAPPER_XMC_PATH           := $(ROOT_DIR)/../../bootstrapper_xmc
 BOOTSTRAPPER_XMC_BRICKLIB2_PATH := $(realpath $(BOOTSTRAPPER_XMC_PATH)/software/src/bricklib2)
+INTERACTIVE                     := $(shell [ -t 0 ] && echo 1)
+
+ifdef INTERACTIVE
+DOCKER_FLAGS                    := -it
+else
+DOCKER_FLAGS                    :=
+endif
 
 .PHONY: $(MAKECMDGOALS) check cmake make clean
 
@@ -52,7 +59,7 @@ check:
 	@if command -v docker >/dev/null 2>&1 ; then \
 		if [ $$(/usr/bin/docker images -q tinkerforge/build_environment_c) ]; then \
 			echo "Using docker image to build."; \
-			docker run \
+			docker run $(DOCKER_FLAGS) \
 			-v $(ROOT_DIR)/../:/$(ROOT_DIR)/../ -u $$(id -u):$$(id -g) \
 			-v $(BRICKLIB2_PATH)/:$(BRICKLIB2_PATH)/: -u $$(id -u):$$(id -g) \
 			-v $(XMCLIB_PATH)/:$(XMCLIB_PATH)/: -u $$(id -u):$$(id -g) \

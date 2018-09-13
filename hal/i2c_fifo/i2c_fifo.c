@@ -317,12 +317,23 @@ I2CFifoState i2c_fifo_next_state(I2CFifo *i2c_fifo) {
 
 #ifdef I2C_FIFO_COOP_ENABLE
 uint32_t i2c_fifo_coop_read_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t length, uint8_t *data) {
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+	static bool mutex = false;
+	if(mutex) {
+		return I2C_FIFO_STATUS_MUTEX;
+	}
+	mutex = true;
+#endif
+
 	i2c_fifo_read_register(i2c_fifo, reg, length);
 
 	while(true) {
 		I2CFifoState state = i2c_fifo_next_state(i2c_fifo);
 		if(state & I2C_FIFO_STATE_ERROR) {
 			loge("I2C FIFO COOP I2C error %d (state %d)\n\r", i2c_fifo->i2c_status, state);
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+			mutex = false;
+#endif
 			return i2c_fifo->i2c_status;
 		}
 		if(state != I2C_FIFO_STATE_READ_REGISTER_READY) {
@@ -333,20 +344,37 @@ uint32_t i2c_fifo_coop_read_register(I2CFifo *i2c_fifo, const uint8_t reg, const
 		uint8_t length_read = i2c_fifo_read_fifo(i2c_fifo, data, length);
 		if(length_read != length) {
 			loge("I2C FIFO COOP unexpected I2C read length: %d vs %d\n\r", length_read, length);
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+			mutex = false;
+#endif
 			return XMC_I2C_CH_STATUS_FLAG_DATA_LOST_INDICATION;
 		}
 
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+		mutex = false;
+#endif
 		return 0;
 	}
 }
 
 uint32_t i2c_fifo_coop_write_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t length, const uint8_t *data, const bool send_stop) {
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+	static bool mutex = false;
+	if(mutex) {
+		return I2C_FIFO_STATUS_MUTEX;
+	}
+	mutex = true;
+#endif
+
 	i2c_fifo_write_register(i2c_fifo, reg, length, data, send_stop);
 
 	while(true) {
 		I2CFifoState state = i2c_fifo_next_state(i2c_fifo);
 		if(state & I2C_FIFO_STATE_ERROR) {
 			loge("I2C FIFO COOP I2C error %d (state %d)\n\r", i2c_fifo->i2c_status, state);
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+			mutex = false;
+#endif
 			return i2c_fifo->i2c_status;
 		}
 		if(state != I2C_FIFO_STATE_WRITE_REGISTER_READY) {
@@ -354,6 +382,9 @@ uint32_t i2c_fifo_coop_write_register(I2CFifo *i2c_fifo, const uint8_t reg, cons
 			continue;
 		}
 
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+		mutex = false;
+#endif
 		return 0;
 	}
 }

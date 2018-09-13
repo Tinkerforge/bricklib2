@@ -42,6 +42,7 @@
 #endif
 
 #define I2C_FIFO_STATUS_TIMEOUT 0xFFFFFFFF
+#define I2C_FIFO_STATUS_MUTEX   0xFFFFFFFE
 
 typedef enum {
 	I2C_FIFO_STATE_IDLE                 = 0,

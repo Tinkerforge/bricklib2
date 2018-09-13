@@ -77,7 +77,7 @@
 // Prescaler 1000 and syn preload 3000 = 16MHz external reference
 #ifndef EXT_REF_PRESCALER
 #if DCO1_CAL_SRC == DCO1_CAL_SRC_RTC
-#define EXT_REF_PRESCALER 0x6
+#define EXT_REF_PRESCALER 2
 #else
 #define EXT_REF_PRESCALER 1000
 #endif
@@ -85,7 +85,7 @@
 
 #ifndef EXT_REF_SYN_PRELOAD
 #if DCO1_CAL_SRC == DCO1_CAL_SRC_RTC
-#define EXT_REF_SYN_PRELOAD 0x2256
+#define EXT_REF_SYN_PRELOAD 2930
 #else
 #define EXT_REF_SYN_PRELOAD 3000
 #endif
@@ -202,8 +202,10 @@ void SystemCoreClockSetup(void) {
 #if UC_SERIES == XMC14
 #if DCO1_CAL_SRC == DCO1_CAL_SRC_EXT
 	XMC_SCU_CLOCK_EnableDCO1ExtRefCalibration(XMC_SCU_CLOCK_SYNC_CLKSRC_OSCHP, EXT_REF_PRESCALER, EXT_REF_SYN_PRELOAD);
+	while(!XMC_SCU_CLOCK_IsDCO1ExtRefCalibrationReady());
 #elif DCO1_CAL_SRC == DCO1_CAL_SRC_RTC
 	XMC_SCU_CLOCK_EnableDCO1ExtRefCalibration(XMC_SCU_CLOCK_SYNC_CLKSRC_OSCLP, EXT_REF_PRESCALER, EXT_REF_SYN_PRELOAD);
+	while(!XMC_SCU_CLOCK_IsDCO1ExtRefCalibrationReady());
 #endif
 #endif
 }

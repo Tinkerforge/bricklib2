@@ -95,6 +95,9 @@ typedef struct {
 	uint32_t i2c_status;
 
 	uint32_t last_activity;
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+	bool mutex;
+#endif
 } I2CFifo;
 
 

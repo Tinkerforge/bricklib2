@@ -269,7 +269,9 @@ void i2c_fifo_init(I2CFifo *i2c_fifo) {
 	XMC_GPIO_Init(i2c_fifo->sda_port, i2c_fifo->sda_pin, &sda_pin_config);
 	XMC_GPIO_Init(i2c_fifo->scl_port, i2c_fifo->scl_pin, &scl_pin_config);
 
+#ifdef I2C_FIFO_COOP_USE_MUTEX
 	i2c_fifo->mutex = false;
+#endif
 }
 
 I2CFifoState i2c_fifo_next_state(I2CFifo *i2c_fifo) {

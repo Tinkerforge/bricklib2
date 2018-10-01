@@ -75,6 +75,9 @@ typedef void (*CoopTaskFunction)(void) ;
 typedef struct {
 	CoopTaskStack stack;
 	CoopTaskFunction function;
+#ifdef COOP_TASK_DEBUG_STACK_LOW_WATERMARK
+	uint32_t stack_low_watermark;  // low watermark of free stack in byte
+#endif
 } CoopTask;
 
 void coop_task_sleep_ms(const uint32_t sleep);

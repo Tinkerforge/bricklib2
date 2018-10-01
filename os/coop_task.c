@@ -45,6 +45,7 @@ static void coop_task_default_return_from_task(void) {
 	while(true);
 }
 
+// This function can not be called from "main task"
 void coop_task_sleep_ms(const uint32_t sleep) {
 	const uint32_t time = system_timer_get_ms();
 	while(!system_timer_is_time_elapsed_ms(time, sleep)) {
@@ -67,6 +68,15 @@ void coop_task_yield(void) {
 
 // This function can only be called from main task
 void coop_task_tick(CoopTask *task) {
+#ifdef COOP_TASK_DEBUG_STACK_LOW_WATERMARK
+	// Calculate currently available stack and save it as low watermark if it is
+	// lower then previous low watermark.
+	uint32_t stack_free = (uint32_t)task->stack.stack_pointer - (uint32_t)task->stack.stack;
+	if(stack_free < task->stack_low_watermark) {
+		task->stack_low_watermark = stack_free;
+	}
+#endif
+
 	coop_task_current = &coop_task_main;
 	coop_task_next = task;
 
@@ -100,4 +110,8 @@ void coop_task_init(CoopTask *task, CoopTaskFunction function) {
 	task->stack.stack_frame.nvic_frame.lr  = coop_task_default_return_from_task;
 	task->stack.stack_frame.nvic_frame.pc  = task->function;
 	task->stack.stack_frame.nvic_frame.psr = 0x21000000; // Everybody uses 0x21000000 here, seems to be the default
+
+#ifdef COOP_TASK_DEBUG_STACK_LOW_WATERMARK
+	task->stack_low_watermark = COOP_TASK_STACK_SIZE;
+#endif
 }

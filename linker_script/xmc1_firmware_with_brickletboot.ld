@@ -193,7 +193,7 @@ SECTIONS
         . = ALIGN(4); /* section size must be multiply of 4. See startup.S file */
         __bss_end = .;
         . = ALIGN(8);
-        Heap_Bank1_Start = .;
+        __stack_debug_end = .;
     } > SRAM
     __bss_size = __bss_end - __bss_start;
     

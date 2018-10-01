@@ -42,7 +42,6 @@ uint8_t * const buffer_send_pointer_protocol_overhead_end = bootloader_status.st
 Ringbuffer *ringbuffer_recv = &bootloader_status.st.ringbuffer_recv;
 uint8_t *ringbuffer_recv_buffer = bootloader_status.st.buffer_recv;
 
-
 void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spitfp_tx_irq_handler(void) {
 	// Use local pointer to save the time for accessing the structs
 	uint8_t *buffer_send_pointer     = bootloader_status.st.buffer_send_pointer;
@@ -50,7 +49,20 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spi
 
 	while(!XMC_USIC_CH_TXFIFO_IsFull(SPITFP_USIC)) {
 		SPITFP_USIC->IN[0] = *buffer_send_pointer;
+		buffer_send_pointer++;
 		if(buffer_send_pointer == buffer_send_pointer_end) {
+			// In the bootloader we check for buffer_send_pointer == buffer_send_pointer_end as a condition
+			// to check if the message was completely send. Because of this we have to make sure that the
+			// last byte is definitely send, so we may need to busy wait for the last byte here.
+
+			// Since we can't update the bootloader for existing Bricklets, this is the best solution
+			// we were able to come up with.
+
+			// This check will rarely be true, so the time penalty is acceptable.
+			while(XMC_USIC_CH_TXFIFO_IsFull(SPITFP_USIC)) {
+				__NOP();
+			}
+			SPITFP_USIC->IN[0] = *buffer_send_pointer;
 
 			// If message is ACK we don't re-send it automatically
 			if(buffer_send_pointer_end == buffer_send_pointer_protocol_overhead_end) {
@@ -62,7 +74,6 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spi
 
 			break;
 		}
-		buffer_send_pointer++;
 	}
 
 	// Save local pointer again

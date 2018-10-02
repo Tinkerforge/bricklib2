@@ -35,7 +35,14 @@ extern BootloaderStatus bootloader_status;
 // Save pointers for start and overhead end so we can use them in the interrupts
 // without the struct access overhead
 uint8_t * const buffer_send_pointer_start = bootloader_status.st.buffer_send;
+
+// Only use this define with Bricklets released after 2018 October 1st.
+// All bricklets before this date have an incompatible bootloader
+#ifdef BOOTLOADER_FIX_POINTER_END
+uint8_t * const buffer_send_pointer_protocol_overhead_end = bootloader_status.st.buffer_send + SPITFP_PROTOCOL_OVERHEAD;
+#else
 uint8_t * const buffer_send_pointer_protocol_overhead_end = bootloader_status.st.buffer_send + SPITFP_PROTOCOL_OVERHEAD-1;
+#endif
 
 // Save pointers for recv buffer and ringbuffer so we can use them in the interrupts
 // without the struct access overhead
@@ -51,6 +58,7 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spi
 		SPITFP_USIC->IN[0] = *buffer_send_pointer;
 		buffer_send_pointer++;
 		if(buffer_send_pointer == buffer_send_pointer_end) {
+#ifndef BOOTLOADER_FIX_POINTER_END
 			// In the bootloader we check for buffer_send_pointer == buffer_send_pointer_end as a condition
 			// to check if the message was completely send. Because of this we have to make sure that the
 			// last byte is definitely send, so we may need to busy wait for the last byte here.
@@ -63,11 +71,13 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spi
 				__NOP();
 			}
 			SPITFP_USIC->IN[0] = *buffer_send_pointer;
+#endif
 
 			// If message is ACK we don't re-send it automatically
 			if(buffer_send_pointer_end == buffer_send_pointer_protocol_overhead_end) {
 				buffer_send_pointer_end = buffer_send_pointer_start;
 			}
+
 			XMC_USIC_CH_TXFIFO_DisableEvent(SPITFP_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
 			XMC_USIC_CH_TXFIFO_ClearEvent(SPITFP_USIC, USIC_CH_TRBSCR_CSTBI_Msk);
 			NVIC_ClearPendingIRQ(SPITFP_IRQ_TX);

@@ -1,5 +1,5 @@
 /* bricklib2
- * Copyright (C) 2017 Olaf Lüke <olaf@tinkerforge.com>
+ * Copyright (C) 2017-2019 Olaf Lüke <olaf@tinkerforge.com>
  *
  * i2c_fifo.c: with fifo implementation for XMC
  *
@@ -34,6 +34,10 @@
 
 #ifndef I2C_FIFO_CLEAR_SLEEP
 #define I2C_FIFO_CLEAR_SLEEP 10 // in us
+#endif
+
+#ifndef I2C_FIFO_REG_SIZE
+#define I2C_FIFO_REG_SIZE 1
 #endif
 
 typedef enum XMC_I2C_CH_TDF {
@@ -86,11 +90,13 @@ static bool i2c_fifo_ready_or_idle(I2CFifo *i2c_fifo) {
 }
 
 // The i2c read/write functions here assume that the FIFO size is never exceeded.
-void i2c_fifo_write_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint16_t length, const uint8_t *data, const bool send_stop) {
+void i2c_fifo_write_register(I2CFifo *i2c_fifo, const I2C_FIFO_REG_TYPE reg, const uint16_t length, const uint8_t *data, const bool send_stop) {
 	if(!i2c_fifo_ready_or_idle(i2c_fifo)) {
 		i2c_fifo->state = I2C_FIFO_STATE_WRITE_REGISTER_ERROR;
 		return;
 	}
+	
+	XMC_I2C_CH_ClearStatusFlag(i2c_fifo->i2c, 0xFFFFFFFF);
 
 	i2c_fifo->last_activity = system_timer_get_ms();
 
@@ -101,8 +107,15 @@ void i2c_fifo_write_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint16_
 
 	// I2C Master Start
 	i2c_fifo->i2c->IN[0] = (i2c_fifo->address << 1) | XMC_I2C_CH_TDF_MASTER_START;
+
+#if I2C_FIFO_REG_SIZE == 1
 	// I2C Send 8 bit register
 	i2c_fifo->i2c->IN[0] = XMC_I2C_CH_TDF_MASTER_SEND | reg;
+#elif I2C_FIFO_REG_SIZE == 2
+	// I2C Send 16 bit register
+	i2c_fifo->i2c->IN[0] = XMC_I2C_CH_TDF_MASTER_SEND | (reg >> 8);
+	i2c_fifo->i2c->IN[0] = XMC_I2C_CH_TDF_MASTER_SEND | (reg & 0xFF);
+#endif
 
 	// I2C Master send bytes to write
 	for(uint16_t i = 0; i < length; i++) {
@@ -120,6 +133,8 @@ void i2c_fifo_write_direct(I2CFifo *i2c_fifo, const uint16_t length, const uint8
 		i2c_fifo->state = I2C_FIFO_STATE_WRITE_DIRECT_ERROR;
 		return;
 	}
+
+	XMC_I2C_CH_ClearStatusFlag(i2c_fifo->i2c, 0xFFFFFFFF);
 
 	i2c_fifo->last_activity = system_timer_get_ms();
 
@@ -142,7 +157,7 @@ void i2c_fifo_write_direct(I2CFifo *i2c_fifo, const uint16_t length, const uint8
 	}
 }
 
-void i2c_fifo_read_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t length) {
+void i2c_fifo_read_register(I2CFifo *i2c_fifo, const I2C_FIFO_REG_TYPE reg, const uint32_t length) {
 	i2c_fifo_write_register(i2c_fifo, reg, 0, NULL, false);
 
 	if(!i2c_fifo_ready_or_idle(i2c_fifo)) {
@@ -176,6 +191,8 @@ void i2c_fifo_read_direct(I2CFifo *i2c_fifo, const uint32_t length, const bool r
 		i2c_fifo->state = I2C_FIFO_STATE_READ_DIRECT_ERROR;
 		return;
 	}
+
+	XMC_I2C_CH_ClearStatusFlag(i2c_fifo->i2c, 0xFFFFFFFF);
 
 	i2c_fifo->last_activity = system_timer_get_ms();
 
@@ -327,7 +344,7 @@ I2CFifoState i2c_fifo_next_state(I2CFifo *i2c_fifo) {
 
 
 #ifdef I2C_FIFO_COOP_ENABLE
-uint32_t i2c_fifo_coop_read_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t length, uint8_t *data) {
+uint32_t i2c_fifo_coop_read_register(I2CFifo *i2c_fifo, const I2C_FIFO_REG_TYPE reg, const uint32_t length, uint8_t *data) {
 #ifdef I2C_FIFO_COOP_USE_MUTEX
 	if(i2c_fifo->mutex) {
 		return I2C_FIFO_STATUS_MUTEX;
@@ -367,7 +384,7 @@ uint32_t i2c_fifo_coop_read_register(I2CFifo *i2c_fifo, const uint8_t reg, const
 	}
 }
 
-uint32_t i2c_fifo_coop_write_register(I2CFifo *i2c_fifo, const uint8_t reg, const uint32_t length, const uint8_t *data, const bool send_stop) {
+uint32_t i2c_fifo_coop_write_register(I2CFifo *i2c_fifo, const I2C_FIFO_REG_TYPE reg, const uint32_t length, const uint8_t *data, const bool send_stop) {
 #ifdef I2C_FIFO_COOP_USE_MUTEX
 	if(i2c_fifo->mutex) {
 		return I2C_FIFO_STATUS_MUTEX;
@@ -397,4 +414,76 @@ uint32_t i2c_fifo_coop_write_register(I2CFifo *i2c_fifo, const uint8_t reg, cons
 		return 0;
 	}
 }
+
+uint32_t i2c_fifo_coop_read_direct(I2CFifo *i2c_fifo, const uint32_t length, uint8_t *data, const bool restart) {
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+	if(i2c_fifo->mutex) {
+		return I2C_FIFO_STATUS_MUTEX;
+	}
+	i2c_fifo->mutex = true;
+#endif
+
+	i2c_fifo_read_direct(i2c_fifo, length, restart);
+
+	while(true) {
+		I2CFifoState state = i2c_fifo_next_state(i2c_fifo);
+		if(state & I2C_FIFO_STATE_ERROR) {
+			loge("I2C FIFO COOP I2C error %d (state %d)\n\r", i2c_fifo->i2c_status, state);
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+			i2c_fifo->mutex = false;
+#endif
+			return i2c_fifo->i2c_status;
+		}
+		if(state != I2C_FIFO_STATE_READ_DIRECT_READY) {
+			coop_task_yield();
+			continue;
+		}
+
+		uint8_t length_read = i2c_fifo_read_fifo(i2c_fifo, data, length);
+		if(length_read != length) {
+			loge("I2C FIFO COOP unexpected I2C read length: %d vs %d\n\r", length_read, length);
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+			i2c_fifo->mutex = false;
+#endif
+			return XMC_I2C_CH_STATUS_FLAG_DATA_LOST_INDICATION;
+		}
+
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+		i2c_fifo->mutex = false;
+#endif
+		return 0;
+	}
+}
+
+uint32_t i2c_fifo_coop_write_direct(I2CFifo *i2c_fifo, const uint32_t length, const uint8_t *data, const bool send_stop) {
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+	if(i2c_fifo->mutex) {
+		return I2C_FIFO_STATUS_MUTEX;
+	}
+	i2c_fifo->mutex = true;
+#endif
+
+	i2c_fifo_write_direct(i2c_fifo, length, data, send_stop);
+
+	while(true) {
+		I2CFifoState state = i2c_fifo_next_state(i2c_fifo);
+		if(state & I2C_FIFO_STATE_ERROR) {
+			loge("I2C FIFO COOP I2C error %d (state %d)\n\r", i2c_fifo->i2c_status, state);
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+			i2c_fifo->mutex = false;
+#endif
+			return i2c_fifo->i2c_status;
+		}
+		if(state != I2C_FIFO_STATE_WRITE_DIRECT_READY) {
+			coop_task_yield();
+			continue;
+		}
+
+#ifdef I2C_FIFO_COOP_USE_MUTEX
+		i2c_fifo->mutex = false;
+#endif
+		return 0;
+	}
+}
+
 #endif

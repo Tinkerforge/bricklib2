@@ -295,14 +295,14 @@ bool CALLBACK_VALUE_SUFFIX(handle_callback_value_callback)(CALLBACK_VALUE_SUFFIX
 			return false;
 		}
 
-		// If outside-threshold is defined but not fulfilled we son't send
+		// If outside-threshold is defined but not fulfilled we don't send
 		if((callback_value->threshold_option == 'o') &&
 		   ((value_current >= callback_value->threshold_min) &&
 		    (value_current <= callback_value->threshold_max))) {
 			return false;
 		}
 
-		// If inside-threshold is defined but not fulfilled we son't send
+		// If inside-threshold is defined but not fulfilled we don't send
 		if((callback_value->threshold_option == 'i') &&
 		   ((value_current < callback_value->threshold_min) ||
 		    (value_current > callback_value->threshold_max))) {

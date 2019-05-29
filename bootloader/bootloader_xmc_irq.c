@@ -60,6 +60,51 @@ Ringbuffer *ringbuffer_recv = &bootloader_status.st.ringbuffer_recv;
 uint8_t *ringbuffer_recv_buffer = bootloader_status.st.buffer_recv;
 
 
+#ifdef BOOTLOADER_USE_MEMORY_OPTIIZED_IRQ_HANDLER
+void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spitfp_tx_irq_handler(void) {
+	// Use local pointer to save the time for accessing the structs
+	uint8_t *buffer_send_pointer     = bootloader_status.st.buffer_send_pointer;
+	uint8_t *buffer_send_pointer_end = bootloader_status.st.buffer_send_pointer_end;
+
+	while(!XMC_USIC_CH_TXFIFO_IsFull(SPITFP_USIC)) {
+		SPITFP_USIC->IN[0] = *buffer_send_pointer;
+		buffer_send_pointer++;
+		if(buffer_send_pointer == buffer_send_pointer_end) {
+#ifndef BOOTLOADER_FIX_POINTER_END
+			// In the bootloader we check for buffer_send_pointer == buffer_send_pointer_end as a condition
+			// to check if the message was completely send. Because of this we have to make sure that the
+			// last byte is definitely send, so we may need to busy wait for the last byte here.
+
+			// Since we can't update the bootloader for existing Bricklets, this is the best solution
+			// we were able to come up with.
+
+			// This check will rarely be true, so the time penalty is acceptable.
+			while(XMC_USIC_CH_TXFIFO_IsFull(SPITFP_USIC)) {
+				__NOP();
+			}
+			SPITFP_USIC->IN[0] = *buffer_send_pointer;
+#endif
+
+			// If message is ACK we don't re-send it automatically
+			if(buffer_send_pointer_end == buffer_send_pointer_protocol_overhead_end) {
+				buffer_send_pointer_end = buffer_send_pointer_start;
+			}
+
+			XMC_USIC_CH_TXFIFO_DisableEvent(SPITFP_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
+			XMC_USIC_CH_TXFIFO_ClearEvent(SPITFP_USIC, USIC_CH_TRBSCR_CSTBI_Msk);
+			NVIC_ClearPendingIRQ(SPITFP_IRQ_TX);
+
+			break;
+		}
+	}
+
+	// Save local pointer again
+	bootloader_status.st.buffer_send_pointer     = buffer_send_pointer;
+	bootloader_status.st.buffer_send_pointer_end = buffer_send_pointer_end;
+}
+
+#else
+
 // Sending 16 bytes per interrupt with this version takes 3us-4us (measured with logic analyzer).
 // Naive version with while-loop takes 17us.
 void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spitfp_tx_irq_handler(void) {
@@ -188,6 +233,8 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spi
 	bootloader_status.st.buffer_send_pointer     = buffer_send_pointer;
 	bootloader_status.st.buffer_send_pointer_end = buffer_send_pointer_end;
 }
+#endif
+
 
 void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spitfp_rx_irq_handler(void) {
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(SPITFP_USIC)) {

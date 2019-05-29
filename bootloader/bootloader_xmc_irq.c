@@ -97,8 +97,8 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spi
 	// The CRC of this message does not fit, so this will be resolved through the
 	// Brick by requesting the message again.
 	//
-	// However, for Bricklets that do not hafe any real-time requirement for
-	// the high priority IRQs (or nor IRQs), we can disable the irqs here.
+	// However, for Bricklets that do not have any real-time requirement for
+	// the high priority IRQs (or no IRQs), we can disable the irqs here.
 	//
 	// Bricklets that have real-time requirement for IRQs have to set the
 	// "SPITFP_NOT_ALLOWED_TO_DISABLE_IRQ" define.

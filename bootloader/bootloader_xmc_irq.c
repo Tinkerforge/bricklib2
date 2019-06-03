@@ -60,7 +60,7 @@ Ringbuffer *ringbuffer_recv = &bootloader_status.st.ringbuffer_recv;
 uint8_t *ringbuffer_recv_buffer = bootloader_status.st.buffer_recv;
 
 
-#ifdef BOOTLOADER_USE_MEMORY_OPTIIZED_IRQ_HANDLER
+#ifdef BOOTLOADER_USE_MEMORY_OPTIMIZED_IRQ_HANDLER
 void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spitfp_tx_irq_handler(void) {
 	// Use local pointer to save the time for accessing the structs
 	uint8_t *buffer_send_pointer     = bootloader_status.st.buffer_send_pointer;

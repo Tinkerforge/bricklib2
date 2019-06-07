@@ -23,8 +23,8 @@
 #include "coop_task.h"
 
 #include "bricklib2/xmclib/CMSIS/Include/core_cm0.h"
+
 #include "bricklib2/hal/system_timer/system_timer.h"
-#include "bricklib2/bootloader/bootloader.h"
 
 #include <string.h>
 

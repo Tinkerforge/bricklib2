@@ -23,7 +23,7 @@
 // Based on CubeMX generated system_stm32f0xx.c
 
 #include "configs/config.h"
-#include "bricklib2/tng/tng_init.h"
+#include "bricklib2/tng/tng.h"
 
 #include "stm32f0xx.h"
 #if !defined  (HSE_VALUE) 

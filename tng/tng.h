@@ -1,7 +1,7 @@
-/* TNG system init
+/* TNG
  * Copyright (C) 2019 Olaf Lüke <olaf@tinkerforge.com>
  *
- * tng_init.h: TNG system initialization
+ * tng.h: TNG system standard init/tick
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,9 +19,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef TNG_INIT_H
-#define TNG_INIT_H
+#ifndef TNG_H
+#define TNG_H
 
 void tng_init(void);
+void tng_tick(void);
 
 #endif

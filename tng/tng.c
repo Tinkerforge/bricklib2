@@ -1,7 +1,7 @@
-/* TNG system init
+/* TNG
  * Copyright (C) 2019 Olaf Lüke <olaf@tinkerforge.com>
  *
- * tng_init.c: TNG system initialization
+ * tng.c: TNG system standard init/tick
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,7 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "tng_init.h"
+#include "tng.h"
 
 #include "configs/config.h"
 
@@ -56,4 +56,8 @@ void tng_init(void) {
 	}
 
 	system_timer_init(HAL_RCC_GetHCLKFreq(), SYSTEM_TIMER_FREQUENCY);
+}
+
+void tng_tick(void) {
+
 }

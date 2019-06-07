@@ -22,7 +22,11 @@
 
 #include "coop_task.h"
 
+#if defined(STM32F0)
+#include "bricklib2/stm32cubef0/Drivers/CMSIS/Include/core_cm0.h"
+#else
 #include "bricklib2/xmclib/CMSIS/Include/core_cm0.h"
+#endif
 
 #include "bricklib2/hal/system_timer/system_timer.h"
 

@@ -35,6 +35,7 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdbool.h>
 
 #ifndef UARTBB_TX_PIN
 #define UARTBB_TX_PIN 17
@@ -59,6 +60,21 @@
 #define UARTBB_BIT_TIME 278 // 32000000/115200 rounded
 #define UARTBB_COUNT_TO_IN_1MS 32000
 #endif
+#endif
+
+#if defined(STM32F0)
+#define UARTBB_BIT_TIME 417 // 48000000/115200 rounded
+#define UARTBB_COUNT_TO_IN_1MS 48000
+#endif
+
+#if defined(UARTBB_TX_PORTA)
+#define UARTBB_TX_PORT GPIOA
+#elif defined(UARTBB_TX_PORTB)
+#define UARTBB_TX_PORT GPIOB
+#elif defined(UARTBB_TX_PORTC)
+#define UARTBB_TX_PORT GPIOC
+#elif defined(UARTBB_TX_PORTF)
+#define UARTBB_TX_PORT GPIOF
 #endif
 
 static inline void uartbb_wait_1bit(uint32_t start) {
@@ -115,7 +131,26 @@ void uartbb_init(void) {
 	uartbb_pin.mode = XMC_GPIO_MODE_OUTPUT_PUSH_PULL;
 	uartbb_pin.output_level = XMC_GPIO_OUTPUT_LEVEL_HIGH;
 	XMC_GPIO_Init(UARTBB_TX_PIN, &uartbb_pin);
+#elif defined(STM32F0)
+#if defined(UARTBB_TX_PORTA)
+	__HAL_RCC_GPIOA_CLK_ENABLE();
+#elif defined(UARTBB_TX_PORTB)
+	__HAL_RCC_GPIOB_CLK_ENABLE();
+#elif defined(UARTBB_TX_PORTC)
+	__HAL_RCC_GPIOC_CLK_ENABLE();
+#elif defined(UARTBB_TX_PORTF)
+	__HAL_RCC_GPIOF_CLK_ENABLE();
 #endif
+	GPIO_InitTypeDef gpio_pp = {
+		.Pin   = UARTBB_TX_PIN,
+		.Mode  = GPIO_MODE_OUTPUT_PP,
+		.Speed = GPIO_SPEED_FREQ_LOW
+	};
+
+	HAL_GPIO_Init(UARTBB_TX_PORT, &gpio_pp);
+	HAL_GPIO_WritePin(UARTBB_TX_PORT, UARTBB_TX_PIN, GPIO_PIN_SET);
+#endif
+
 }
 
 void uartbb_tx(const uint8_t value) {
@@ -131,7 +166,7 @@ void uartbb_tx(const uint8_t value) {
 
 #if defined(__SAM0__)
 	cpu_irq_disable();
-#elif defined(__XMC1__)
+#elif defined(__XMC1__) || defined(STM32F0)
 	__disable_irq();
 #endif
 
@@ -143,12 +178,16 @@ void uartbb_tx(const uint8_t value) {
       port->OUTSET.reg = (1 << UARTBB_TX_PIN);
 #elif defined(__XMC1__)
 	XMC_GPIO_SetOutputHigh(UARTBB_TX_PIN);
+#elif defined(STM32F0)
+	HAL_GPIO_WritePin(UARTBB_TX_PORT, UARTBB_TX_PIN, GPIO_PIN_SET);
 #endif
     } else {
 #if defined(__SAM0__)
       port->OUTCLR.reg = (1 << UARTBB_TX_PIN);
 #elif defined(__XMC1__)
       XMC_GPIO_SetOutputLow(UARTBB_TX_PIN);
+#elif defined(STM32F0)
+	HAL_GPIO_WritePin(UARTBB_TX_PORT, UARTBB_TX_PIN, GPIO_PIN_RESET);
 #endif
     }
 
@@ -160,7 +199,7 @@ void uartbb_tx(const uint8_t value) {
 
 #if defined(__SAM0__)
 	cpu_irq_enable();
-#elif defined(__XMC1__)
+#elif defined(__XMC1__) || defined(STM32F0)
 	__enable_irq();
 #endif
 }

@@ -97,3 +97,20 @@ void system_timer_sleep_us(const uint32_t sleep) {
 		}
 	}
 }
+
+// The STM32F0 CubeMX HAL code implements a system timer similar to the one in the bricklib.
+// They can't both be used at the same time. For the STM32 HAL to function we need to provide
+// the HAL_InitTick and HAL_GetTick hooks.
+#if defined(STM32F0)
+
+#include "stm32f0xx_hal_def.h"
+
+HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority) {
+	system_timer_init(HAL_RCC_GetHCLKFreq(), SYSTEM_TIMER_FREQUENCY);
+	return HAL_OK;
+}
+
+uint32_t HAL_GetTick(void) {
+	return system_timer_get_ms();
+}
+#endif

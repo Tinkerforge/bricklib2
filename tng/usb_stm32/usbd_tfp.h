@@ -1,7 +1,8 @@
 /* TNG
  * Copyright (C) 2019 Olaf Lüke <olaf@tinkerforge.com>
  *
- * tng.h: TNG system standard init/tick
+ * usb_tfp.h: TNG system STM32 USB descriptors for Vendor 
+ *            Specifc USB class (for TFP)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,18 +20,16 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef TNG_H
-#define TNG_H
+#ifndef USBD_TFP_H
+#define USBD_TFP_H
 
-typedef enum {
-	HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE = 0,
-	HANDLE_MESSAGE_RESPONSE_EMPTY = 1,
-	HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED = 2,
-	HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER = 3,
-	HANDLE_MESSAGE_RESPONSE_NONE = 4,
-} TNGHandleMessageResponse;
+#include  "usbd_ioreq.h"
 
-void tng_init(void);
-void tng_tick(void);
+#define USBD_TFP_IN_EP     0x81
+#define USBD_TFP_OUT_EP    0x01
+#define USBD_TFP_IN_SIZE   64
+#define USBD_TFP_OUT_SIZE  64
+
+extern USBD_ClassTypeDef usbd_tfp;
 
 #endif

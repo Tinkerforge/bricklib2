@@ -1,7 +1,7 @@
 /* TNG
  * Copyright (C) 2019 Olaf Lüke <olaf@tinkerforge.com>
  *
- * tng.h: TNG system standard init/tick
+ * usb_desc.h: TNG system STM32 USB descriptors
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,18 +19,11 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef TNG_H
-#define TNG_H
+#ifndef USBD_DESCRIPTORS_H
+#define USBD_DESCRIPTORS_H
 
-typedef enum {
-	HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE = 0,
-	HANDLE_MESSAGE_RESPONSE_EMPTY = 1,
-	HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED = 2,
-	HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER = 3,
-	HANDLE_MESSAGE_RESPONSE_NONE = 4,
-} TNGHandleMessageResponse;
+#include "usbd_def.h"
 
-void tng_init(void);
-void tng_tick(void);
+extern USBD_DescriptorsTypeDef usbd_descriptors;
 
 #endif

@@ -1,7 +1,7 @@
 /* TNG
  * Copyright (C) 2019 Olaf Lüke <olaf@tinkerforge.com>
  *
- * tng.h: TNG system standard init/tick
+ * usb.h: TNG system USB API
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,18 +19,26 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef TNG_H
-#define TNG_H
+#ifndef USB_H
+#define USB_H
 
-typedef enum {
-	HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE = 0,
-	HANDLE_MESSAGE_RESPONSE_EMPTY = 1,
-	HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED = 2,
-	HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER = 3,
-	HANDLE_MESSAGE_RESPONSE_NONE = 4,
-} TNGHandleMessageResponse;
+#include <stdbool.h>
+#include <stdint.h>
 
-void tng_init(void);
-void tng_tick(void);
+#include "usbd_tfp.h"
+
+typedef struct {
+    __attribute__ ((aligned (4))) uint8_t in_buffer[USBD_TFP_IN_SIZE];
+    __attribute__ ((aligned (4))) uint8_t out_buffer[USBD_TFP_OUT_SIZE];
+    uint16_t in_buffer_length;
+    uint16_t out_buffer_length;
+    bool transfer_in_progress;
+} TFUSB;
+
+extern TFUSB tfusb;
+
+void usb_init(void);
+bool usb_send(uint8_t *data, uint16_t length);
+uint16_t usb_recv(uint8_t *data, uint16_t max_length);
 
 #endif

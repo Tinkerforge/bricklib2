@@ -23,227 +23,220 @@
 // Based on CubeMX generated system_stm32f0xx.c
 
 #include "configs/config.h"
+
+#ifdef TNG_BOOTLOADER
+// Nothing special for bootloader here
+#else
+// Set fixed constants at end of flash.
+// These are checked and compared by bootloader.
+const uint32_t magic_number __attribute__ ((section(".magic_number"))) = STM32F0_MAGIC_NUMBER;
+const uint32_t device_identifier __attribute__ ((section(".device_identifier"))) = TNG_DEVICE_IDENTIFIER;
+
+// Set temporary firmware crc and length.
+// Will be overwritten by build process after compilation
+const uint32_t firmware_crc __attribute__ ((section(".firmware_crc"))) = 0;
+const uint32_t firmware_length __attribute__ ((section(".firmware_length"))) = 0;
+
 #include "bricklib2/tng/tng.h"
+#include "stm32f0xx_hal_conf.h"
+
+#endif
 
 #include "stm32f0xx.h"
-#if !defined  (HSE_VALUE) 
-  #define HSE_VALUE    ((uint32_t)8000000) /*!< Default value of the External oscillator in Hz.
-                                                This value can be provided and adapted by the user application. */
-#endif /* HSE_VALUE */
+#if !defined (HSE_VALUE) 
+#define HSE_VALUE ((uint32_t)8000000) // Default value of the External oscillator in Hz. 
+#endif
 
-#if !defined  (HSI_VALUE)
-  #define HSI_VALUE    ((uint32_t)8000000) /*!< Default value of the Internal oscillator in Hz.
-                                                This value can be provided and adapted by the user application. */
-#endif /* HSI_VALUE */
+#if !defined (HSI_VALUE)
+#define HSI_VALUE ((uint32_t)8000000) // Default value of the Internal oscillator in Hz.
+#endif
 
 #if !defined (HSI48_VALUE)
-#define HSI48_VALUE    ((uint32_t)48000000) /*!< Default value of the HSI48 Internal oscillator in Hz.
-                                                 This value can be provided and adapted by the user application. */
-#endif /* HSI48_VALUE */
-/**
-  * @}
-  */
+#define HSI48_VALUE ((uint32_t)48000000) // Default value of the HSI48 Internal oscillator in Hz.
+#endif
 
-/** @addtogroup STM32F0xx_System_Private_Macros
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-/** @addtogroup STM32F0xx_System_Private_Variables
-  * @{
-  */
-  /* This variable is updated in three ways:
-      1) by calling CMSIS function SystemCoreClockUpdate()
-      2) by calling HAL API function HAL_RCC_GetHCLKFreq()
-      3) each time HAL_RCC_ClockConfig() is called to configure the system clock frequency
-         Note: If you use this function to configure the system clock there is no need to
-               call the 2 first functions listed above, since SystemCoreClock variable is 
-               updated automatically.
-  */
+// This variable is updated in three ways:
+// 1) by calling CMSIS function SystemCoreClockUpdate()
+// 2) by calling HAL API function HAL_RCC_GetHCLKFreq()
+// 3) each time HAL_RCC_ClockConfig() is called to configure the system clock frequency
+// Note: If you use this function to configure the system clock there is no need to
+//       call the 2 first functions listed above, since SystemCoreClock variable is updated automatically.
 uint32_t SystemCoreClock = 8000000;
 
 const uint8_t AHBPrescTable[16] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 6, 7, 8, 9};
 const uint8_t APBPrescTable[8]  = {0, 0, 0, 0, 1, 2, 3, 4};
 
-/**
-  * @}
-  */
-
-/** @addtogroup STM32F0xx_System_Private_FunctionPrototypes
-  * @{
-  */
-
-/**
-  * @}
-  */
-
-/** @addtogroup STM32F0xx_System_Private_Functions
-  * @{
-  */
-
-/**
-  * @brief  Setup the microcontroller system.
-  *         Initialize the default HSI clock source, vector table location and the PLL configuration is reset.
-  * @param  None
-  * @retval None
-  */
-void SystemInit(void)
-{
-  /* Reset the RCC clock configuration to the default reset state ------------*/
-  /* Set HSION bit */
-  RCC->CR |= (uint32_t)0x00000001U;
+// Setup the microcontroller system.
+// Initialize the default HSI clock source, vector table location and the PLL configuration is reset.
+void startup_stm32f0_system_init(void) {
+	// Reset the RCC clock configuration to the default reset state
+	// Set HSION bit
+	RCC->CR |= (uint32_t)0x00000001U;
 
 #if defined (STM32F051x8) || defined (STM32F058x8)
-  /* Reset SW[1:0], HPRE[3:0], PPRE[2:0], ADCPRE and MCOSEL[2:0] bits */
-  RCC->CFGR &= (uint32_t)0xF8FFB80CU;
+	// Reset SW[1:0], HPRE[3:0], PPRE[2:0], ADCPRE and MCOSEL[2:0] bits
+	RCC->CFGR &= (uint32_t)0xF8FFB80CU;
 #else
-  /* Reset SW[1:0], HPRE[3:0], PPRE[2:0], ADCPRE, MCOSEL[2:0], MCOPRE[2:0] and PLLNODIV bits */
-  RCC->CFGR &= (uint32_t)0x08FFB80CU;
-#endif /* STM32F051x8 or STM32F058x8 */
-  
-  /* Reset HSEON, CSSON and PLLON bits */
-  RCC->CR &= (uint32_t)0xFEF6FFFFU;
+	// Reset SW[1:0], HPRE[3:0], PPRE[2:0], ADCPRE, MCOSEL[2:0], MCOPRE[2:0] and PLLNODIV bits
+	RCC->CFGR &= (uint32_t)0x08FFB80CU;
+#endif
+	
+	// Reset HSEON, CSSON and PLLON bits
+	RCC->CR &= (uint32_t)0xFEF6FFFFU;
 
-  /* Reset HSEBYP bit */
-  RCC->CR &= (uint32_t)0xFFFBFFFFU;
+	// Reset HSEBYP bit
+	RCC->CR &= (uint32_t)0xFFFBFFFFU;
 
-  /* Reset PLLSRC, PLLXTPRE and PLLMUL[3:0] bits */
-  RCC->CFGR &= (uint32_t)0xFFC0FFFFU;
+	// Reset PLLSRC, PLLXTPRE and PLLMUL[3:0] bits
+	RCC->CFGR &= (uint32_t)0xFFC0FFFFU;
 
-  /* Reset PREDIV[3:0] bits */
-  RCC->CFGR2 &= (uint32_t)0xFFFFFFF0U;
+	// Reset PREDIV[3:0] bits
+	RCC->CFGR2 &= (uint32_t)0xFFFFFFF0U;
 
 #if defined (STM32F072xB) || defined (STM32F078xx)
-  /* Reset USART2SW[1:0], USART1SW[1:0], I2C1SW, CECSW, USBSW and ADCSW bits */
-  RCC->CFGR3 &= (uint32_t)0xFFFCFE2CU;
+	// Reset USART2SW[1:0], USART1SW[1:0], I2C1SW, CECSW, USBSW and ADCSW bits
+	RCC->CFGR3 &= (uint32_t)0xFFFCFE2CU;
 #elif defined (STM32F071xB)
-  /* Reset USART2SW[1:0], USART1SW[1:0], I2C1SW, CECSW and ADCSW bits */
-  RCC->CFGR3 &= (uint32_t)0xFFFFCEACU;
+	// Reset USART2SW[1:0], USART1SW[1:0], I2C1SW, CECSW and ADCSW bits
+	RCC->CFGR3 &= (uint32_t)0xFFFFCEACU;
 #elif defined (STM32F091xC) || defined (STM32F098xx)
-  /* Reset USART3SW[1:0], USART2SW[1:0], USART1SW[1:0], I2C1SW, CECSW and ADCSW bits */
-  RCC->CFGR3 &= (uint32_t)0xFFF0FEACU;
+	// Reset USART3SW[1:0], USART2SW[1:0], USART1SW[1:0], I2C1SW, CECSW and ADCSW bits
+	RCC->CFGR3 &= (uint32_t)0xFFF0FEACU;
 #elif defined (STM32F030x6) || defined (STM32F030x8) || defined (STM32F031x6) || defined (STM32F038xx) || defined (STM32F030xC)
-  /* Reset USART1SW[1:0], I2C1SW and ADCSW bits */
-  RCC->CFGR3 &= (uint32_t)0xFFFFFEECU;
+	// Reset USART1SW[1:0], I2C1SW and ADCSW bits
+	RCC->CFGR3 &= (uint32_t)0xFFFFFEECU;
 #elif defined (STM32F051x8) || defined (STM32F058xx)
-  /* Reset USART1SW[1:0], I2C1SW, CECSW and ADCSW bits */
-  RCC->CFGR3 &= (uint32_t)0xFFFFFEACU;
+	// Reset USART1SW[1:0], I2C1SW, CECSW and ADCSW bits
+	RCC->CFGR3 &= (uint32_t)0xFFFFFEACU;
 #elif defined (STM32F042x6) || defined (STM32F048xx)
-  /* Reset USART1SW[1:0], I2C1SW, CECSW, USBSW and ADCSW bits */
-  RCC->CFGR3 &= (uint32_t)0xFFFFFE2CU;
+	// Reset USART1SW[1:0], I2C1SW, CECSW, USBSW and ADCSW bits
+	RCC->CFGR3 &= (uint32_t)0xFFFFFE2CU;
 #elif defined (STM32F070x6) || defined (STM32F070xB)
-  /* Reset USART1SW[1:0], I2C1SW, USBSW and ADCSW bits */
-  RCC->CFGR3 &= (uint32_t)0xFFFFFE6CU;
-  /* Set default USB clock to PLLCLK, since there is no HSI48 */
-  RCC->CFGR3 |= (uint32_t)0x00000080U;  
+	// Reset USART1SW[1:0], I2C1SW, USBSW and ADCSW bits
+	RCC->CFGR3 &= (uint32_t)0xFFFFFE6CU;
+	// Set default USB clock to PLLCLK, since there is no HSI48
+	RCC->CFGR3 |= (uint32_t)0x00000080U;  
 #else
  #warning "No target selected"
 #endif
 
-  /* Reset HSI14 bit */
-  RCC->CR2 &= (uint32_t)0xFFFFFFFEU;
+	// Reset HSI14 bit
+	RCC->CR2 &= (uint32_t)0xFFFFFFFEU;
 
-  /* Disable all interrupts */
-  RCC->CIR = 0x00000000U;
-
-  tng_init();
+	// Disable all interrupts
+	RCC->CIR = 0x00000000U;
 }
 
-/**
-   * @brief  Update SystemCoreClock variable according to Clock Register Values.
-  *         The SystemCoreClock variable contains the core clock (HCLK), it can
-  *         be used by the user application to setup the SysTick timer or configure
-  *         other parameters.
-  *
-  * @note   Each time the core clock (HCLK) changes, this function must be called
-  *         to update SystemCoreClock variable value. Otherwise, any configuration
-  *         based on this variable will be incorrect.
-  *
-  * @note   - The system frequency computed by this function is not the real
-  *           frequency in the chip. It is calculated based on the predefined
-  *           constant and the selected clock source:
-  *
-  *           - If SYSCLK source is HSI, SystemCoreClock will contain the HSI_VALUE(*)
-  *
-  *           - If SYSCLK source is HSE, SystemCoreClock will contain the HSE_VALUE(**)
-  *
-  *           - If SYSCLK source is PLL, SystemCoreClock will contain the HSE_VALUE(**)
-  *             or HSI_VALUE(*) multiplied/divided by the PLL factors.
-  *
-  *         (*) HSI_VALUE is a constant defined in stm32f0xx_hal.h file (default value
-  *             8 MHz) but the real value may vary depending on the variations
-  *             in voltage and temperature.
-  *
-  *         (**) HSE_VALUE is a constant defined in stm32f0xx_hal.h file (default value
-  *              8 MHz), user has to ensure that HSE_VALUE is same as the real
-  *              frequency of the crystal used. Otherwise, this function may
-  *              have wrong result.
-  *
-  *         - The result of this function could be not correct when using fractional
-  *           value for HSE crystal.
-  *
-  * @param  None
-  * @retval None
-  */
-void SystemCoreClockUpdate (void)
-{
-  uint32_t tmp = 0, pllmull = 0, pllsource = 0, predivfactor = 0;
+// ---- SystemCoreClockUpdate CMSIS function implementation ----
 
-  /* Get SYSCLK source -------------------------------------------------------*/
-  tmp = RCC->CFGR & RCC_CFGR_SWS;
+// Update SystemCoreClock variable according to Clock Register Values.
+// The SystemCoreClock variable contains the core clock (HCLK), it can
+// be used by the user application to setup the SysTick timer or configure
+// other parameters.
+//
+// Each time the core clock (HCLK) changes, this function must be called
+// to update SystemCoreClock variable value. Otherwise, any configuration
+// based on this variable will be incorrect.
+// 
+// - The system frequency computed by this function is not the real
+//   frequency in the chip. It is calculated based on the predefined
+//   constant and the selected clock source:
+//
+// - If SYSCLK source is HSI, SystemCoreClock will contain the HSI_VALUE(*)
+//
+// - If SYSCLK source is HSE, SystemCoreClock will contain the HSE_VALUE(**)
+//
+// - If SYSCLK source is PLL, SystemCoreClock will contain the HSE_VALUE(**)
+//   or HSI_VALUE(*) multiplied/divided by the PLL factors.
+//
+//   (*)  HSI_VALUE is a constant defined in stm32f0xx_hal.h file (default value
+//        8 MHz) but the real value may vary depending on the variations
+//        in voltage and temperature.
+//
+//   (**) HSE_VALUE is a constant defined in stm32f0xx_hal.h file (default value
+//        8 MHz), user has to ensure that HSE_VALUE is same as the real
+//        frequency of the crystal used. Otherwise, this function may
+//        have wrong result.
+//
+//        - The result of this function could be not correct when using fractional
+//          value for HSE crystal.
+void SystemCoreClockUpdate(void) {
+	uint32_t tmp = 0, pllmull = 0, pllsource = 0, predivfactor = 0;
 
-  switch (tmp)
-  {
-    case RCC_CFGR_SWS_HSI:  /* HSI used as system clock */
-      SystemCoreClock = HSI_VALUE;
-      break;
-    case RCC_CFGR_SWS_HSE:  /* HSE used as system clock */
-      SystemCoreClock = HSE_VALUE;
-      break;
-    case RCC_CFGR_SWS_PLL:  /* PLL used as system clock */
-      /* Get PLL clock source and multiplication factor ----------------------*/
-      pllmull = RCC->CFGR & RCC_CFGR_PLLMUL;
-      pllsource = RCC->CFGR & RCC_CFGR_PLLSRC;
-      pllmull = ( pllmull >> 18) + 2;
-      predivfactor = (RCC->CFGR2 & RCC_CFGR2_PREDIV) + 1;
+	// Get SYSCLK source
+	tmp = RCC->CFGR & RCC_CFGR_SWS;
 
-      if (pllsource == RCC_CFGR_PLLSRC_HSE_PREDIV)
-      {
-        /* HSE used as PLL clock source : SystemCoreClock = HSE/PREDIV * PLLMUL */
-        SystemCoreClock = (HSE_VALUE/predivfactor) * pllmull;
-      }
+	switch (tmp) {
+		case RCC_CFGR_SWS_HSI:  // HSI used as system clock
+			SystemCoreClock = HSI_VALUE;
+			break;
+		case RCC_CFGR_SWS_HSE:  // HSE used as system clock
+			SystemCoreClock = HSE_VALUE;
+			break;
+		case RCC_CFGR_SWS_PLL:  // PLL used as system clock
+			// Get PLL clock source and multiplication factor
+			pllmull = RCC->CFGR & RCC_CFGR_PLLMUL;
+			pllsource = RCC->CFGR & RCC_CFGR_PLLSRC;
+			pllmull = ( pllmull >> 18) + 2;
+			predivfactor = (RCC->CFGR2 & RCC_CFGR2_PREDIV) + 1;
+
+			if(pllsource == RCC_CFGR_PLLSRC_HSE_PREDIV) {
+				// HSE used as PLL clock source : SystemCoreClock = HSE/PREDIV * PLLMUL
+				SystemCoreClock = (HSE_VALUE/predivfactor) * pllmull;
+			}
 #if defined(STM32F042x6) || defined(STM32F048xx) || defined(STM32F072xB) || defined(STM32F078xx) || defined(STM32F091xC) || defined(STM32F098xx)
-      else if (pllsource == RCC_CFGR_PLLSRC_HSI48_PREDIV)
-      {
-        /* HSI48 used as PLL clock source : SystemCoreClock = HSI48/PREDIV * PLLMUL */
-        SystemCoreClock = (HSI48_VALUE/predivfactor) * pllmull;
-      }
-#endif /* STM32F042x6 || STM32F048xx || STM32F072xB || STM32F078xx || STM32F091xC || STM32F098xx */
-      else
-      {
-#if defined(STM32F042x6) || defined(STM32F048xx)  || defined(STM32F070x6) \
- || defined(STM32F078xx) || defined(STM32F071xB)  || defined(STM32F072xB) \
+			else if (pllsource == RCC_CFGR_PLLSRC_HSI48_PREDIV) {
+				// HSI48 used as PLL clock source : SystemCoreClock = HSI48/PREDIV * PLLMUL
+				SystemCoreClock = (HSI48_VALUE/predivfactor) * pllmull;
+			}
+#endif
+			else {
+#if defined(STM32F042x6) || defined(STM32F048xx) || defined(STM32F070x6) \
+ || defined(STM32F078xx) || defined(STM32F071xB) || defined(STM32F072xB) \
  || defined(STM32F070xB) || defined(STM32F091xC) || defined(STM32F098xx)  || defined(STM32F030xC)
-        /* HSI used as PLL clock source : SystemCoreClock = HSI/PREDIV * PLLMUL */
-        SystemCoreClock = (HSI_VALUE/predivfactor) * pllmull;
+				// HSI used as PLL clock source : SystemCoreClock = HSI/PREDIV * PLLMUL
+				SystemCoreClock = (HSI_VALUE/predivfactor) * pllmull;
 #else
-        /* HSI used as PLL clock source : SystemCoreClock = HSI/2 * PLLMUL */
-        SystemCoreClock = (HSI_VALUE >> 1) * pllmull;
-#endif /* STM32F042x6 || STM32F048xx || STM32F070x6 || 
-          STM32F071xB || STM32F072xB || STM32F078xx || STM32F070xB ||
-          STM32F091xC || STM32F098xx || STM32F030xC */
-      }
-      break;
-    default: /* HSI used as system clock */
-      SystemCoreClock = HSI_VALUE;
-      break;
-  }
-  /* Compute HCLK clock frequency ----------------*/
-  /* Get HCLK prescaler */
-  tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
-  /* HCLK clock frequency */
-  SystemCoreClock >>= tmp;
+				// HSI used as PLL clock source : SystemCoreClock = HSI/2 * PLLMUL
+				SystemCoreClock = (HSI_VALUE >> 1) * pllmull;
+#endif
+			}
+			break;
+		default: // HSI used as system clock
+			SystemCoreClock = HSI_VALUE;
+			break;
+	}
+
+	// Compute HCLK clock frequency
+	// Get HCLK prescaler
+	tmp = AHBPrescTable[((RCC->CFGR & RCC_CFGR_HPRE) >> 4)];
+
+	// HCLK clock frequency
+	SystemCoreClock >>= tmp;
+}
+
+void startup_stm32f0_init(void) {
+#ifdef TNG_BOOTLOADER
+	// The bootloader does the microcontroller system setup, PLL configuration, etc
+	startup_stm32f0_system_init();
+#else
+	// The firmware uses the configurations from the bootloader,
+	// but it does have to have its own vector table.
+	// For this we copy the vector table to RAM and map it to position 0.
+
+	// Copy interrupt vector table to the RAM to position 0 in RAM.
+	volatile uint32_t *vector_table = (volatile uint32_t *)STM32F0_RAM_VECTOR_TABLE_POSITION;
+	for(uint8_t i = 0; i < 48; i++) {
+		vector_table[i] = *(__IO uint32_t*)((uint32_t)STM32F0_FIRMWARE_ACTIVE_POS_STACK_POINTER + (i << 2));
+	}
+
+	// Map RAM to position 0, so the correct vector table is used
+	__DSB();
+	__HAL_SYSCFG_REMAPMEMORY_SRAM();
+	__DSB();
+  	__ISB();
+
+	// Initialize TNG (LEDs, USB, etc)
+	tng_init();
+#endif
 }

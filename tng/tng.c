@@ -29,6 +29,7 @@
 #include "bricklib2/protocols/tfp/tfp.h"
 
 #include "communication.h"
+#include "tng_communication.h"
 
 #include <string.h>
 
@@ -54,7 +55,10 @@ void tng_tick(void) {
 		if(tng_response_header->length == 0) {
 			memcpy(tng_response_data, tng_request_data, sizeof(TFPMessageHeader));
 			tng_response_header->length = 0;
-			TNGHandleMessageResponse handle_message_return = handle_message(tng_request_data, tng_response_data);
+			TNGHandleMessageResponse handle_message_return = tng_handle_message(tng_request_data, tng_response_data);
+			if(handle_message_return == HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED) {
+				handle_message_return = handle_message(tng_request_data, tng_response_data);
+			}
 
 #if 0
 			if(tng_request_length > tng_request_header->length) {
@@ -129,3 +133,11 @@ void tng_init(void) {
 	usb_init();
 }
 
+uint32_t tng_get_uid(void) {
+	volatile uint32_t *uid = (volatile uint32_t *)STM32F0_UID_POSITION;
+	if((*uid == 0) || (*uid == 0xFFFFFFFF)) {
+		return 2;
+	}
+
+	return *uid;
+}

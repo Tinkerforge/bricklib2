@@ -22,6 +22,8 @@
 #ifndef TNG_H
 #define TNG_H
 
+#include <stdint.h>
+
 typedef enum {
 	HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE = 0,
 	HANDLE_MESSAGE_RESPONSE_EMPTY = 1,
@@ -32,5 +34,6 @@ typedef enum {
 
 void tng_init(void);
 void tng_tick(void);
+uint32_t tng_get_uid(void);
 
 #endif

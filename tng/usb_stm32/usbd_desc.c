@@ -24,6 +24,9 @@
 #include "usbd_core.h"
 #include "usbd_conf.h"
 
+#include "bricklib2/protocols/tfp/tfp.h"
+#include "bricklib2/tng/tng.h"
+
 #include "configs/config.h"
 
 
@@ -31,10 +34,9 @@
 #define USBD_PID                     0x063D
 #define USBD_LANGID_STRING           0x0409 // English US
 #define USBD_MANUFACTURER_STRING     "Tinkerforge GmbH"
-#define USBD_PRODUCT_STRING          "TNG DI8"
+#define USBD_PRODUCT_STRING          TNG_MODULE_NAME
 #define USBD_CONFIGURATION_STRING    "TFP Configuration"
 #define USBD_INTERFACE_STRING        "TFP Interface"
-#define USBD_SERIAL_STRING           "A"
 #define USBD_MAX_STRING_SIZE         512
 
 // USB standard device descriptor for TNG modules 
@@ -98,7 +100,9 @@ uint8_t *usbd_get_product_string_descriptor(USBD_SpeedTypeDef speed, uint16_t *l
 
 uint8_t *usbd_get_serial_string_descriptor(USBD_SpeedTypeDef speed, uint16_t *length) {
 	UNUSED(speed);
-	USBD_GetString((uint8_t *)USBD_SERIAL_STRING, usbd_string_descriptor, length);
+	char uid[8];
+	tfp_uid_uint32_to_base58(tng_get_uid(), uid);
+	USBD_GetString((uint8_t *)uid, usbd_string_descriptor, length);
 	return usbd_string_descriptor;
 }
 

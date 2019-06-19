@@ -9,6 +9,16 @@ ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
                    POST_BUILD
                    COMMAND ${CMAKE_OBJCOPY} -S -O binary ${PROJECT_NAME}.elf ${PROJECT_NAME}.bin)
 
+# Add CRC to end of firmware
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD
+                   COMMAND
+				   ${PROJECT_SOURCE_DIR}/src/bricklib2/tng/tng_build.py ${PROJECT_NAME}.bin > ${PROJECT_NAME}-with-checksum.bin)
+
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD
+                   COMMAND cat
+				   ${PROJECT_SOURCE_DIR}/../../tng-bootloader-stm32/software/build/tng-bootloader.bin ${PROJECT_NAME}-with-checksum.bin > ${PROJECT_NAME}-with-bootloader.bin)
 
 # Make firmware infos
 ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf

@@ -1,5 +1,7 @@
 DOCKER_LOCK_FILE                := $(ROOT_DIR)/DOCKER_LOCK
 STM32CUBEF0_PATH                := $(realpath $(BRICKLIB2_PATH)/stm32cubef0)
+BOOTLOADER_STM32_PATH           := $(ROOT_DIR)/../../tng-bootloader-stm32
+BOOTLOADER_STM32_BRICKLIB2_PATH := $(realpath $(BOOTLOADER_STM32_PATH)/software/src/bricklib2)
 INTERACTIVE                     := $(shell [ -t 0 ] && echo 1)
 
 ifdef INTERACTIVE
@@ -42,6 +44,8 @@ check:
 			-v $(ROOT_DIR)/../:/$(ROOT_DIR)/../ -u $$(id -u):$$(id -g) \
 			-v $(BRICKLIB2_PATH)/:$(BRICKLIB2_PATH)/: -u $$(id -u):$$(id -g) \
 			-v $(STM32CUBEF0_PATH)/:$(STM32CUBEF0_PATH)/: -u $$(id -u):$$(id -g) \
+			-v $(BOOTLOADER_STM32_PATH)/:$(BOOTLOADER_STM32_PATH)/: -u $$(id -u):$$(id -g) \
+			-v $(BOOTLOADER_STM32_BRICKLIB2_PATH)/:$(BOOTLOADER_STM32_BRICKLIB2_PATH)/: -u $$(id -u):$$(id -g) \
 			tinkerforge/build_environment_c /bin/bash \
 			-c "cd $(ROOT_DIR) ; make $(MAKECMDGOALS)" && \
 			touch $(DOCKER_LOCK_FILE); \

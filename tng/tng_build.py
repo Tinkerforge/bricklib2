@@ -9,7 +9,7 @@ import sys
 import struct
 
 firmware = open(sys.argv[1],'rb').read()
-crc = struct.pack('<I', binascii.crc32(firmware) & 0xFFFFFFFF)
+crc = struct.pack('<I', binascii.crc32(firmware[8:]) & 0xFFFFFFFF)
 length = struct.pack('<I', len(firmware))
 sys.stdout.buffer.write(crc)
 sys.stdout.buffer.write(length)

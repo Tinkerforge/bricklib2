@@ -40,9 +40,6 @@ MEMORY
 SECTIONS
 {
     /* Add constants to start of firmware */
-    /* firmware_crc: ORIGIN(FLASH) + 0 is done externaly */
-    /* firmware_length: ORIGIN(FLASH) + 4 is done externaly */
-
     .firmware_crc ORIGIN(FLASH) + 0:
   	{
     	KEEP(*(.firmware_crc))

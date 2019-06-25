@@ -29,6 +29,7 @@
 #include "bricklib2/logging/logging.h"
 
 #include "bricklib2/tng/tng.h"
+#include "bricklib2/tng/tng_firmware.h"
 
 extern const uint32_t device_identifier;
 
@@ -36,15 +37,27 @@ static uint32_t tng_firmware_pointer = 0;
 
 TNGHandleMessageResponse tng_handle_message(const void *message, void *response) {
 	switch(tfp_get_fid_from_message(message)) {
-        case TNG_FID_SET_WRITE_FIRMWARE_POINTER: return tng_set_write_firmware_pointer(message);
-        case TNG_FID_WRITE_FIRMWARE: return tng_write_firmware(message, response);
-        case TNG_FID_RESET: return tng_reset(message);
-        case TNG_FID_READ_UID: return tng_read_uid(message, response);
-        case TNG_FID_WRITE_UID: return tng_write_uid(message);
-        case TNG_FID_ENUMERATE: return tng_enumerate(message, response);
+		case TNG_FID_COPY_FIRMWARE: return tng_copy_firmware(message, response);
+		case TNG_FID_SET_WRITE_FIRMWARE_POINTER: return tng_set_write_firmware_pointer(message);
+		case TNG_FID_WRITE_FIRMWARE: return tng_write_firmware(message, response);
+		case TNG_FID_RESET: return tng_reset(message);
+		case TNG_FID_READ_UID: return tng_read_uid(message, response);
+		case TNG_FID_WRITE_UID: return tng_write_uid(message);
+		case TNG_FID_ENUMERATE: return tng_enumerate(message, response);
 		case TNG_FID_GET_IDENTITY: return tng_get_identity(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
+}
+
+TNGHandleMessageResponse tng_copy_firmware(const TNGCopyFirmware *data, TNGCopyFirmware_Response *response) {
+	response->header.length = sizeof(TNGCopyFirmware_Response);
+	response->status        = tng_firmware_check_all();
+
+	if(response->status == TNG_FIRMWARE_COPY_STATUS_OK) {
+		tng_firmware_set_boot_info(0xFFFFFFFF);
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 TNGHandleMessageResponse tng_set_write_firmware_pointer(const TNGSetWriteFirmwarePointer *data) {
@@ -54,32 +67,33 @@ TNGHandleMessageResponse tng_set_write_firmware_pointer(const TNGSetWriteFirmwar
 }
 
 TNGHandleMessageResponse tng_write_firmware(const TNGWriteFirmware *data, TNGWriteFirmware_Response *response) {
-    HAL_FLASH_Unlock();
-    if(tng_firmware_pointer == 0) {
-        FLASH_EraseInitTypeDef erase_init = {
-            .TypeErase = FLASH_TYPEERASE_PAGES,
-            .PageAddress = STM32F0_FIRMWARE_NEW_POS_START,
-            .NbPages = STM32F0_FIRMWARE_SIZE/FLASH_PAGE_SIZE
-        };
-        uint32_t page_error = 0;
-        if(HAL_FLASHEx_Erase(&erase_init, &page_error) != HAL_OK) {
-            loge("HAL_FLASHEx_Erase error %d\n\r", page_error);
-            response->status = TNG_WRITE_FIRMWARE_STATUS_INVALID_POINTER;
-	        return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
-        }
-    }
+	response->header.length = sizeof(TNGWriteFirmware_Response);
+	HAL_FLASH_Unlock();
+	if(tng_firmware_pointer == 0) {
+		FLASH_EraseInitTypeDef erase_init = {
+			.TypeErase = FLASH_TYPEERASE_PAGES,
+			.PageAddress = STM32F0_FIRMWARE_NEW_POS_START,
+			.NbPages = STM32F0_FIRMWARE_SIZE/FLASH_PAGE_SIZE
+		};
+		uint32_t page_error = 0;
+		if(HAL_FLASHEx_Erase(&erase_init, &page_error) != HAL_OK) {
+			HAL_FLASH_Lock();
+			response->status = TNG_WRITE_FIRMWARE_STATUS_INVALID_POINTER;
+			return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+		}
+	}
 
-    uint32_t *data32 = (uint32_t *)data->data;
-    for(uint8_t i = 0; i < TNG_WRITE_FIRMWARE_CHUNK_SIZE/4; i++) {
-        if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, STM32F0_FIRMWARE_NEW_POS_START + tng_firmware_pointer*TNG_WRITE_FIRMWARE_CHUNK_SIZE + i*4, *data32) != HAL_OK) {
-            loge("HAL_FLASH_Program error\n\r");
-            response->status = TNG_WRITE_FIRMWARE_STATUS_INVALID_POINTER;
-	        return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
-        }
-    }
-    HAL_FLASH_Lock();
+	for(uint8_t i = 0; i < TNG_WRITE_FIRMWARE_CHUNK_SIZE; i += 4) {
+		uint32_t *data32 = (uint32_t *)&data->data[i];
+		if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, STM32F0_FIRMWARE_NEW_POS_START + tng_firmware_pointer + i, *data32) != HAL_OK) {
+			HAL_FLASH_Lock();
+			response->status = TNG_WRITE_FIRMWARE_STATUS_INVALID_POINTER;
+			return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+		}
+	}
+	HAL_FLASH_Lock();
 
-    response->status = TNG_WRITE_FIRMWARE_STATUS_OK;
+	response->status = TNG_WRITE_FIRMWARE_STATUS_OK;
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
@@ -101,24 +115,25 @@ TNGHandleMessageResponse tng_write_uid(const TNGWriteUID *data) {
 		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
 	}
 
-    HAL_FLASH_Unlock();
+	HAL_FLASH_Unlock();
 
-    FLASH_EraseInitTypeDef erase_init = {
-        .TypeErase = FLASH_TYPEERASE_PAGES,
-        .PageAddress = STM32F0_UID_POSITION,
-        .NbPages = 1
-    };
-    uint32_t page_error = 0;
-    if(HAL_FLASHEx_Erase(&erase_init, &page_error) != HAL_OK) {
-        loge("HAL_FLASHEx_Erase error %d\n\r", page_error);
-    }
+	FLASH_EraseInitTypeDef erase_init = {
+		.TypeErase = FLASH_TYPEERASE_PAGES,
+		.PageAddress = STM32F0_UID_POSITION,
+		.NbPages = 1
+	};
+	uint32_t page_error = 0;
+	if(HAL_FLASHEx_Erase(&erase_init, &page_error) != HAL_OK) {
+		HAL_FLASH_Lock();
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
 
-    if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, STM32F0_UID_POSITION, data->uid) != HAL_OK) {
-        loge("HAL_FLASH_Program error\n\r");
-    }
+	if(HAL_FLASH_Program(FLASH_TYPEPROGRAM_WORD, STM32F0_UID_POSITION, data->uid) != HAL_OK) {
+		HAL_FLASH_Lock();
+		return HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER;
+	}
 
-    HAL_FLASH_Lock();
-
+	HAL_FLASH_Lock();
 	return HANDLE_MESSAGE_RESPONSE_EMPTY;
 }
 
@@ -142,8 +157,6 @@ TNGHandleMessageResponse tng_get_identity(const TNGGetIdentity *data, TNGGetIden
 }
 
 TNGHandleMessageResponse tng_enumerate(const TNGEnumerate *data, TNGEnumerate_Callback *response) {
-	logd("tng_enumerate\n\r");
-
 	// The function itself does not return anything, but we return the callback here instead.
 	// We use get_identity for uids, fw version and hw version.
 	// The layout of the struct it the same.

@@ -17,8 +17,40 @@ ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
 
 ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
                    POST_BUILD
+                   COMMAND cp
+				   ${PROJECT_SOURCE_DIR}/../../tng-bootloader-stm32/software/build/tng-bootloader.bin ${PROJECT_NAME}-bootloader.bin)
+
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD
                    COMMAND cat
-				   ${PROJECT_SOURCE_DIR}/../../tng-bootloader-stm32/software/build/tng-bootloader.bin ${PROJECT_NAME}-with-checksum.bin > ${PROJECT_NAME}-with-bootloader.bin)
+				   ${PROJECT_NAME}-bootloader.bin ${PROJECT_NAME}-with-checksum.bin > ${PROJECT_NAME}-usb.bin)
+
+
+# Create zbin
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD
+                   COMMAND rm -rf zip)
+
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD
+                   COMMAND mkdir -p zip)
+
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD
+                   COMMAND cp ${PROJECT_NAME}-usb.bin zip/${PROJECT_NAME}-usb.bin)
+
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD
+                   COMMAND cp ${PROJECT_NAME}-bootloader.bin zip/${PROJECT_NAME}-bootloader.bin)
+
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD
+                   COMMAND cp ${PROJECT_NAME}-with-checksum.bin zip/${PROJECT_NAME}-firmware.bin)
+
+ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf
+                   POST_BUILD
+                   COMMAND zip -j ${PROJECT_NAME}-firmware.zbin zip/${PROJECT_NAME}-firmware.bin zip/${PROJECT_NAME}-bootloader.bin zip/${PROJECT_NAME}-usb.bin)
+
 
 # Make firmware infos
 ADD_CUSTOM_COMMAND(TARGET ${PROJECT_NAME}.elf

@@ -42,6 +42,14 @@ static uint16_t tng_request_length = 0;
 static TFPMessageHeader *tng_request_header = (TFPMessageHeader*)tng_request_data;
 static TFPMessageHeader *tng_response_header = (TFPMessageHeader*)tng_response_data;
 
+bool tng_is_valid_request(TFPMessageHeader *header) {
+	if((header->uid != 0) && (tng_get_uid() != header->uid)) {
+		return false;
+	}
+
+	return true;
+}
+
 void tng_tick(void) {
 	if(tng_request_length < sizeof(TFPMessageHeader)) {
 		tng_request_length += usb_recv(tng_request_data + tng_request_length, TNG_BUFFER_SIZE - tng_request_length);
@@ -53,36 +61,35 @@ void tng_tick(void) {
 
 	if(tng_request_length >= tng_request_header->length) {
 		if(tng_response_header->length == 0) {
-			memcpy(tng_response_data, tng_request_data, sizeof(TFPMessageHeader));
-			tng_response_header->length = 0;
-			TNGHandleMessageResponse handle_message_return = tng_handle_message(tng_request_data, tng_response_data);
-			if(handle_message_return == HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED) {
-				handle_message_return = handle_message(tng_request_data, tng_response_data);
+			if(tng_is_valid_request(tng_request_header)) {
+				memcpy(tng_response_data, tng_request_data, sizeof(TFPMessageHeader));
+				tng_response_header->length = 0;
+				TNGHandleMessageResponse handle_message_return = tng_handle_message(tng_request_data, tng_response_data);
+				if(handle_message_return == HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED) {
+					handle_message_return = handle_message(tng_request_data, tng_response_data);
+				}
+
+				if(tng_response_header->return_expected) {
+					if(tng_response_header->length == 0) {
+						tng_response_header->length = 8;
+					}
+					switch(handle_message_return) {
+						case HANDLE_MESSAGE_RESPONSE_EMPTY:             tng_response_header->error = TFP_MESSAGE_ERROR_CODE_OK;                break;
+						case HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED:     tng_response_header->error = TFP_MESSAGE_ERROR_CODE_NOT_SUPPORTED;     break;
+						case HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER: tng_response_header->error = TFP_MESSAGE_ERROR_CODE_INVALID_PARAMETER; break;
+						case HANDLE_MESSAGE_RESPONSE_NONE:              break;
+						default: break;
+					}
+				}
 			}
 
-#if 0
 			if(tng_request_length > tng_request_header->length) {
 				memmove(tng_request_data + tng_request_header->length, tng_request_data, TNG_BUFFER_SIZE - tng_request_header->length);
 				tng_request_length -= tng_request_header->length;
 			} else {
 				tng_request_length = 0;
 			}
-#else
-			tng_request_length = 0;
-#endif
 
-			if(tng_response_header->return_expected) {
-				if(tng_response_header->length == 0) {
-					tng_response_header->length = 8;
-				}
-				switch(handle_message_return) {
-					case HANDLE_MESSAGE_RESPONSE_EMPTY:             tng_response_header->error = TFP_MESSAGE_ERROR_CODE_OK;                break;
-					case HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED:     tng_response_header->error = TFP_MESSAGE_ERROR_CODE_NOT_SUPPORTED;     break;
-					case HANDLE_MESSAGE_RESPONSE_INVALID_PARAMETER: tng_response_header->error = TFP_MESSAGE_ERROR_CODE_INVALID_PARAMETER; break;
-					case HANDLE_MESSAGE_RESPONSE_NONE:              break;
-					default: break;
-				}
-			}
 		}
 	}
 

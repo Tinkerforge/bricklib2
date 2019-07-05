@@ -21,9 +21,11 @@
 
 #include "system_timer.h"
 
-#include "configs/config.h"
-
+#ifdef SYSTEM_TIMER_USE_64BIT_US
+static volatile uint64_t system_timer_tick;
+#else
 static volatile uint32_t system_timer_tick;
+#endif
 
 #ifdef SYSTEM_TIMER_CALLBACK_ENABLED
 void system_timer_callback();
@@ -62,7 +64,40 @@ system_timer_get_ms(void) {
 	return system_timer_tick;
 }
 
-// This will work even with wrap-around up to UIN32_MAX/2 difference.
+#ifdef SYSTEM_TIMER_USE_64BIT_US
+uint64_t
+#ifdef SYSTEM_TIMER_IS_RAMFUNC
+__attribute__ ((section (".ram_code")))
+#endif
+__attribute__((optimize("-O3")))
+system_timer_get_us(void) {
+	uint64_t ms1 = 0;
+	uint64_t ms2 = 0;
+	uint32_t us  = 0;
+
+	// At 48 MHz the VAL value goes from 47999 to 0. At 0 the SysTick interrupt is generated.
+	// To get the time in us we take the ms from the system timer and add the current VAL count
+	// If we devide it by 48 we get a decrementing value beteween 999 and 0. Thus we can get the
+	// current us with 999 - VAL/48.
+
+	// Additionally we have to make sure that the SysTick interrupt is not triggered right between
+	// we read it and VAL.
+	do {
+		ms1 = system_timer_tick;
+#ifdef SYSTEM_TIMER_MAIN_CLOCK_MHZ_48
+		// This is about three times as fast as the division by 48.
+		us  = 999 - (SysTick->VAL*21845 >> 20);
+#else
+		us  = 999 - SysTick->VAL/SYSTEM_TIMER_MAIN_CLOCK_MHZ;
+#endif
+		ms2 = system_timer_tick;
+	} while(ms1 != ms2);
+
+	return ms1*1000 + us;
+}
+#endif
+
+// This will work even with wrap-around up to UINT32_MAX/2 difference.
 // E.g.: end - start = 0x00000010 - 0xfffffff = 0x00000011 etc
 inline bool
 #ifdef SYSTEM_TIMER_IS_RAMFUNC
@@ -77,6 +112,20 @@ void system_timer_sleep_ms(const uint32_t sleep) {
 	while(!system_timer_is_time_elapsed_ms(time, sleep));
 }
 
+#ifdef SYSTEM_TIMER_USE_64BIT_US
+inline bool
+#ifdef SYSTEM_TIMER_IS_RAMFUNC
+__attribute__ ((section (".ram_code")))
+#endif
+ system_timer_is_time_elapsed_us(const uint64_t start_measurement, const uint64_t time_to_be_elapsed) {
+	return (system_timer_get_us() - start_measurement) >= time_to_be_elapsed;
+}
+
+void system_timer_sleep_us(const uint64_t sleep) {
+	const uint64_t time = system_timer_get_us();
+	while(!system_timer_is_time_elapsed_us(time, sleep));
+}
+#else
 // Only works for sleep values <= 500
 // TODO: Make sure this supports sleep times > 500 by counting overflows
 //       and/or using system_timer_sleep_ms additionally.
@@ -97,6 +146,7 @@ void system_timer_sleep_us(const uint32_t sleep) {
 		}
 	}
 }
+#endif
 
 // The STM32F0 CubeMX HAL code implements a system timer similar to the one in the bricklib.
 // They can't both be used at the same time. For the STM32 HAL to function we need to provide

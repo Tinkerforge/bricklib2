@@ -25,9 +25,20 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "configs/config.h"
+
 void system_timer_init(const uint32_t main_clock_frequency, const uint32_t system_timer_frequency);
 uint32_t system_timer_get_ms(void);
 bool system_timer_is_time_elapsed_ms(const uint32_t start_measurement, const uint32_t time_to_be_elapsed);
 void system_timer_sleep_ms(const uint32_t sleep);
+
+
+#ifdef SYSTEM_TIMER_USE_64BIT_US
+uint64_t system_timer_get_us(void);
+bool system_timer_is_time_elapsed_us(const uint64_t start_measurement, const uint64_t time_to_be_elapsed);
+void system_timer_sleep_us(const uint64_t sleep);
+#else
 void system_timer_sleep_us(const uint32_t sleep);
+#endif
+
 #endif

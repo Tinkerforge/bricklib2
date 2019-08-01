@@ -27,18 +27,25 @@
 
 #include "usbd_tfp.h"
 
+#define USB_BUFFER_SIZE 256
+
 typedef struct {
-    __attribute__ ((aligned (4))) uint8_t in_buffer[USBD_TFP_IN_SIZE];
-    __attribute__ ((aligned (4))) uint8_t out_buffer[USBD_TFP_OUT_SIZE];
+    __attribute__ ((aligned (4))) uint8_t in_buffer[USB_BUFFER_SIZE];
+    __attribute__ ((aligned (4))) uint8_t out_buffer[USB_BUFFER_SIZE];
     uint16_t in_buffer_length;
     uint16_t out_buffer_length;
     bool transfer_in_progress;
+
+    uint16_t in_buffer_storage_length;
+    uint8_t in_buffer_storage[USB_BUFFER_SIZE];
 } TFUSB;
 
 extern TFUSB tfusb;
 
 void usb_init(void);
 bool usb_send(uint8_t *data, uint16_t length);
+bool usb_send_storage(void);
 uint16_t usb_recv(uint8_t *data, uint16_t max_length);
+bool usb_can_recv(void);
 
 #endif

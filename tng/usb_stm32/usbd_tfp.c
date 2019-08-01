@@ -84,8 +84,9 @@ __attribute__ ((aligned (4))) static uint8_t usbd_tfp_configuration_descriptor[]
 	0x00                     // bInterval: ignore for Bulk transfer
 };
 
+extern volatile bool test;
 static uint8_t usbd_tfp_init(USBD_HandleTypeDef *dev, uint8_t cfgidx) {
-	logd("usbd_tfp_init speed: %d\n\r", dev->dev_speed);
+	test = true;
 
 	// Open IN EP 
 	USBD_LL_OpenEP(dev,	USBD_TFP_IN_EP,  USBD_EP_TYPE_BULK, USBD_TFP_IN_SIZE);
@@ -100,8 +101,6 @@ static uint8_t usbd_tfp_init(USBD_HandleTypeDef *dev, uint8_t cfgidx) {
 }
 
 static uint8_t usbd_tfp_deinit(USBD_HandleTypeDef *dev, uint8_t cfgidx) {
-	logd("usbd_tfp_deint\n\r");
-
 	// Close IN EP
 	USBD_LL_CloseEP(dev, USBD_TFP_IN_EP);
 
@@ -113,6 +112,7 @@ static uint8_t usbd_tfp_deinit(USBD_HandleTypeDef *dev, uint8_t cfgidx) {
 
 static uint8_t usbd_tfp_data_in(USBD_HandleTypeDef *dev, uint8_t epnum) {
 	tfusb.transfer_in_progress = false;
+	usb_send_storage();
 
 	return USBD_OK;
 }
@@ -132,20 +132,6 @@ uint8_t *usbd_tfp_get_device_qualifier_descriptor(uint16_t *length) {
 	*length = sizeof(usbd_tfp_device_qualifier_descriptor);
 	return usbd_tfp_device_qualifier_descriptor;
 }
-
-#if 0
-uint8_t usbd_tfp_transmit_packet(USBD_HandleTypeDef *dev) {      
-	if(usbd_tfp_transfer_in_progress) {
-		return USBD_BUSY;
-	} else {
-		usbd_tfp_transfer_in_progress = true;
-		USBD_LL_Transmit(dev, USBD_TFP_IN_EP, usbd_tfp_in_buffer, usbd_tfp_in_buffer_length);
-	}	
-
-	return USBD_OK;
-}
-#endif
-
 
 // TFP interface class callbacks structure
 USBD_ClassTypeDef usbd_tfp =  {

@@ -33,6 +33,10 @@
 
 #include "bricklib2/hal/system_timer/system_timer.h"
 
+#ifdef SPI_FIFO_COOP_ENABLE
+#include "bricklib2/os/coop_task.h"
+#endif
+
 #ifndef SPI_FIFO_TIMEOUT
 #define SPI_FIFO_TIMEOUT 10 // in ms
 #endif
@@ -40,6 +44,34 @@
 static bool spi_fifo_ready_or_idle(SPIFifo *spi_fifo) {
 	return (spi_fifo->state == SPI_FIFO_STATE_IDLE) || (spi_fifo->state & SPI_FIFO_STATE_READY);
 }
+
+#ifdef SPI_FIFO_COOP_ENABLE
+bool spi_fifo_coop_transceive(SPIFifo *spi_fifo, const uint16_t length, const uint8_t *mosi, uint8_t *miso) {
+	XMC_USIC_CH_RXFIFO_Flush(spi_fifo->channel);
+	uint32_t start = system_timer_get_ms();
+	XMC_SPI_CH_EnableSlaveSelect(spi_fifo->channel, spi_fifo->slave);
+
+	// We assume that the data fits in the FIFO
+	for(uint16_t i = 0; i < length; i++) {
+		spi_fifo->channel->IN[0] = mosi[i];
+	}
+
+	uint16_t i = 0;
+	while(i < length) {
+		if(system_timer_is_time_elapsed_ms(start, SPI_FIFO_TIMEOUT)) {
+			return false;
+		}
+		if(XMC_USIC_CH_RXFIFO_IsEmpty(spi_fifo->channel)) {
+			coop_task_yield();
+			continue;
+		}
+		miso[i] = spi_fifo->channel->OUTR;
+		i++;
+	}
+
+	return true;
+}
+#else
 
 void spi_fifo_transceive(SPIFifo *spi_fifo,  const uint16_t length, const uint8_t *data) {
 	if(!spi_fifo_ready_or_idle(spi_fifo)) {
@@ -70,6 +102,26 @@ uint8_t spi_fifo_read_fifo(SPIFifo *spi_fifo, uint8_t *buffer, const uint8_t buf
 
 	return length;
 }
+
+SPIFifoState spi_fifo_next_state(SPIFifo *spi_fifo) {
+	if(spi_fifo->state == SPI_FIFO_STATE_TRANSCEIVE) {
+		spi_fifo->spi_status = XMC_SPI_CH_GetStatusFlag(spi_fifo->channel);
+		if(spi_fifo->spi_status & (XMC_SPI_CH_STATUS_FLAG_PARITY_ERROR_EVENT_DETECTED | XMC_SPI_CH_STATUS_FLAG_DATA_LOST_INDICATION)) {
+			XMC_SPI_CH_DisableSlaveSelect(spi_fifo->channel);
+			spi_fifo->state = SPI_FIFO_STATE_TRANSCEIVE_ERROR;
+		} else if(XMC_USIC_CH_RXFIFO_GetLevel(spi_fifo->channel) >= spi_fifo->expected_fifo_level) {
+			XMC_SPI_CH_DisableSlaveSelect(spi_fifo->channel);
+			spi_fifo->state = SPI_FIFO_STATE_TRANSCEIVE_READY;
+		} else if(system_timer_is_time_elapsed_ms(spi_fifo->last_activity, SPI_FIFO_TIMEOUT)) {
+			spi_fifo->state = SPI_FIFO_STATE_TRANSCEIVE_ERROR;
+			spi_fifo->spi_status = SPI_FIFO_STATUS_TIMEOUT;
+		}
+	}
+
+	return spi_fifo->state;
+}
+
+#endif
 
 void spi_fifo_init(SPIFifo *spi_fifo) {
 	// USIC channel configuration
@@ -127,6 +179,11 @@ void spi_fifo_init(SPIFifo *spi_fifo) {
 	// Configure Leading/Trailing delay
 	XMC_SPI_CH_SetSlaveSelectDelay(spi_fifo->channel, 2);
 
+#ifdef SPI_FIFO_COOP_ENABLE
+	// Disable FEM, such that FIFO will automatically disable slave select (used in coop mode)
+	XMC_SPI_CH_DisableFEM(spi_fifo->channel);
+#endif
+
 	// Set input source path
 	XMC_SPI_CH_SetInputSource(spi_fifo->channel, spi_fifo->miso_input, spi_fifo->miso_source);
 
@@ -154,22 +211,4 @@ void spi_fifo_init(SPIFifo *spi_fifo) {
 	XMC_USIC_CH_RXFIFO_Flush(spi_fifo->channel);
 
 	spi_fifo->state = SPI_FIFO_STATE_IDLE;
-}
-
-SPIFifoState spi_fifo_next_state(SPIFifo *spi_fifo) {
-	if(spi_fifo->state == SPI_FIFO_STATE_TRANSCEIVE) {
-		spi_fifo->spi_status = XMC_SPI_CH_GetStatusFlag(spi_fifo->channel);
-		if(spi_fifo->spi_status & (XMC_SPI_CH_STATUS_FLAG_PARITY_ERROR_EVENT_DETECTED | XMC_SPI_CH_STATUS_FLAG_DATA_LOST_INDICATION)) {
-			XMC_SPI_CH_DisableSlaveSelect(spi_fifo->channel);
-			spi_fifo->state = SPI_FIFO_STATE_TRANSCEIVE_ERROR;
-		} else if(XMC_USIC_CH_RXFIFO_GetLevel(spi_fifo->channel) >= spi_fifo->expected_fifo_level) {
-			XMC_SPI_CH_DisableSlaveSelect(spi_fifo->channel);
-			spi_fifo->state = SPI_FIFO_STATE_TRANSCEIVE_READY;
-		} else if(system_timer_is_time_elapsed_ms(spi_fifo->last_activity, SPI_FIFO_TIMEOUT)) {
-			spi_fifo->state = SPI_FIFO_STATE_TRANSCEIVE_ERROR;
-			spi_fifo->spi_status = SPI_FIFO_STATUS_TIMEOUT;
-		}
-	}
-
-	return spi_fifo->state;
 }

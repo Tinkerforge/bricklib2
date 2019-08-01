@@ -80,10 +80,14 @@ typedef struct {
 	uint32_t last_activity;
 } SPIFifo;
 
-// data_send and data_receive can be the same pointer
+#ifdef SPI_FIFO_COOP_ENABLE
+bool spi_fifo_coop_transceive(SPIFifo *spi_fifo,  const uint16_t length, const uint8_t *mosi, uint8_t *miso);
+#else
 void spi_fifo_transceive(SPIFifo *spi_fifo,  const uint16_t length, const uint8_t *data);
 uint8_t spi_fifo_read_fifo(SPIFifo *spi_fifo, uint8_t *buffer, const uint8_t buffer_length);
-void spi_fifo_init(SPIFifo *i2c_fifo);
 SPIFifoState spi_fifo_next_state(SPIFifo *spi_fifo);
+#endif 
+
+void spi_fifo_init(SPIFifo *i2c_fifo);
 
 #endif

@@ -27,6 +27,7 @@
 #include "bricklib2/utility/communication_callback.h"
 #include "bricklib2/protocols/tfp/tfp.h"
 #include "bricklib2/logging/logging.h"
+#include "bricklib2/hal/system_timer/system_timer.h"
 
 #include "bricklib2/tng/tng.h"
 #include "bricklib2/tng/tng_firmware.h"
@@ -37,6 +38,7 @@ static uint32_t tng_firmware_pointer = 0;
 
 TNGHandleMessageResponse tng_handle_message(const void *message, void *response) {
 	switch(tfp_get_fid_from_message(message)) {
+		case TNG_FID_GET_TIMESTAMP: return tng_get_timestamp(message, response);
 		case TNG_FID_COPY_FIRMWARE: return tng_copy_firmware(message, response);
 		case TNG_FID_SET_WRITE_FIRMWARE_POINTER: return tng_set_write_firmware_pointer(message);
 		case TNG_FID_WRITE_FIRMWARE: return tng_write_firmware(message, response);
@@ -47,6 +49,13 @@ TNGHandleMessageResponse tng_handle_message(const void *message, void *response)
 		case TNG_FID_GET_IDENTITY: return tng_get_identity(message, response);
 		default: return HANDLE_MESSAGE_RESPONSE_NOT_SUPPORTED;
 	}
+}
+
+TNGHandleMessageResponse tng_get_timestamp(const TNGGetTimestamp *data, TNGGetTimestamp_Response *response) {
+	response->header.length = sizeof(TNGGetTimestamp_Response);
+	response->timestamp     = system_timer_get_us();
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
 TNGHandleMessageResponse tng_copy_firmware(const TNGCopyFirmware *data, TNGCopyFirmware_Response *response) {

@@ -44,7 +44,8 @@ TNGHandleMessageResponse tng_handle_message(const void *data, void *response);
 #define TNG_WRITE_FIRMWARE_STATUS_INVALID_POINTER 1
 
 // Function and callback IDs and structs
-#define TNG_FID_COPY_FIRMWARE 236
+#define TNG_FID_GET_TIMESTAMP 234
+#define TNG_FID_COPY_FIRMWARE 235
 #define TNG_FID_SET_WRITE_FIRMWARE_POINTER 237
 #define TNG_FID_WRITE_FIRMWARE 238
 #define TNG_FID_RESET 243
@@ -53,6 +54,15 @@ TNGHandleMessageResponse tng_handle_message(const void *data, void *response);
 #define TNG_FID_ENUMERATE_CALLBACK 253
 #define TNG_FID_ENUMERATE 254
 #define TNG_FID_GET_IDENTITY 255
+
+typedef struct {
+	TFPMessageHeader header;
+} __attribute__((__packed__)) TNGGetTimestamp;
+
+typedef struct {
+	TFPMessageHeader header;
+    uint64_t timestamp;
+} __attribute__((__packed__)) TNGGetTimestamp_Response;
 
 typedef struct {
 	TFPMessageHeader header;
@@ -127,6 +137,7 @@ typedef struct {
 
 
 // Function prototypes
+TNGHandleMessageResponse tng_get_timestamp(const TNGGetTimestamp *data, TNGGetTimestamp_Response *response);
 TNGHandleMessageResponse tng_copy_firmware(const TNGCopyFirmware *data, TNGCopyFirmware_Response *response);
 TNGHandleMessageResponse tng_set_write_firmware_pointer(const TNGSetWriteFirmwarePointer *data);
 TNGHandleMessageResponse tng_write_firmware(const TNGWriteFirmware *data, TNGWriteFirmware_Response *response);

@@ -110,9 +110,12 @@ void tng_init(void) {
 #endif
 
 	RCC_OscInitTypeDef rcc_osc = {
-		.OscillatorType = RCC_OSCILLATORTYPE_HSI48,
-		.HSI48State     = RCC_HSI48_ON,
-		.PLL.PLLState   = RCC_PLL_NONE
+		.OscillatorType = RCC_OSCILLATORTYPE_HSE,
+		.HSEState       = RCC_HSE_ON,
+		.PLL.PLLState   = RCC_PLL_ON,
+		.PLL.PLLSource  = RCC_PLLSOURCE_HSE,
+		.PLL.PLLMUL     = RCC_PLL_MUL6,
+		.PLL.PREDIV     = RCC_PREDIV_DIV1
 	};
 	HAL_StatusTypeDef status = HAL_RCC_OscConfig(&rcc_osc);
 	if(status != HAL_OK) {
@@ -121,7 +124,7 @@ void tng_init(void) {
 
 	RCC_ClkInitTypeDef rcc_clk = {
 		.ClockType      = RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_PCLK1,
-		.SYSCLKSource   = RCC_SYSCLKSOURCE_HSI48,
+		.SYSCLKSource   = RCC_SYSCLKSOURCE_PLLCLK,
 		.AHBCLKDivider  = RCC_SYSCLK_DIV1,
 		.APB1CLKDivider = RCC_HCLK_DIV1
 	};
@@ -132,7 +135,7 @@ void tng_init(void) {
 
 	RCC_PeriphCLKInitTypeDef rcc_periph_clk = {
 		.PeriphClockSelection = RCC_PERIPHCLK_USB,
-		.UsbClockSelection    = RCC_USBCLKSOURCE_HSI48
+		.UsbClockSelection    = RCC_USBCLKSOURCE_PLL
 	};
 	status = HAL_RCCEx_PeriphCLKConfig(&rcc_periph_clk);
 	if(status != HAL_OK) {

@@ -180,6 +180,9 @@ void SystemCoreClockSetup(void) {
 #if RTC_CLOCK_SRC == RTC_CLOCK_SRC_EXT_XTAL
 	// Enable OSC_LP
 	SCU_ANALOG->ANAOSCLPCTRL &= ~SCU_ANALOG_ANAOSCLPCTRL_MODE_Msk;
+#else
+	// Disable OSC_LP
+	SCU_ANALOG->ANAOSCLPCTRL |=  SCU_ANALOG_ANAOSCLPCTRL_MODE_Msk;
 #endif
 
 	// Update PCLK selection mux.

@@ -64,7 +64,11 @@ void ccu4_pwm_init(XMC_GPIO_PORT_t *const port, const uint8_t pin, const uint8_t
 	};
 
 	const XMC_GPIO_CONFIG_t gpio_out_config	= {
+#ifdef CCU4_PWM_PUSH_PULL_ALT
+		.mode                = CCU4_PWM_PUSH_PULL_ALT,
+#else
 		.mode                = XMC_GPIO_MODE_OUTPUT_PUSH_PULL_ALT2,
+#endif
 		.input_hysteresis    = XMC_GPIO_INPUT_HYSTERESIS_STANDARD,
 		.output_level        = XMC_GPIO_OUTPUT_LEVEL_LOW,
 	};

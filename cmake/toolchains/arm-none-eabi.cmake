@@ -10,6 +10,7 @@ SET(CMAKE_CXX_COMPILER arm-none-eabi-g++)
 SET(CMAKE_CXX_COMPILER_WORKS 1)
 SET(CMAKE_SIZE arm-none-eabi-size)
 SET(CMAKE_OBJCOPY arm-none-eabi-objcopy)
+SET(CMAKE_OBJDUMP arm-none-eabi-objdump)
 
 # adjust the default behaviour of the FIND_XXX() commands:
 # search headers and libraries in the target environment, search 

@@ -22,6 +22,8 @@
 #ifndef SPI_FIFO_H
 #define SPI_FIFO_H
 
+#include "configs/config.h"
+
 #include "xmc_usic.h"
 #include "xmc_spi.h"
 #include "xmc_gpio.h"
@@ -78,6 +80,10 @@ typedef struct {
 	uint32_t spi_status;
 
 	uint32_t last_activity;
+
+#ifdef SPI_FIFO_COOP_USE_MUTEX
+	bool mutex;
+#endif
 } SPIFifo;
 
 #ifdef SPI_FIFO_COOP_ENABLE

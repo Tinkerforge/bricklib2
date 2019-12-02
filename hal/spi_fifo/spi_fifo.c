@@ -41,12 +41,15 @@
 #define SPI_FIFO_TIMEOUT 10 // in ms
 #endif
 
-static bool spi_fifo_ready_or_idle(SPIFifo *spi_fifo) {
-	return (spi_fifo->state == SPI_FIFO_STATE_IDLE) || (spi_fifo->state & SPI_FIFO_STATE_READY);
-}
-
 #ifdef SPI_FIFO_COOP_ENABLE
 bool spi_fifo_coop_transceive(SPIFifo *spi_fifo, const uint16_t length, const uint8_t *mosi, uint8_t *miso) {
+#ifdef SPI_FIFO_COOP_USE_MUTEX
+	if(spi_fifo->mutex) {
+		coop_task_yield();
+	}
+	spi_fifo->mutex = true;
+#endif
+
 	XMC_USIC_CH_RXFIFO_Flush(spi_fifo->channel);
 	uint32_t start = system_timer_get_ms();
 	XMC_SPI_CH_EnableSlaveSelect(spi_fifo->channel, spi_fifo->slave);
@@ -59,6 +62,9 @@ bool spi_fifo_coop_transceive(SPIFifo *spi_fifo, const uint16_t length, const ui
 	uint16_t i = 0;
 	while(i < length) {
 		if(system_timer_is_time_elapsed_ms(start, SPI_FIFO_TIMEOUT)) {
+#ifdef SPI_FIFO_COOP_USE_MUTEX
+			spi_fifo->mutex = false;
+#endif
 			return false;
 		}
 		if(XMC_USIC_CH_RXFIFO_IsEmpty(spi_fifo->channel)) {
@@ -69,9 +75,17 @@ bool spi_fifo_coop_transceive(SPIFifo *spi_fifo, const uint16_t length, const ui
 		i++;
 	}
 
+#ifdef SPI_FIFO_COOP_USE_MUTEX
+	spi_fifo->mutex = false;
+#endif
+
 	return true;
 }
 #else
+
+static bool spi_fifo_ready_or_idle(SPIFifo *spi_fifo) {
+	return (spi_fifo->state == SPI_FIFO_STATE_IDLE) || (spi_fifo->state & SPI_FIFO_STATE_READY);
+}
 
 void spi_fifo_transceive(SPIFifo *spi_fifo,  const uint16_t length, const uint8_t *data) {
 	if(!spi_fifo_ready_or_idle(spi_fifo)) {

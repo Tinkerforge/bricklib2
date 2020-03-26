@@ -59,7 +59,11 @@ void ccu4_pwm_init(XMC_GPIO_PORT_t *const port, const uint8_t pin, const uint8_t
 #endif
 		.float_limit         = 0,
 		.dither_limit        = 0,
+#ifdef CCU4_PWM_PASSIVE_LEVEL
+		.passive_level       = CCU4_PWM_PASSIVE_LEVEL,
+#else
 		.passive_level       = XMC_CCU4_SLICE_OUTPUT_PASSIVE_LEVEL_LOW,
+#endif
 		.timer_concatenation = 0
 	};
 

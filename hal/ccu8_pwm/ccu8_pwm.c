@@ -38,6 +38,7 @@ void ccu8_pwm_set_period(const uint8_t ccu8_slice_number, const uint16_t period_
 // Compare value is a value from 0 to period_value (^= 0 to 100% duty cycle)
 void ccu8_pwm_set_duty_cycle(const uint8_t ccu8_slice_number, const uint16_t compare_value) {
 	XMC_CCU8_SLICE_SetTimerCompareMatch(slice[ccu8_slice_number], XMC_CCU8_SLICE_COMPARE_CHANNEL_1, compare_value);
+	XMC_CCU8_SLICE_SetTimerCompareMatch(slice[ccu8_slice_number], XMC_CCU8_SLICE_COMPARE_CHANNEL_2, compare_value);
     XMC_CCU8_EnableShadowTransfer(CCU80, (XMC_CCU8_SHADOW_TRANSFER_SLICE_0 << (ccu8_slice_number*4)) |
     		                             (XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (ccu8_slice_number*4)));
 }
@@ -63,6 +64,10 @@ void ccu8_pwm_init(XMC_GPIO_PORT_t *const port, const uint8_t pin, const uint8_t
 		.passive_level_out1  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_LOW,
 		.passive_level_out2  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_LOW,
 		.passive_level_out3  = XMC_CCU8_SLICE_OUTPUT_PASSIVE_LEVEL_LOW,
+		.invert_out0         = 0,
+		.invert_out1         = 1,
+		.invert_out2         = 0,
+		.invert_out3         = 1,
 		.asymmetric_pwm      = false,
 		.timer_concatenation = 0
 	};
@@ -77,6 +82,22 @@ void ccu8_pwm_init(XMC_GPIO_PORT_t *const port, const uint8_t pin, const uint8_t
 		.output_level        = XMC_GPIO_OUTPUT_LEVEL_LOW,
 	};
 
+	const XMC_CCU8_SLICE_DEAD_TIME_CONFIG_t  dead_time_config = {
+		.enable_dead_time_channel1         = 0,
+		.enable_dead_time_channel2         = 0,
+		.channel1_st_path                  = 0,
+		.channel1_inv_st_path              = 0,
+		.channel2_st_path                  = 0,
+		.channel2_inv_st_path              = 0,
+		.div                               = XMC_CCU8_SLICE_DTC_DIV_1,
+
+		.channel1_st_rising_edge_counter   = 0,
+		.channel1_st_falling_edge_counter  = 0,
+
+		.channel2_st_rising_edge_counter   = 0,
+		.channel2_st_falling_edge_counter  = 0,
+	};
+
     XMC_CCU8_Init(CCU80, XMC_CCU8_SLICE_MCMS_ACTION_TRANSFER_PR_CR);
     XMC_CCU8_StartPrescaler(CCU80);
     XMC_CCU8_SLICE_CompareInit(slice[ccu8_slice_number], &compare_config);
@@ -84,9 +105,14 @@ void ccu8_pwm_init(XMC_GPIO_PORT_t *const port, const uint8_t pin, const uint8_t
     // Set the period and compare register values
     XMC_CCU8_SLICE_SetTimerPeriodMatch(slice[ccu8_slice_number], period_value);
     XMC_CCU8_SLICE_SetTimerCompareMatch(slice[ccu8_slice_number], XMC_CCU8_SLICE_COMPARE_CHANNEL_1, 0);
+    XMC_CCU8_SLICE_SetTimerCompareMatch(slice[ccu8_slice_number], XMC_CCU8_SLICE_COMPARE_CHANNEL_2, 0);
+	XMC_CCU8_SLICE_SetShadowTransferMode(slice[ccu8_slice_number], XMC_CCU8_SLICE_SHADOW_TRANSFER_MODE_ONLY_IN_PERIOD_MATCH);
 
     XMC_CCU8_EnableShadowTransfer(CCU80, (XMC_CCU8_SHADOW_TRANSFER_SLICE_0 << (ccu8_slice_number*4)) |
-    		                             (XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (ccu8_slice_number*4)));
+    		                             (XMC_CCU8_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (ccu8_slice_number*4)) |
+										 (XMC_CCU8_SHADOW_TRANSFER_DITHER_SLICE_0 << (ccu8_slice_number*4)));
+
+	XMC_CCU8_SLICE_DeadTimeInit(slice[ccu8_slice_number], &dead_time_config);
 
     XMC_GPIO_Init(port, pin, &gpio_out_config);
 

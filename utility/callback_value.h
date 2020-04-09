@@ -268,10 +268,19 @@ bool CALLBACK_VALUE_SUFFIX(handle_callback_value_callback)(CALLBACK_VALUE_SUFFIX
                                                            const uint8_t channel,
 #endif
                                                            const uint8_t fid) {
-	static bool is_buffered = false;
-	static CALLBACK_VALUE_SUFFIX(CallbackValue_Callback) cb;
+#ifdef CALLBACK_VALUE_CHANNEL_NUM
+	static bool is_buffered_[CALLBACK_VALUE_CHANNEL_NUM] = {0};
+	static CALLBACK_VALUE_SUFFIX(CallbackValue_Callback) cb_[CALLBACK_VALUE_CHANNEL_NUM];
+	bool *is_buffered = &is_buffered_[channel];
+	CALLBACK_VALUE_SUFFIX(CallbackValue_Callback) *cb = &cb_[channel];
+#else
+	static bool is_buffered_ = false;
+	static CALLBACK_VALUE_SUFFIX(CallbackValue_Callback) cb_;
+	bool *is_buffered = &is_buffered_;
+	CALLBACK_VALUE_SUFFIX(CallbackValue_Callback) *cb = &cb_;
+#endif
 
-	if(!is_buffered) {
+	if(!*is_buffered) {
 #ifdef CALLBACK_VALUE_CHANNEL_NUM
 		CALLBACK_VALUE_SUFFIX(CallbackValue) *callback_value = &callback_values[channel];
 		const CALLBACK_VALUE_T value_current = callback_values->get_callback_value(channel);
@@ -280,7 +289,7 @@ bool CALLBACK_VALUE_SUFFIX(handle_callback_value_callback)(CALLBACK_VALUE_SUFFIX
 		const CALLBACK_VALUE_T value_current = callback_values->get_callback_value();
 #endif
 
-		tfp_make_default_header(&cb.header, bootloader_get_uid(), sizeof(CALLBACK_VALUE_SUFFIX(CallbackValue_Callback)), fid);
+		tfp_make_default_header(&cb->header, bootloader_get_uid(), sizeof(CALLBACK_VALUE_SUFFIX(CallbackValue_Callback)), fid);
 
 		// If period is 0 callback is off
 		// If period > 0 and not elapsed we don't send
@@ -313,17 +322,17 @@ bool CALLBACK_VALUE_SUFFIX(handle_callback_value_callback)(CALLBACK_VALUE_SUFFIX
 		callback_value->last_time  = system_timer_get_ms();
 		callback_value->value_last = value_current;
 #ifdef CALLBACK_VALUE_CHANNEL_NUM
-		cb.channel                 = channel;
+		cb->channel                = channel;
 #endif
-		cb.value                   = value_current;
+		cb->value                  = value_current;
 	}
 
 	if(bootloader_spitfp_is_send_possible(&bootloader_status.st)) {
-		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)&cb, sizeof(CALLBACK_VALUE_SUFFIX(CallbackValue_Callback)));
-		is_buffered = false;
+		bootloader_spitfp_send_ack_and_message(&bootloader_status, (uint8_t*)cb, sizeof(CALLBACK_VALUE_SUFFIX(CallbackValue_Callback)));
+		*is_buffered = false;
 		return true;
 	} else {
-		is_buffered = true;
+		*is_buffered = true;
 	}
 
 	return false;

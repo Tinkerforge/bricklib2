@@ -23,6 +23,9 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#ifndef INTN_TO_INT32
+	#define INTN_TO_INT32(value, bits) ((((int32_t)(value)) & (1UL << ((bits)-1))) ? ((int32_t)((uint32_t)((value) | (~((1UL << (bits))-1))))) : ((int32_t)(value)))
+#endif
 #ifndef ABS
 	#define ABS(a) (((a) < 0) ? (-(a)) : (a))
 #endif

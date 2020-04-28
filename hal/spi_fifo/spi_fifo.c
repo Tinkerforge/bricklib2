@@ -134,10 +134,44 @@ SPIFifoState spi_fifo_next_state(SPIFifo *spi_fifo) {
 
 	return spi_fifo->state;
 }
+#endif
 
+// Remimplementation of XMCLibs XMC_SPI_CH_Init
+// The baudrate is not calculated dynamically, it has
+// to be pre-configured in the config.h.
+// This saves about 200 bytes of flash.
+#if defined(SPI_FIFO_BAUDRATE_FDR) && defined(SPI_FIFO_BAUDRATE_BRG) && defined(SPI_FIFO_CHANNEL)
+void spi_fifo_init_xmc_spi_ch(void) {
+	XMC_USIC_CH_Enable(SPI_FIFO_CHANNEL);
+
+	// Set baudrate
+	SPI_FIFO_CHANNEL->FDR = SPI_FIFO_BAUDRATE_FDR;
+	SPI_FIFO_CHANNEL->BRG = SPI_FIFO_BAUDRATE_BRG;
+
+	// Configuration of USIC Shift Control
+	// Transmission Mode (TRM) = 1
+	// Passive Data Level (PDL) = 1
+	SPI_FIFO_CHANNEL->SCTR = USIC_CH_SCTR_PDL_Msk | (0x1 << USIC_CH_SCTR_TRM_Pos) | (0x3f << USIC_CH_SCTR_FLE_Pos)| (0x7 << USIC_CH_SCTR_WLE_Pos);
+
+	// Configuration of USIC Transmit Control/Status Register
+	// TBUF Data Enable (TDEN) = 1
+	// TBUF Data Single Shot Mode (TDSSM) = 1
+	SPI_FIFO_CHANNEL->TCSR = (uint32_t)(USIC_CH_TCSR_HPCMD_Msk | (0x01 << USIC_CH_TCSR_TDEN_Pos) | USIC_CH_TCSR_TDSSM_Msk);
+
+	// Configuration of Protocol Control Register */
+	SPI_FIFO_CHANNEL->PCR_SSCMode = (uint32_t)(USIC_CH_PCR_SSCMode_MSLSEN_Msk | USIC_CH_PCR_SSCMode_SELCTR_Msk | XMC_SPI_CH_SLAVE_SEL_INV_TO_MSLS | USIC_CH_PCR_SSCMode_FEM_Msk);
+
+	// Clear protocol status
+	SPI_FIFO_CHANNEL->PSCR = 0xFFFFFFFFUL;
+
+	// Set parity settings
+	SPI_FIFO_CHANNEL->CCR = (uint32_t)XMC_USIC_CH_PARITY_MODE_NONE;
+}
 #endif
 
 void spi_fifo_init(SPIFifo *spi_fifo) {
+#if defined(SPI_FIFO_BAUDRATE_FDR) && defined(SPI_FIFO_BAUDRATE_BRG) && defined(SPI_FIFO_CHANNEL)
+#else
 	// USIC channel configuration
 	const XMC_SPI_CH_CONFIG_t channel_config = {
 		.baudrate       = spi_fifo->baudrate,
@@ -145,6 +179,7 @@ void spi_fifo_init(SPIFifo *spi_fifo) {
 		.selo_inversion = XMC_SPI_CH_SLAVE_SEL_INV_TO_MSLS,
 		.parity_mode    = XMC_USIC_CH_PARITY_MODE_NONE
 	};
+#endif
 
 	// MOSI pin configuration
 	const XMC_GPIO_CONFIG_t mosi_pin_config = {
@@ -174,7 +209,11 @@ void spi_fifo_init(SPIFifo *spi_fifo) {
 	XMC_GPIO_Init(spi_fifo->miso_port, spi_fifo->miso_pin, &miso_pin_config);
 
 	// Initialize USIC channel in SPI master mode
+#if defined(SPI_FIFO_BAUDRATE_FDR) && defined(SPI_FIFO_BAUDRATE_BRG) && defined(SPI_FIFO_CHANNEL)
+	spi_fifo_init_xmc_spi_ch();
+#else
 	XMC_SPI_CH_Init(spi_fifo->channel, &channel_config);
+#endif
 	spi_fifo->channel->SCTR &= ~USIC_CH_SCTR_PDL_Msk; // Set passive data level to 0
 //	UC1701_USIC->PCR_SSCMode &= ~USIC_CH_PCR_SSCMode_TIWEN_Msk; // Disable time between bytes
 

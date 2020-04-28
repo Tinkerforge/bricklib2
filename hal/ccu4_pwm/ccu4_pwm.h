@@ -28,7 +28,9 @@
 #include "xmc_ccu4.h"
 
 void ccu4_pwm_set_period(const uint8_t ccu4_slice_number, const uint16_t period_value);
+uint16_t ccu4_pwm_get_period(const uint8_t ccu4_slice_number);
 void ccu4_pwm_set_duty_cycle(const uint8_t ccu4_slice_number, const uint16_t compare_value);
+uint16_t ccu4_pwm_get_duty_cycle(const uint8_t ccu4_slice_number);
 void ccu4_pwm_init(XMC_GPIO_PORT_t *const port, const uint8_t pin, const uint8_t ccu4_slice_number, const uint16_t period_value);
 
 #endif

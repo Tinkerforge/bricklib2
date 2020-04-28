@@ -35,11 +35,19 @@ void ccu4_pwm_set_period(const uint8_t ccu4_slice_number, const uint16_t period_
     XMC_CCU4_SLICE_SetTimerPeriodMatch(slice[ccu4_slice_number], period_value);
 }
 
+uint16_t ccu4_pwm_get_period(const uint8_t ccu4_slice_number) {
+    XMC_CCU4_SLICE_GetTimerPeriodMatch(slice[ccu4_slice_number]);
+}
+
 // Compare value is a value from 0 to period_value (^= 0 to 100% duty cycle)
 void ccu4_pwm_set_duty_cycle(const uint8_t ccu4_slice_number, const uint16_t compare_value) {
 	XMC_CCU4_SLICE_SetTimerCompareMatch(slice[ccu4_slice_number], compare_value);
     XMC_CCU4_EnableShadowTransfer(CCU40, (XMC_CCU4_SHADOW_TRANSFER_SLICE_0 << (ccu4_slice_number*4)) |
     		                             (XMC_CCU4_SHADOW_TRANSFER_PRESCALER_SLICE_0 << (ccu4_slice_number*4)));
+}
+
+uint16_t ccu4_pwm_get_duty_cycle(const uint8_t ccu4_slice_number) {
+	return XMC_CCU4_SLICE_GetTimerCompareMatch(slice[ccu4_slice_number]);
 }
 
 // Period value is the amount of clock cycles per period

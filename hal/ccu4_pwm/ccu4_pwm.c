@@ -36,7 +36,7 @@ void ccu4_pwm_set_period(const uint8_t ccu4_slice_number, const uint16_t period_
 }
 
 uint16_t ccu4_pwm_get_period(const uint8_t ccu4_slice_number) {
-    XMC_CCU4_SLICE_GetTimerPeriodMatch(slice[ccu4_slice_number]);
+    return XMC_CCU4_SLICE_GetTimerPeriodMatch(slice[ccu4_slice_number]);
 }
 
 // Compare value is a value from 0 to period_value (^= 0 to 100% duty cycle)

@@ -30,6 +30,7 @@
 
 #include "communication.h"
 #include "tng_communication.h"
+#include "tng_led.h"
 
 #include <string.h>
 
@@ -102,6 +103,7 @@ void tng_tick(void) {
 	}
 
 	communication_tick();
+	tng_led_tick();
 }
 
 void tng_init(void) {
@@ -146,6 +148,7 @@ void tng_init(void) {
 
 	usb_init();
 	communication_init();
+	tng_led_init();
 }
 
 uint32_t tng_get_uid(void) {

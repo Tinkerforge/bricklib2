@@ -147,4 +147,6 @@ TNGHandleMessageResponse tng_write_uid(const TNGWriteUID *data);
 TNGHandleMessageResponse tng_get_identity(const TNGGetIdentity *data, TNGGetIdentity_Response *response);
 TNGHandleMessageResponse tng_enumerate(const TNGEnumerate *data, TNGEnumerate_Callback *response);
 
+bool tng_send_initial_enumerate(void);
+
 #endif

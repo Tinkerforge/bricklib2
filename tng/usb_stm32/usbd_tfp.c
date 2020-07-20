@@ -24,6 +24,7 @@
 
 #include "configs/config.h"
 #include "bricklib2/logging/logging.h"
+#include "bricklib2/tng/tng_communication.h"
 #include "usb.h"
 
 // USB Standard Device Descriptor
@@ -84,10 +85,7 @@ __attribute__ ((aligned (4))) static uint8_t usbd_tfp_configuration_descriptor[]
 	0x00                     // bInterval: ignore for Bulk transfer
 };
 
-extern volatile bool test;
 static uint8_t usbd_tfp_init(USBD_HandleTypeDef *dev, uint8_t cfgidx) {
-	test = true;
-
 	// Open IN EP 
 	USBD_LL_OpenEP(dev,	USBD_TFP_IN_EP,  USBD_EP_TYPE_BULK, USBD_TFP_IN_SIZE);
 
@@ -96,6 +94,11 @@ static uint8_t usbd_tfp_init(USBD_HandleTypeDef *dev, uint8_t cfgidx) {
 	
 	// Prepare Out endpoint to receive next packet
 	USBD_LL_PrepareReceive(dev, USBD_TFP_OUT_EP, tfusb.out_buffer, USBD_TFP_OUT_SIZE);
+
+	// TODO: We don't check if there was enough space in the usb buffer here.
+	//       I think this is always OK for the initial enumerate, since there is never any messages in the buffer?
+	//       If this doesn't work out we can add a tng_communication_tick with a bool for the initial enumeration.
+	tng_send_initial_enumerate();
 
 	return USBD_OK;
 }

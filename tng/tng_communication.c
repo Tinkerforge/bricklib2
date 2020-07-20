@@ -32,6 +32,8 @@
 #include "bricklib2/tng/tng.h"
 #include "bricklib2/tng/tng_firmware.h"
 
+#include "bricklib2/tng/usb_stm32/usb.h"
+
 extern const uint32_t device_identifier;
 
 static uint32_t tng_firmware_pointer = 0;
@@ -170,18 +172,19 @@ TNGHandleMessageResponse tng_enumerate(const TNGEnumerate *data, TNGEnumerate_Ca
 	// We use get_identity for uids, fw version and hw version.
 	// The layout of the struct it the same.
 	tng_get_identity((void*)data, (void*)response);
-
-	response->header.length           = sizeof(TNGEnumerate_Callback);
-	response->header.uid              = tng_get_uid();
-	response->header.fid              = TNG_FID_ENUMERATE_CALLBACK;
-	response->header.sequence_num     = 0; // Sequence number for callback is 0
-	response->header.return_expected  = 1;
-	response->header.authentication   = 0;
-	response->header.other_options    = 0;
-	response->header.error            = 0;
-	response->header.future_use       = 0;
+	tfp_make_default_header(&response->header, tng_get_uid(), sizeof(TNGEnumerate_Callback), TNG_FID_ENUMERATE_CALLBACK);
 
 	response->enumeration_type = TNG_ENUMERATE_TYPE_AVAILABLE;
 
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
+
+bool tng_send_initial_enumerate(void) {
+	TNGEnumerate_Callback response;
+
+	// Use the normal tng_enumerate function and replace the type from enumerate-available to -added.
+	tng_enumerate(NULL, &response);
+	response.enumeration_type = TNG_ENUMERATE_TYPE_ADDED;
+
+	return usb_send((uint8_t *)&response, response.header.length);
 }

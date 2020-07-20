@@ -89,3 +89,31 @@ void log_array_u16(const uint16_t *arr, const int32_t length, const bool end_of_
 		LOGGING_PRINT("\n\r");
 	}
 }
+
+void log_array_u32(const uint32_t *arr, const int32_t length, const bool end_of_line) {
+	LOGGING_PRINT("[");
+	for(int32_t i = 0; i < length-1; i++) {
+		LOGGING_PRINT("%d, ", arr[i]);
+	}
+	if(length > 0) {
+		LOGGING_PRINT("%d", arr[length-1]);
+	}
+	LOGGING_PRINT("]");
+	if(end_of_line) {
+		LOGGING_PRINT("\n\r");
+	}
+}
+
+void log_array_u64(const uint64_t *arr, const int32_t length, const bool end_of_line) {
+	LOGGING_PRINT("[");
+	for(int32_t i = 0; i < length-1; i++) {
+		LOGGING_PRINT("%d, ", (uint32_t)arr[i]);
+	}
+	if(length > 0) {
+		LOGGING_PRINT("%d", (uint32_t)arr[length-1]);
+	}
+	LOGGING_PRINT("]");
+	if(end_of_line) {
+		LOGGING_PRINT("\n\r");
+	}
+}

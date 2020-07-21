@@ -47,5 +47,7 @@ bool usb_send(uint8_t *data, uint16_t length);
 bool usb_send_storage(void);
 uint16_t usb_recv(uint8_t *data, uint16_t max_length);
 bool usb_can_recv(void);
+void usb_interrupt_enable(bool mask);
+bool usb_interrupt_disable(void);
 
 #endif

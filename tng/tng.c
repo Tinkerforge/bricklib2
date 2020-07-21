@@ -51,15 +51,21 @@ bool tng_is_valid_request(TFPMessageHeader *header) {
 	return true;
 }
 
-void tng_tick(void) {
-	if(usb_can_recv()) {
-		if(tng_request_length < sizeof(TFPMessageHeader)) {
-			tng_request_length += usb_recv(tng_request_data + tng_request_length, TNG_BUFFER_SIZE - tng_request_length);
-		}
+void tng_try_usb_recv(void) {
+	if(tng_request_length < sizeof(TFPMessageHeader)) {
+		tng_request_length += usb_recv(tng_request_data + tng_request_length, TNG_BUFFER_SIZE - tng_request_length);
+	}
 
-		if((tng_request_length >= sizeof(TFPMessageHeader)) && (tng_request_length < tng_request_header->length)) {
-			tng_request_length += usb_recv(tng_request_data + tng_request_length, TNG_BUFFER_SIZE - tng_request_length);
-		}
+	if((tng_request_length >= sizeof(TFPMessageHeader)) && (tng_request_length < tng_request_header->length)) {
+		tng_request_length += usb_recv(tng_request_data + tng_request_length, TNG_BUFFER_SIZE - tng_request_length);
+	}
+}
+
+void tng_tick(void) {
+	if(usb_can_recv() || (tng_request_length >= tng_request_header->length)) {
+		bool interrupt_state = usb_interrupt_disable();
+		tng_try_usb_recv();
+		usb_interrupt_enable(interrupt_state);
 
 		if(tng_request_length >= tng_request_header->length) {
 			if(tng_response_header->length == 0) {
@@ -85,13 +91,14 @@ void tng_tick(void) {
 					}
 				}
 
+				bool interrupt_state = usb_interrupt_disable();
 				if(tng_request_length > tng_request_header->length) {
 					memmove(tng_request_data + tng_request_header->length, tng_request_data, TNG_BUFFER_SIZE - tng_request_header->length);
 					tng_request_length -= tng_request_header->length;
 				} else {
 					tng_request_length = 0;
 				}
-
+				usb_interrupt_enable(interrupt_state);
 			}
 		}
 	}

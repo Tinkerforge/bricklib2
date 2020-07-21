@@ -35,5 +35,6 @@ typedef enum {
 void tng_init(void);
 void tng_tick(void);
 uint32_t tng_get_uid(void);
+void tng_try_usb_recv(void);
 
 #endif

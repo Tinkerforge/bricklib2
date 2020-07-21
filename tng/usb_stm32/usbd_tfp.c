@@ -25,6 +25,7 @@
 #include "configs/config.h"
 #include "bricklib2/logging/logging.h"
 #include "bricklib2/tng/tng_communication.h"
+#include "bricklib2/tng/tng.h"
 #include "usb.h"
 
 // USB Standard Device Descriptor
@@ -121,12 +122,15 @@ static uint8_t usbd_tfp_data_in(USBD_HandleTypeDef *dev, uint8_t epnum) {
 }
 
 static uint8_t usbd_tfp_data_out(USBD_HandleTypeDef *dev, uint8_t epnum) {      
-	tfusb.out_buffer_length = USBD_LL_GetRxDataSize(dev, epnum);
+	tfusb.out_buffer_length += USBD_LL_GetRxDataSize(dev, epnum);
+
+	// If possible we try to handle the data directly in the callback to improve USB speed.
+	tng_try_usb_recv();
 
 	return USBD_OK;
 }
 
-static uint8_t  *usbd_tfp_get_configuration_descriptor(uint16_t *length) {
+static uint8_t *usbd_tfp_get_configuration_descriptor(uint16_t *length) {
 	*length = sizeof(usbd_tfp_configuration_descriptor);
 	return usbd_tfp_configuration_descriptor;
 }

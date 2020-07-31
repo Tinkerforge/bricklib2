@@ -266,7 +266,6 @@ static void pac193x_tick(void) {
 
 	// Non-blocking refresh/read state-machine
 	// Do not use blocking pac193x_read/write_register in tick!
-	do {
 	switch(tng_energy_monitor.pac193x_state) {
 		case PAC193X_STATE_REFRESH: {
 			data[0] = PAC193X_REG_REFRESH;
@@ -348,30 +347,6 @@ static void pac193x_tick(void) {
 			break;
 		}
 	}
-	}while(tng_energy_monitor.pac193x_state != PAC193X_STATE_SLEEP);
-
-#if 0
-	uint8_t refresh = 0;
-	pac193x_write_register(PAC193X_REG_REFRESH, 1, &refresh);
-
-	pac193x_read_register(0x01, sizeof(PAC193XReadRegister), (uint8_t *)&tng_energy_monitor.pac193x_read_register);
-
-	uint32_t voltage[3] = {0, 0, 0}; // register 0x7-0x9
-	for(uint8_t ch = 0; ch < 3; ch++) {
-		voltage[ch] = (tng_energy_monitor.pac193x_read_register.vbus[ch][0] << 8) | tng_energy_monitor.pac193x_read_register.vbus[ch][1];
-		voltage[ch] = voltage[ch] * 32000/0xFFFF;
-	}
-	logd("VBus 0: %dmV, VBus 1: %dmV, VBus 2: %dmV\n\r", voltage[0], voltage[1], voltage[2]);
-
-	uint32_t current[3] = {0, 0, 0};  // register 0xb-0xd
-	for(uint8_t ch = 0; ch < 3; ch++) {
-		current[ch] = (tng_energy_monitor.pac193x_read_register.vsense[ch][0] << 8) | tng_energy_monitor.pac193x_read_register.vsense[ch][1];
-		current[ch] = current[ch] * 5000/0xFFFF;
-	}
-	logd("VSense 0: %dmA, VSense 1: %dmA, VSense 2: %dmA\n\r", current[0], current[1], current[2]);
-
-	system_timer_sleep_ms(1);
-#endif
 }
 
 void tng_energy_monitor_init(void) {

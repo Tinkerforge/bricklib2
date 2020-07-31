@@ -259,16 +259,19 @@ static void pac193x_update_values(PAC193XReadRegister *read_reg_tmp) {
 }
 
 static void pac193x_tick(void) {
-	static uint32_t wait_start_time = 0;
+	// Make data that is read/written static, it needs to be available after we leave the function for the DMA.
+	static uint8_t data[2] = {0, 0};
 	static PAC193XReadRegister read_reg_tmp;
+	static uint32_t wait_start_time = 0;
 
 	// Non-blocking refresh/read state-machine
 	// Do not use blocking pac193x_read/write_register in tick!
 	do {
 	switch(tng_energy_monitor.pac193x_state) {
 		case PAC193X_STATE_REFRESH: {
-			uint8_t refresh[2] = {PAC193X_REG_REFRESH, 0};
-			HAL_StatusTypeDef status = HAL_I2C_Master_Transmit_DMA(&tng_energy_monitor.pac193x_i2c, PAC193X_ADDRESS, refresh, 2);
+			data[0] = PAC193X_REG_REFRESH;
+			data[1] = 0;
+			HAL_StatusTypeDef status = HAL_I2C_Master_Transmit_DMA(&tng_energy_monitor.pac193x_i2c, PAC193X_ADDRESS, data, 2);
 			if(status != HAL_OK) {
 				loge("Error during PAC193X_STATE_REFRESH transmit: %d\n\r", status);
 			} else {
@@ -289,8 +292,8 @@ static void pac193x_tick(void) {
 		case PAC193X_STATE_READ_TX: {
 			if((wait_start_time == 0) || system_timer_is_time_elapsed_ms(wait_start_time, 2)) {
 				wait_start_time = 0;
-				uint8_t reg = PAC193X_REG_CTRL; // Start reading from CTRL reg
-				HAL_StatusTypeDef status = HAL_I2C_Master_Transmit_DMA(&tng_energy_monitor.pac193x_i2c, PAC193X_ADDRESS, &reg, 1);
+				data[0] = PAC193X_REG_CTRL; // Start reading from CTRL reg
+				HAL_StatusTypeDef status = HAL_I2C_Master_Transmit_DMA(&tng_energy_monitor.pac193x_i2c, PAC193X_ADDRESS, data, 1);
 				if(status != HAL_OK) {
 					loge("Error during PAC193X_STATE_READ_TX transmit: %d\n\r", status);
 				} else {

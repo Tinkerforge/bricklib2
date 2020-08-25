@@ -296,7 +296,8 @@ void uartbb_printf(char const *fmt, ...) {
 	va_list va;
 	va_start(va, fmt);
 
-	char buffer[32];
+	// Evaluates to 33. The + 1 is required to fit the null-terminator written by utoa when printing 32 binary digits.
+	char buffer[sizeof(int) * 8 + 1];
 	char character;
 #ifdef UARTBB_PRINTF_ADVANCED
 	uint32_t zero_padding;

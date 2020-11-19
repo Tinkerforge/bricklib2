@@ -21,6 +21,8 @@
 
 #include "system_timer.h"
 
+#include "bricklib2/utility/util_definitions.h"
+
 #ifdef SYSTEM_TIMER_USE_64BIT_US
 static volatile uint64_t system_timer_tick;
 #else
@@ -127,9 +129,7 @@ void system_timer_sleep_us(const uint64_t sleep) {
 }
 #else
 // Only works for sleep values <= 500
-// TODO: Make sure this supports sleep times > 500 by counting overflows
-//       and/or using system_timer_sleep_ms additionally.
-void system_timer_sleep_us(const uint32_t sleep) {
+static void system_timer_sleep_us_internal(const uint32_t sleep) {
 	// We have about 5us function overhead, remove them from the sleep time
 	const uint32_t sleep_value = sleep <= 5 ? SysTick->LOAD/1000 : (sleep-5)*(SysTick->LOAD/1000);
 	const uint16_t start_value = (SysTick->LOAD - SysTick->VAL);
@@ -144,6 +144,16 @@ void system_timer_sleep_us(const uint32_t sleep) {
 				return;
 			}
 		}
+	}
+}
+
+// TODO: This is too hacky, there is to much overhead...
+void system_timer_sleep_us(const uint32_t sleep) {
+	uint32_t remaining_sleep = sleep;
+	while(remaining_sleep > 0) {
+		uint32_t sleep_segmentation = MIN(500, remaining_sleep);
+		system_timer_sleep_us_internal(sleep_segmentation);
+		remaining_sleep -= sleep_segmentation;
 	}
 }
 #endif

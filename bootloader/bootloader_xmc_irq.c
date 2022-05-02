@@ -36,9 +36,13 @@
 #include "bootloader.h"
 
 // The irqs are compiled for bootloader as well as firmware
+#ifndef SPITFP_IRQ_RX_HANDLER
+#define SPITFP_IRQ_RX_HANDLER IRQ_Hdlr_9
+#endif
 
-#define spitfp_rx_irq_handler IRQ_Hdlr_9
-#define spitfp_tx_irq_handler IRQ_Hdlr_10
+#ifndef SPITFP_IRQ_TX_HANDLER
+#define SPITFP_IRQ_TX_HANDLER IRQ_Hdlr_10
+#endif
 
 extern BootloaderStatus bootloader_status;
 
@@ -59,9 +63,8 @@ uint8_t * const buffer_send_pointer_protocol_overhead_end = bootloader_status.st
 Ringbuffer *ringbuffer_recv = &bootloader_status.st.ringbuffer_recv;
 uint8_t *ringbuffer_recv_buffer = bootloader_status.st.buffer_recv;
 
-
 #ifdef BOOTLOADER_USE_MEMORY_OPTIMIZED_IRQ_HANDLER
-void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spitfp_tx_irq_handler(void) {
+void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) SPITFP_IRQ_TX_HANDLER(void) {
 	// Use local pointer to save the time for accessing the structs
 	uint8_t *buffer_send_pointer     = bootloader_status.st.buffer_send_pointer;
 	uint8_t *buffer_send_pointer_end = bootloader_status.st.buffer_send_pointer_end;
@@ -107,7 +110,7 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spi
 
 // Sending 16 bytes per interrupt with this version takes 3us-4us (measured with logic analyzer).
 // Naive version with while-loop takes 17us.
-void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spitfp_tx_irq_handler(void) {
+void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) SPITFP_IRQ_TX_HANDLER(void) {
 	// Use local pointer to save the time for accessing the structs
 	uint8_t *buffer_send_pointer     = bootloader_status.st.buffer_send_pointer;
 	uint8_t *buffer_send_pointer_end = bootloader_status.st.buffer_send_pointer_end;
@@ -236,7 +239,7 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spi
 #endif
 
 
-void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) spitfp_rx_irq_handler(void) {
+void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) SPITFP_IRQ_RX_HANDLER(void) {
 	while(!XMC_USIC_CH_RXFIFO_IsEmpty(SPITFP_USIC)) {
 		ringbuffer_recv_buffer[ringbuffer_recv->end] = SPITFP_USIC->OUTR;
 		ringbuffer_recv->end = (ringbuffer_recv->end + 1) & SPITFP_RECEIVE_BUFFER_MASK;

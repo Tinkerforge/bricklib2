@@ -192,10 +192,6 @@ void SystemCoreClockSetup(void) {
 	                 (PCLK_CLOCK_SRC << SCU_CLK_CLKCR_PCLKSEL_Pos) |
 	                 0x100U; // IDIV = 1
 
-#if DCO1_CAL_SRC == DCO1_CAL_SRC_EXT
-	SCU_CLK->CLKCR = (SCU_CLK->CLKCR & (uint32_t)~(SCU_CLK_CLKCR_PCLKSEL_Msk | SCU_CLK_CLKCR_RTCCLKSEL_Msk)) | 65536;
-#endif
-
 #endif
 
 	SCU_GENERAL->PASSWD = 0x000000C3UL; // enable bit protection

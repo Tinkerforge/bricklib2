@@ -77,6 +77,14 @@
 #define UARTBB_TX_PORT GPIOF
 #endif
 
+#ifndef CUSTOM_ENABLE_IRQ
+#define CUSTOM_ENABLE_IRQ() __enable_irq()
+#endif
+
+#ifndef CUSTOM_DISABLE_IRQ
+#define CUSTOM_DISABLE_IRQ() __disable_irq()
+#endif
+
 static inline void uartbb_wait_1bit(uint32_t start) {
 	while(true) {
 		int32_t current = UARTBB_COUNT_TO_IN_1MS - SysTick->VAL;
@@ -167,7 +175,7 @@ void uartbb_tx(const uint8_t value) {
 #if defined(__SAM0__)
 	cpu_irq_disable();
 #elif defined(__XMC1__) || defined(STM32F0)
-	__disable_irq();
+	CUSTOM_DISABLE_IRQ();
 #endif
 
   start = UARTBB_COUNT_TO_IN_1MS - SysTick->VAL;
@@ -200,7 +208,7 @@ void uartbb_tx(const uint8_t value) {
 #if defined(__SAM0__)
 	cpu_irq_enable();
 #elif defined(__XMC1__) || defined(STM32F0)
-	__enable_irq();
+	CUSTOM_ENABLE_IRQ();
 #endif
 }
 

@@ -561,6 +561,10 @@ void sdm_tick(void) {
 			uint16_t meter_code = 20000;
 			bool ret = sdm_get_holding_input_16bit(&meter_code);
 			if(ret) {
+				if (meter_code != 20000) {
+					rs485.modbus_common_error_counters.timeout = 0;
+				}
+
 				modbus_clear_request(&rs485);
 				switch(meter_code) {
 					case 0x0084: sdm.meter_type = SDM_METER_TYPE_UNKNOWN;     break;  // 0x0084 is SDM72V1 (not supported)

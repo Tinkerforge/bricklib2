@@ -26,6 +26,12 @@
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/logging/logging.h"
 
+#include "configs/config.h"
+
+#ifdef HAS_HARDWARE_VERSION
+#include "hardware_version.h"
+#endif
+
 #include <string.h>
 
 #define CONTACTOR_CHECK_INTERVAL 250
@@ -35,67 +41,83 @@ ContactorCheck contactor_check;
 void contactor_check_init(void) {
 	memset(&contactor_check, 0, sizeof(ContactorCheck));
 
-	const XMC_GPIO_CONFIG_t pin_config_input = {
-		.mode             = XMC_GPIO_MODE_INPUT_TRISTATE,
-		.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
-	};
+#ifdef HAS_HARDWARE_VERSION
+	if(hardware_version.is_v2) {
+#endif
+		const XMC_GPIO_CONFIG_t pin_config_input = {
+			.mode             = XMC_GPIO_MODE_INPUT_TRISTATE,
+			.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
+		};
 
-	XMC_GPIO_Init(CONTACTOR_CHECK_AC1_PIN, &pin_config_input);
-	XMC_GPIO_Init(CONTACTOR_CHECK_AC2_PIN, &pin_config_input);
+		XMC_GPIO_Init(CONTACTOR_CHECK_AC1_PIN, &pin_config_input);
+		XMC_GPIO_Init(CONTACTOR_CHECK_AC2_PIN, &pin_config_input);
 
-	contactor_check.ac1_last_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC1_PIN);
-	contactor_check.ac2_last_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC2_PIN);
+		contactor_check.ac1_last_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC1_PIN);
+		contactor_check.ac2_last_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC2_PIN);
+#ifdef HAS_HARDWARE_VERSION
+	} else {
+	}
+#endif
 }
 
 void contactor_check_tick(void) {
-	bool ac1_new_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC1_PIN);
-	bool ac2_new_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC2_PIN);
+#ifdef HAS_HARDWARE_VERSION
+	if(hardware_version.is_v2) {
+#endif
+		bool ac1_new_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC1_PIN);
+		bool ac2_new_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC2_PIN);
 
-	if(ac1_new_value != contactor_check.ac1_last_value) {
-		contactor_check.ac1_last_value = ac1_new_value;
-		contactor_check.ac1_edge_count++;
-	}
-
-	if(ac2_new_value != contactor_check.ac2_last_value) {
-		contactor_check.ac2_last_value = ac2_new_value;
-		contactor_check.ac2_edge_count++;
-	}
-
-	if(system_timer_is_time_elapsed_ms(contactor_check.last_check, CONTACTOR_CHECK_INTERVAL)) {
-		contactor_check.last_check = system_timer_get_ms();
-
-		if(contactor_check.invalid_counter > 0) {
-			contactor_check.invalid_counter--;
-		} else {
-			// Check for edge count of 10. We expect an edge count of 25,
-			// but an edge count > 0 should already be enough to detect the 230V.
-			// To make sure that we don't see any random glitches we check for > 10 as a compromise.
-			const bool ac1_live = contactor_check.ac1_edge_count > 10;
-			const bool ac2_live = contactor_check.ac2_edge_count > 10;
-
-			contactor_check.state = ac1_live | (ac2_live << 1);
-
-			const bool relay_state = CONTACTOR_CHECK_RELAY_PIN_IS_INVERTED ? !XMC_GPIO_GetInput(EVSE_RELAY_PIN) : XMC_GPIO_GetInput(EVSE_RELAY_PIN);
-			if(relay_state) {
-				// If contact is switched on, we expect to have 230V AC on both sides of it
-				switch(contactor_check.state) {
-					case CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_NLIVE: contactor_check.error = 1; break;
-					case CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_NLIVE:  contactor_check.error = 2; break;
-					case CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_LIVE:  contactor_check.error = 3; break;
-					case CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_LIVE:   contactor_check.error = 0; break;
-				}
-			} else {
-				// If contact is switched off, we expect to have 230V AC on AC1 and nothing on AC2
-				switch(contactor_check.state) {
-					case CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_NLIVE: contactor_check.error = 4; break;
-					case CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_NLIVE:  contactor_check.error = 0; break;
-					case CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_LIVE:  contactor_check.error = 5; break;
-					case CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_LIVE:   contactor_check.error = 6; break;
-				}
-			}
+		if(ac1_new_value != contactor_check.ac1_last_value) {
+			contactor_check.ac1_last_value = ac1_new_value;
+			contactor_check.ac1_edge_count++;
 		}
 
-		contactor_check.ac1_edge_count = 0;
-		contactor_check.ac2_edge_count = 0;
+		if(ac2_new_value != contactor_check.ac2_last_value) {
+			contactor_check.ac2_last_value = ac2_new_value;
+			contactor_check.ac2_edge_count++;
+		}
+
+		if(system_timer_is_time_elapsed_ms(contactor_check.last_check, CONTACTOR_CHECK_INTERVAL)) {
+			contactor_check.last_check = system_timer_get_ms();
+
+			if(contactor_check.invalid_counter > 0) {
+				contactor_check.invalid_counter--;
+			} else {
+				// Check for edge count of 10. We expect an edge count of 25,
+				// but an edge count > 0 should already be enough to detect the 230V.
+				// To make sure that we don't see any random glitches we check for > 10 as a compromise.
+				const bool ac1_live = contactor_check.ac1_edge_count > 10;
+				const bool ac2_live = contactor_check.ac2_edge_count > 10;
+
+				contactor_check.state = ac1_live | (ac2_live << 1);
+
+				const bool relay_state = CONTACTOR_CHECK_RELAY_PIN_IS_INVERTED ? !XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN) : XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN);
+				if(relay_state) {
+					// If contact is switched on, we expect to have 230V AC on both sides of it
+					switch(contactor_check.state) {
+						case CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_NLIVE: contactor_check.error = 1; break;
+						case CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_NLIVE:  contactor_check.error = 2; break;
+						case CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_LIVE:  contactor_check.error = 3; break;
+						case CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_LIVE:   contactor_check.error = 0; break;
+					}
+				} else {
+					// If contact is switched off, we expect to have 230V AC on AC1 and nothing on AC2
+					switch(contactor_check.state) {
+						case CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_NLIVE: contactor_check.error = 4; break;
+						case CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_NLIVE:  contactor_check.error = 0; break;
+						case CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_LIVE:  contactor_check.error = 5; break;
+						case CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_LIVE:   contactor_check.error = 6; break;
+					}
+				}
+			}
+
+			contactor_check.ac1_edge_count = 0;
+			contactor_check.ac2_edge_count = 0;
+		}
+#ifdef HAS_HARDWARE_VERSION
+	} else {
+		contactor_check.error = 0;
+		contactor_check.state = 1 | (0 << 1);
 	}
+#endif
 }

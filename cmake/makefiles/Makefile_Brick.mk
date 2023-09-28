@@ -39,9 +39,9 @@ check:
 		if [ $$(docker images -q tinkerforge/build_environment_c) ]; then \
 			echo "Using docker image to build."; \
 			docker run $(DOCKER_FLAGS) \
-			-v $(ROOT_DIR)/../:/$(ROOT_DIR)/../ -u $$(id -u):$$(id -g) \
-			-v $(BRICKLIB2_PATH)/:$(BRICKLIB2_PATH)/: -u $$(id -u):$$(id -g) \
-			-v $(ASFLIB_PATH)/:$(ASFLIB_PATH)/: -u $$(id -u):$$(id -g) \
+			-v $(ROOT_DIR)/../:$(ROOT_DIR)/../ -u $$(id -u):$$(id -g) \
+			-v $(BRICKLIB2_PATH)/:$(BRICKLIB2_PATH)/ -u $$(id -u):$$(id -g) \
+			-v $(ASFLIB_PATH)/:$(ASFLIB_PATH)/ -u $$(id -u):$$(id -g) \
 			tinkerforge/build_environment_c /bin/bash \
 			-c "cd $(ROOT_DIR) ; make $(MAKECMDGOALS)" && \
 			touch $(DOCKER_LOCK_FILE); \

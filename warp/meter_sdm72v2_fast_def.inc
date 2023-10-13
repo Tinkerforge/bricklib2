@@ -1,0 +1,6 @@
+{53, &meter_fast_register_set.power, 1.0, METER_REGISTER_DATA_TYPE_FLOAT},
+{343, &meter_fast_register_set.absolute_energy, 1.0, METER_REGISTER_DATA_TYPE_FLOAT},
+{7, &meter_fast_register_set.current_per_phase[0], 1.0, METER_REGISTER_DATA_TYPE_FLOAT},
+{9, &meter_fast_register_set.current_per_phase[1], 1.0, METER_REGISTER_DATA_TYPE_FLOAT},
+{11, &meter_fast_register_set.current_per_phase[2], 1.0, METER_REGISTER_DATA_TYPE_FLOAT},
+{0, NULL, 0.0, 0},

@@ -1,0 +1,7 @@
+{53, &meter_fast_register_set.power, 1.0, METER_REGISTER_DATA_TYPE_INT32},
+{73, &meter_fast_register_set.absolute_energy_import, 0.01, METER_REGISTER_DATA_TYPE_INT32},
+{75, &meter_fast_register_set.absolute_energy_export, 0.01, METER_REGISTER_DATA_TYPE_INT32},
+{7, &meter_fast_register_set.current_per_phase[0], 0.01, METER_REGISTER_DATA_TYPE_INT32},
+{9, &meter_fast_register_set.current_per_phase[1], 0.01, METER_REGISTER_DATA_TYPE_INT32},
+{11, &meter_fast_register_set.current_per_phase[2], 0.01, METER_REGISTER_DATA_TYPE_INT32},
+{0, NULL, 0.0, 0},

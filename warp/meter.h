@@ -73,6 +73,7 @@ typedef struct {
     MeterRegisterType *register_set_address;
     float scale_factor;
     MeterRegisterDataType register_data_type;
+	bool fast_read;
 //    uint8_t register_length;
 //    float offset;
 } MeterDefinition;
@@ -102,8 +103,7 @@ typedef struct {
 	bool phases_connected[3];
 	MeterRegisterType relative_energy;
 
-	MeterDefinition *current_meter_full;
-	MeterDefinition *current_meter_fast;
+	const MeterDefinition *current_meter;
 } Meter;
 
 typedef struct {
@@ -158,19 +158,11 @@ typedef struct {
 	MeterRegisterType import_kvarh[METER_PHASE_NUM];
 	MeterRegisterType export_kvarh[METER_PHASE_NUM];
 	MeterRegisterType total_kvarh[METER_PHASE_NUM];
-} __attribute__((__packed__)) MeterFullRegisterSet;
+} __attribute__((__packed__)) MeterRegisterSet;
 
-typedef struct {
-	MeterRegisterType power;
-	MeterRegisterType absolute_energy_import; // Eltako
-	MeterRegisterType absolute_energy_export; // Eltako
-	MeterRegisterType absolute_energy;        // SDM (this value is calculated for Eltako)
-	MeterRegisterType current_per_phase[METER_PHASE_NUM];
-} __attribute__((__packed__)) MeterFastRegisterSet;
 
 extern Meter meter;
-extern MeterFastRegisterSet meter_fast_register_set;
-extern MeterFullRegisterSet meter_full_register_set;
+extern MeterRegisterSet meter_register_set;
 
 void meter_init(void);
 void meter_tick(void);

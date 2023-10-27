@@ -31,27 +31,16 @@
 #include <math.h>
 
 Meter meter;
+MeterRegisterSet meter_register_set;
 
-MeterFastRegisterSet meter_fast_register_set;
-MeterFullRegisterSet meter_full_register_set;
-
-MeterDefinition meter_sdm630_full[] = { 
-    #include "meter_sdm630_full_def.inc"
+static const MeterDefinition meter_sdm630[] = { 
+    #include "meter_sdm630_def.inc"
 };
-MeterDefinition meter_sdm72v2_full[] = {
-    #include "meter_sdm72v2_full_def.inc"
+static const MeterDefinition meter_sdm72v2[] = {
+    #include "meter_sdm72v2_def.inc"
 };
-MeterDefinition meter_dsz15dzmod_full[] = {
-    #include "meter_dsz15dzmod_full_def.inc"
-};
-MeterDefinition meter_sdm630_fast[] = {
-    #include "meter_sdm630_fast_def.inc"
-};
-MeterDefinition meter_sdm72v2_fast[] = {
-    #include "meter_sdm72v2_fast_def.inc"
-};
-MeterDefinition meter_dsz15dzmod_fast[] = {
-    #include "meter_dsz15dzmod_fast_def.inc"
+static const MeterDefinition meter_dsz15dzmod[] = {
+    #include "meter_dsz15dzmod_def.inc"
 };
 
 static void modbus_store_tx_frame_data_bytes(const uint8_t *data, const uint16_t length) {
@@ -195,11 +184,8 @@ void meter_init(void) {
 	memset(&meter, 0, sizeof(Meter));
 
 	// Initialize registers with NaN
-	for(uint8_t i = 0; i < (sizeof(meter_full_register_set)/sizeof(uint32_t)); i++) {
-		((float*)&meter_full_register_set)[i] = NAN;
-	}
-	for(uint8_t i = 0; i < (sizeof(meter_fast_register_set)/sizeof(uint32_t)); i++) {
-		((float*)&meter_fast_register_set)[i] = NAN;
+	for(uint8_t i = 0; i < (sizeof(meter_register_set)/sizeof(uint32_t)); i++) {
+		((float*)&meter_register_set)[i] = NAN;
 	}
 
 	meter.relative_energy.data = relative_energy_save;
@@ -209,9 +195,9 @@ void meter_init(void) {
 
 // Update phases connected bool array (this is used in communication.c)
 void meter_handle_phases_connected(void) {
-	meter.phases_connected[0] = meter_full_register_set.line_to_neutral_volts[0].f > 180.0f;
-	meter.phases_connected[1] = meter_full_register_set.line_to_neutral_volts[1].f > 180.0f;
-	meter.phases_connected[2] = meter_full_register_set.line_to_neutral_volts[2].f > 180.0f;
+	meter.phases_connected[0] = meter_register_set.line_to_neutral_volts[0].f > 180.0f;
+	meter.phases_connected[1] = meter_register_set.line_to_neutral_volts[1].f > 180.0f;
+	meter.phases_connected[2] = meter_register_set.line_to_neutral_volts[2].f > 180.0f;
 }
 
 void meter_handle_new_system_type(void) {
@@ -235,10 +221,11 @@ void meter_handle_new_system_type(void) {
 void meter_set_meter_type(MeterType type) {
     meter.type = type;
     switch(type) {
-        case METER_TYPE_SDM72V2:    meter.slave_address = 0x01; meter.current_meter_full = &meter_sdm72v2_full[0];    meter.current_meter_fast = &meter_sdm72v2_fast[0];    break;
-        case METER_TYPE_SDM630:     meter.slave_address = 0x01; meter.current_meter_full = &meter_sdm630_full[0];     meter.current_meter_fast = &meter_sdm630_fast[0];     break;
-        case METER_TYPE_DSZ15DZMOD: meter.slave_address = 0x37; meter.current_meter_full = &meter_dsz15dzmod_full[0]; meter.current_meter_fast = &meter_dsz15dzmod_fast[0]; break;
-        default:                    meter.slave_address = 0;    meter.current_meter_full = NULL;                      meter.current_meter_fast = NULL;                      break;
+        case METER_TYPE_SDM72V2:     meter.slave_address = 0x01; meter.current_meter = &meter_sdm72v2[0];    break;
+        case METER_TYPE_SDM630:      meter.slave_address = 0x01; meter.current_meter = &meter_sdm630[0];     break;
+        case METER_TYPE_SDM630MCTV2: meter.slave_address = 0x01; meter.current_meter = &meter_sdm630[0];     break;
+        case METER_TYPE_DSZ15DZMOD:  meter.slave_address = 0x37; meter.current_meter = &meter_dsz15dzmod[0]; break;
+        default:                     meter.slave_address = 0;    meter.current_meter = NULL;                 break;
     }
 
     // Reset meter timeout
@@ -270,6 +257,7 @@ void meter_find_meter_type(void) {
 					case 0x0089: meter_set_meter_type(METER_TYPE_SDM72V2);     find_meter_state = 0; return;  // Compare datasheet page 16 meter code
 					case 0x0000: // Some early versions of the SDM630 return 0x0000 instead of 0x0070 for the meter type register.
 					case 0x0070: meter_set_meter_type(METER_TYPE_SDM630);      find_meter_state = 0; return;
+					case 0x0079: meter_set_meter_type(METER_TYPE_SDM630MCTV2); find_meter_state = 0; return;
 					default:     meter.type = METER_TYPE_UNKNOWN;                                    break; 
 				}
 
@@ -311,7 +299,8 @@ void meter_find_meter_type(void) {
     }
 }
 
-void meter_handle_new_data(MeterRegisterType data, MeterDefinition *definition) {
+float tmp = 1000;
+void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *definition) {
     if(definition->register_data_type == METER_REGISTER_DATA_TYPE_FLOAT) {
         definition->register_set_address->f = data.f * definition->scale_factor;
     } else if(definition->register_data_type == METER_REGISTER_DATA_TYPE_INT32) {
@@ -321,15 +310,20 @@ void meter_handle_new_data(MeterRegisterType data, MeterDefinition *definition) 
     }
 
     // The DSZ15DZMOD meter only has import and export register, but we need the sum.
-    if(definition->register_set_address == &meter_fast_register_set.absolute_energy_export) {
-        meter_fast_register_set.absolute_energy.f = meter_fast_register_set.absolute_energy_import.f + meter_fast_register_set.absolute_energy_export.f;
+	// We do this here directly after we read the export register (which comes after the import register)
+    if(definition->register_set_address == &meter_register_set.total_export_kwh) {
+        meter_register_set.total_kwh_sum.f = meter_register_set.total_import_kwh.f + meter_register_set.total_export_kwh.f;
     }
+    if(definition->register_set_address == &meter_register_set.total_system_power) {
+		meter_register_set.total_system_power.f = tmp;
+		tmp = tmp + 100;
+	}
 }
 
 // The complete register set has been read. Handle differences between meters.
 void meter_handle_register_set_read_done(void) {
     if(meter.type == METER_TYPE_DSZ15DZMOD) {
-        meter_full_register_set.total_kwh_sum.f = meter_full_register_set.total_import_kwh.f + meter_full_register_set.total_export_kwh.f;
+        // meter_register_set.total_kwh_sum.f = meter_full_register_set.total_import_kwh.f + meter_full_register_set.total_export_kwh.f;
         // Given by DSZ15DZMOD:
         // PF = power_factor (power factor)
         // P  = power (active power)
@@ -353,17 +347,17 @@ void meter_handle_register_set_read_done(void) {
         // P = S * cos(φ) => φ = arccos(P / S)
 /*
         for(uint8_t i = 0; i < METER_PHASE_NUM; i++) {
-			if(meter_full_register_set.power_factor[i].f == 0.0) {
-				meter_full_register_set.volt_amps[i].f = 0.0;
-				meter_full_register_set.volt_amps_reactive[i].f = 0.0;
+			if(meter_register_set.power_factor[i].f == 0.0) {
+				meter_register_set.volt_amps[i].f = 0.0;
+				meter_register_set.volt_amps_reactive[i].f = 0.0;
 			} else {
-            	meter_full_register_set.volt_amps[i].f = meter_full_register_set.power[i].f / meter_full_register_set.power_factor[i].f;
-            	meter_full_register_set.volt_amps_reactive[i].f = sqrt(meter_full_register_set.volt_amps[i].f * meter_full_register_set.volt_amps[i].f - meter_full_register_set.power[i].f * meter_full_register_set.power[i].f);
+            	meter_register_set.volt_amps[i].f = meter_full_register_set.power[i].f / meter_full_register_set.power_factor[i].f;
+            	meter_register_set.volt_amps_reactive[i].f = sqrt(meter_full_register_set.volt_amps[i].f * meter_full_register_set.volt_amps[i].f - meter_full_register_set.power[i].f * meter_full_register_set.power[i].f);
 			}
-            if(meter_full_register_set.volt_amps[i].f == 0.0) {
-				meter_full_register_set.phase_angle[i].f = 0.0;
+            if(meter_register_set.volt_amps[i].f == 0.0) {
+				meter_register_set.phase_angle[i].f = 0.0;
 			} else {
-            	meter_full_register_set.phase_angle[i].f = acosf(meter_full_register_set.power[i].f / meter_full_register_set.volt_amps[i].f);
+            	meter_register_set.phase_angle[i].f = acosf(meter_full_register_set.power[i].f / meter_full_register_set.volt_amps[i].f);
 			}
 		}
 */
@@ -413,11 +407,11 @@ void meter_tick(void) {
 
 	switch(meter.state) {
         case 0: { // request
-            if(system_timer_is_time_elapsed_ms(meter.register_fast_time, 500) || (meter.register_fast_position > 0)) {
-                meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, meter.current_meter_fast[meter.register_fast_position].register_address, 2);
+            if(system_timer_is_time_elapsed_ms(meter.register_fast_time, 500) || read_fast) {
+                meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, meter.current_meter[meter.register_fast_position].register_address, 2);
 				read_fast = true;
 			} else {
-                meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, meter.current_meter_full[meter.register_full_position].register_address, 2);
+                meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, meter.current_meter[meter.register_full_position].register_address, 2);
 				read_fast = false;
 			}
 			meter.state++;
@@ -429,25 +423,32 @@ void meter_tick(void) {
             MeterRegisterType data;
             ret = meter_get_read_registers_response(MODBUS_FC_READ_INPUT_REGISTERS, &data, 2);
 			if(ret) {
-                meter_handle_new_data(data, read_fast ? &meter.current_meter_fast[meter.register_fast_position] : &meter.current_meter_full[meter.register_full_position]);
+                meter_handle_new_data(data, read_fast ? &meter.current_meter[meter.register_fast_position] : &meter.current_meter[meter.register_full_position]);
 				modbus_clear_request(&rs485);
 				meter.state++;
 				if(read_fast) {
-					meter.register_fast_position++;
-                    if(meter.current_meter_fast[meter.register_fast_position].register_set_address == NULL) {
-						meter.register_fast_position = 0;
-						meter.register_fast_time += 500;
-						if(system_timer_is_time_elapsed_ms(meter.register_fast_time, 500)) {
-							meter.register_fast_time = system_timer_get_ms();
+					do {
+						meter.register_fast_position++;
+						if(meter.current_meter[meter.register_fast_position].register_set_address == NULL) {
+							meter.register_fast_position = 0;
+							meter.register_fast_time += 500;
+							if(system_timer_is_time_elapsed_ms(meter.register_fast_time, 500)) {
+								meter.register_fast_time = system_timer_get_ms();
+							}
+							// We read all fast registers once, go back to full read.
+							// Fast read will start again after 500ms
+							read_fast = false;
 						}
-					}
+					} while(!meter.current_meter[meter.register_fast_position].fast_read);
 				} else {
-					meter.register_full_position++;
-                    if(meter.current_meter_full[meter.register_full_position].register_set_address == NULL) {
-						meter.register_full_position = 0;
-						meter.each_value_read_once   = true;
-                        meter_handle_register_set_read_done();
-					}
+					do {
+						meter.register_full_position++;
+						if(meter.current_meter[meter.register_full_position].register_set_address == NULL) {
+							meter.register_full_position = 0;
+							meter.each_value_read_once   = true;
+							meter_handle_register_set_read_done();
+						}
+					} while(meter.current_meter[meter.register_full_position].fast_read);
 				}
 			}
 			break;

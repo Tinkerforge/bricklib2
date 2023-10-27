@@ -126,7 +126,7 @@ void contactor_check_tick(void) {
 		const bool contactor    = XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN);      // low = contactor aux active, high = contactor aux not active
 		const bool phase_switch = XMC_GPIO_GetInput(EVSE_PHASE_SWITCH_PIN);   // low = contactor aux active, high = contactor aux not active
 
-		if(pe) {
+		if(check_pe) {
 			contactor_check.error = 1;
 		} else {
 			contactor_check.error = 0;

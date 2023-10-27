@@ -40,15 +40,14 @@ ContactorCheck contactor_check;
 
 void contactor_check_init(void) {
 	memset(&contactor_check, 0, sizeof(ContactorCheck));
+	const XMC_GPIO_CONFIG_t pin_config_input = {
+		.mode             = XMC_GPIO_MODE_INPUT_TRISTATE,
+		.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
+	};
 
 #ifdef HAS_HARDWARE_VERSION
 	if(hardware_version.is_v2) {
 #endif
-		const XMC_GPIO_CONFIG_t pin_config_input = {
-			.mode             = XMC_GPIO_MODE_INPUT_TRISTATE,
-			.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
-		};
-
 		XMC_GPIO_Init(CONTACTOR_CHECK_AC1_PIN, &pin_config_input);
 		XMC_GPIO_Init(CONTACTOR_CHECK_AC2_PIN, &pin_config_input);
 
@@ -56,6 +55,9 @@ void contactor_check_init(void) {
 		contactor_check.ac2_last_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC2_PIN);
 #ifdef HAS_HARDWARE_VERSION
 	} else {
+		XMC_GPIO_Init(CONTACTOR_CHECK_FB1_PIN, &pin_config_input);
+		XMC_GPIO_Init(CONTACTOR_CHECK_FB2_PIN, &pin_config_input);
+		XMC_GPIO_Init(CONTACTOR_CHECK_PE_PIN, &pin_config_input);
 	}
 #endif
 }
@@ -116,8 +118,52 @@ void contactor_check_tick(void) {
 		}
 #ifdef HAS_HARDWARE_VERSION
 	} else {
-		contactor_check.error = 0;
-		contactor_check.state = 1 | (0 << 1);
+		// TODO: Do we need debouce here?
+		const bool check_n_l1   = XMC_GPIO_GetInput(CONTACTOR_CHECK_FB1_PIN); // low = contactor active, high = contactor not active
+		const bool check_l2_l3  = XMC_GPIO_GetInput(CONTACTOR_CHECK_FB2_PIN); // low = contactor active, high = contactor not active
+		const bool check_pe     = XMC_GPIO_GetInput(CONTACTOR_CHECK_PE_PIN);  // low = PE check OK, high = PE check fail
+
+		const bool contactor    = XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN);      // low = contactor aux active, high = contactor aux not active
+		const bool phase_switch = XMC_GPIO_GetInput(EVSE_PHASE_SWITCH_PIN);   // low = contactor aux active, high = contactor aux not active
+
+		if(pe) {
+			contactor_check.error = 1;
+		} else {
+			contactor_check.error = 0;
+		}
+
+		uint8_t error = 0;
+		switch(contactor | (phase_switch << 1) | (check_n_l1 << 2) | (check_l2_l3 << 3)) {
+			// contactor active + 3phase
+			case 0b0000: error = 0;  break; // contactor aux and phase switch aux active -> OK
+			case 0b0001: error = 1;  break;
+			case 0b0010: error = 2;  break;
+			case 0b0011: error = 3;  break;
+
+			// contactor active + 1phase
+			case 0b0100: error = 4;  break;
+			case 0b0101: error = 0;  break; // contactor aux active and phase switch aux not active -> OK
+			case 0b0110: error = 5;  break;
+			case 0b0111: error = 6;  break;
+
+			// contactor not active (1/3phase not relevant)
+			case 0b1000: error = 7;  break;
+			case 0b1001: error = 8;  break;
+			case 0b1010: error = 9;  break;
+			case 0b1011: error = 0;  break; // contactor aux not active and phase switch aux not active -> OK
+			case 0b1100: error = 10; break;
+			case 0b1101: error = 11; break;
+			case 0b1110: error = 12; break;
+			case 0b1111: error = 0;  break; // contactor aux not active and phase switch aux not active -> OK
+
+			default:     error = 13; break; // Impossible
+		}
+
+		// First bit used for independed PE check error
+		contactor_check.error |= (1 << error);
+
+		// The data that we send to the Brick uses "active high", so we invert the inputs here
+		contactor_check.state = (!check_n_l1) | ((!check_l2_l3) << 1) | ((!check_pe) << 2) | ((!contactor) << 3) | ((!phase_switch) << 4);
 	}
 #endif
 }

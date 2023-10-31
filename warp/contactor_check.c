@@ -160,7 +160,7 @@ void contactor_check_tick(void) {
 		}
 
 		// First bit used for independed PE check error
-		contactor_check.error |= (1 << error);
+		contactor_check.error |= (error << 1);
 
 		// The data that we send to the Brick uses "active high", so we invert the inputs here
 		contactor_check.state = (!check_n_l1) | ((!check_l2_l3) << 1) | ((!check_pe) << 2) | ((!contactor) << 3) | ((!phase_switch) << 4);

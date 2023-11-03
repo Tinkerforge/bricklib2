@@ -299,7 +299,6 @@ void meter_find_meter_type(void) {
     }
 }
 
-float tmp = 1000;
 void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *definition) {
     if(definition->register_data_type == METER_REGISTER_DATA_TYPE_FLOAT) {
         definition->register_set_address->f = data.f * definition->scale_factor;
@@ -314,10 +313,6 @@ void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *defini
     if(definition->register_set_address == &meter_register_set.total_export_kwh) {
         meter_register_set.total_kwh_sum.f = meter_register_set.total_import_kwh.f + meter_register_set.total_export_kwh.f;
     }
-    if(definition->register_set_address == &meter_register_set.total_system_power) {
-		meter_register_set.total_system_power.f = tmp;
-		tmp = tmp + 100;
-	}
 }
 
 // The complete register set has been read. Handle differences between meters.

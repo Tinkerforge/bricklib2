@@ -70,7 +70,6 @@ const uint16_t sdm_registers_fast_to_read[] = {
 
 SDM sdm;
 SDMRegister sdm_register;
-SDMRegisterFast sdm_register_fast;
 
 #define SDM_REGISTER_NUM      (sizeof(sdm_registers_to_read)/sizeof(uint16_t))
 #define SDM_REGISTER_FAST_NUM (sizeof(sdm_registers_fast_to_read)/sizeof(uint16_t))

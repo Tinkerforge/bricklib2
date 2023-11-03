@@ -45,6 +45,13 @@ typedef struct {
 
     ContactorCheckState state;
     uint8_t error;
+
+    uint32_t pe_edge_count;
+
+    bool pe_last_value;
+
+    uint8_t last_error;
+    uint8_t last_error_time;
 } ContactorCheck;
 
 extern ContactorCheck contactor_check;

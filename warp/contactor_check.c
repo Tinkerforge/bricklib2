@@ -58,6 +58,8 @@ void contactor_check_init(void) {
 		XMC_GPIO_Init(CONTACTOR_CHECK_FB1_PIN, &pin_config_input);
 		XMC_GPIO_Init(CONTACTOR_CHECK_FB2_PIN, &pin_config_input);
 		XMC_GPIO_Init(CONTACTOR_CHECK_PE_PIN, &pin_config_input);
+
+		contactor_check.pe_last_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_PE_PIN);
 	}
 #endif
 }
@@ -126,14 +128,32 @@ void contactor_check_tick(void) {
 		const bool contactor    = XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN);      // low = contactor aux active, high = contactor aux not active
 		const bool phase_switch = XMC_GPIO_GetInput(EVSE_PHASE_SWITCH_PIN);   // low = contactor aux active, high = contactor aux not active
 
-		if(check_pe) {
-			contactor_check.error = 1;
+
+		// PE check
+		if(check_pe != contactor_check.pe_last_value) {
+			contactor_check.pe_last_value = check_pe;
+			contactor_check.pe_edge_count++;
+		}
+		if(system_timer_is_time_elapsed_ms(contactor_check.last_check, CONTACTOR_CHECK_INTERVAL)) {
+			contactor_check.last_check = system_timer_get_ms();
+
+			if(contactor_check.invalid_counter > 0) {
+				contactor_check.invalid_counter--;
+			} else {
+				// Check for edge count of 10. We expect an edge count of 25,
+				// but an edge count > 0 should already be enough to detect the 230V.
+				// To make sure that we don't see any random glitches we check for > 10 as a compromise.
+				contactor_check.error = contactor_check.pe_edge_count > 10 ? 0 : 1;
+			}
+			contactor_check.pe_edge_count = 0;
 		} else {
-			contactor_check.error = 0;
+			// If we are not PE check interval, we keep that last value of PE check
+			contactor_check.error = contactor_check.error & 1;
 		}
 
+		// N/L1 and L2/L3 check
 		uint8_t error = 0;
-		switch(contactor | (phase_switch << 1) | (check_n_l1 << 2) | (check_l2_l3 << 3)) {
+		switch((contactor << 3) | (phase_switch << 2) | (check_n_l1 << 1) | (check_l2_l3 << 0)) {
 			// contactor active + 3phase
 			case 0b0000: error = 0;  break; // contactor aux and phase switch aux active -> OK
 			case 0b0001: error = 1;  break;
@@ -163,7 +183,7 @@ void contactor_check_tick(void) {
 		contactor_check.error |= (error << 1);
 
 		// The data that we send to the Brick uses "active high", so we invert the inputs here
-		contactor_check.state = (!check_n_l1) | ((!check_l2_l3) << 1) | ((!check_pe) << 2) | ((!contactor) << 3) | ((!phase_switch) << 4);
+		contactor_check.state = (!check_n_l1) | ((!check_l2_l3) << 1) | ((!(contactor_check.error & 1)) << 2) | ((!contactor) << 3) | ((!phase_switch) << 4);
 	}
 #endif
 }

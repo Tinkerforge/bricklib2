@@ -120,10 +120,9 @@ void contactor_check_tick(void) {
 		}
 #ifdef HAS_HARDWARE_VERSION
 	} else {
-		// TODO: Do we need debouce here?
 		const bool check_n_l1   = XMC_GPIO_GetInput(CONTACTOR_CHECK_FB1_PIN); // low = contactor active, high = contactor not active
 		const bool check_l2_l3  = XMC_GPIO_GetInput(CONTACTOR_CHECK_FB2_PIN); // low = contactor active, high = contactor not active
-		const bool check_pe     = XMC_GPIO_GetInput(CONTACTOR_CHECK_PE_PIN);  // low = PE check OK, high = PE check fail
+		const bool check_pe     = XMC_GPIO_GetInput(CONTACTOR_CHECK_PE_PIN);  // 50hz = PE check OK, constant = PE check fail
 
 		const bool contactor    = XMC_GPIO_GetInput(EVSE_CONTACTOR_PIN);      // low = contactor aux active, high = contactor aux not active
 		const bool phase_switch = XMC_GPIO_GetInput(EVSE_PHASE_SWITCH_PIN);   // low = contactor aux active, high = contactor aux not active
@@ -146,10 +145,10 @@ void contactor_check_tick(void) {
 				contactor_check.error = contactor_check.pe_edge_count > 10 ? 0 : 1;
 			}
 			contactor_check.pe_edge_count = 0;
-		} else {
-			// If we are not PE check interval, we keep that last value of PE check
-			contactor_check.error = contactor_check.error & 1;
 		}
+
+		// Only keep the last value of PE check
+		contactor_check.error = contactor_check.error & 1;
 
 		// N/L1 and L2/L3 check
 		uint8_t error = 0;
@@ -179,8 +178,18 @@ void contactor_check_tick(void) {
 			default:     error = 13; break; // Impossible
 		}
 
-		// First bit used for independed PE check error
-		contactor_check.error |= (error << 1);
+		if(error == 0) {
+			contactor_check.last_error_time = 0;
+		} else {
+			if(contactor_check.last_error_time == 0) {
+				contactor_check.last_error_time = system_timer_get_ms();
+			} else if(system_timer_is_time_elapsed_ms(contactor_check.last_error_time, 250)) { // 250ms error debounce
+				contactor_check.error |= (error << 1);
+
+				// Make sure we reach here again if the error persists
+				contactor_check.last_error_time = system_timer_get_ms() - 251;
+			}
+		}
 
 		// The data that we send to the Brick uses "active high", so we invert the inputs here
 		contactor_check.state = (!check_n_l1) | ((!check_l2_l3) << 1) | ((!(contactor_check.error & 1)) << 2) | ((!contactor) << 3) | ((!phase_switch) << 4);

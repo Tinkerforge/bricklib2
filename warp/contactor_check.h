@@ -50,8 +50,7 @@ typedef struct {
 
     bool pe_last_value;
 
-    uint8_t last_error;
-    uint8_t last_error_time;
+    uint32_t last_error_time;
 } ContactorCheck;
 
 extern ContactorCheck contactor_check;

@@ -49,22 +49,25 @@
 typedef enum {
 	METER_TYPE_UNKNOWN     = 0,
 	METER_TYPE_UNSUPPORTED = 1,
-	METER_TYPE_SDM630      = 2,
-	METER_TYPE_SDM72V2     = 3,
-	METER_TYPE_SDM72CTM    = 4,
-	METER_TYPE_SDM630MCTV2 = 5,
-	METER_TYPE_DSZ15DZMOD  = 6 // Eltako
+	METER_TYPE_SDM630      = 2, // Eastron
+	METER_TYPE_SDM72V2     = 3, // Eastron
+	METER_TYPE_SDM72CTM    = 4, // Eastron
+	METER_TYPE_SDM630MCTV2 = 5, // Eastron
+	METER_TYPE_DSZ15DZMOD  = 6, // Eltako
+	METER_TYPE_DEM4A       = 7  // YTL
 } MeterType;
 
 typedef enum {
 	METER_REGISTER_DATA_TYPE_FLOAT = 0,
-	METER_REGISTER_DATA_TYPE_INT32 = 1
+	METER_REGISTER_DATA_TYPE_INT32 = 1,
+	METER_REGISTER_DATA_TYPE_INT16 = 2
 } MeterRegisterDataType;
 
 typedef union {
 	float f;
 	uint32_t data;
 	int32_t i32;
+	int16_t i16;
 	uint16_t u16[2];
 } MeterRegisterType;
 

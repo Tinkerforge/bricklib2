@@ -42,6 +42,9 @@ static const MeterDefinition meter_sdm72v2[] = {
 static const MeterDefinition meter_dsz15dzmod[] = {
     #include "meter_dsz15dzmod_def.inc"
 };
+static const MeterDefinition meter_dem4a[] = {
+    #include "meter_dem4a_def.inc"
+};
 
 static void modbus_store_tx_frame_data_bytes(const uint8_t *data, const uint16_t length) {
 	for(uint16_t i = 0; i < length; i++) {
@@ -225,6 +228,7 @@ void meter_set_meter_type(MeterType type) {
         case METER_TYPE_SDM630:      meter.slave_address = 0x01; meter.current_meter = &meter_sdm630[0];     break;
         case METER_TYPE_SDM630MCTV2: meter.slave_address = 0x01; meter.current_meter = &meter_sdm630[0];     break;
         case METER_TYPE_DSZ15DZMOD:  meter.slave_address = 0x37; meter.current_meter = &meter_dsz15dzmod[0]; break;
+        case METER_TYPE_DEM4A:       meter.slave_address = 0x01; meter.current_meter = &meter_dem4a[0];      break;
         default:                     meter.slave_address = 0;    meter.current_meter = NULL;                 break;
     }
 
@@ -237,13 +241,39 @@ void meter_find_meter_type(void) {
 
     switch(find_meter_state) {
         case 0: {
+            // Read meter code for YTL meters register with slave address 1 (SDM)
+            meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, 1, 0x100D, 1);
+            find_meter_state++;
+            break;
+        }
+
+        case 1: {
+			uint16_t meter_code = 0xFFFF;
+			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &meter_code, 1);
+			if(ret) {
+				if(meter_code != 0xFFFF) {
+					rs485.modbus_common_error_counters.timeout = 0;
+				}
+
+				modbus_clear_request(&rs485);
+				switch(meter_code) {
+					case 0x0006: meter_set_meter_type(METER_TYPE_DEM4A); find_meter_state = 0; rs485.modbus_common_error_counters.timeout = 0; return;
+					default:     meter.type = METER_TYPE_UNKNOWN;                              break;
+				}
+
+				find_meter_state++;
+			}
+			break;
+		}
+
+        case 2: {
             // Read meter code register with slave address 1 (SDM)
             meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, 1, METER_SDM_HOLDING_REG_METER_CODE, 1);
             find_meter_state++;
             break;
         }
 
-        case 1: {
+        case 3: {
 			uint16_t meter_code = 0xFFFF;
 			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &meter_code, 1);
 			if(ret) {
@@ -266,14 +296,15 @@ void meter_find_meter_type(void) {
 			break;
 		}
 
-        case 2: {
+
+        case 4: {
             // Read meter code register with slave address 0x37 (Eltako)
             meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, 0x37, METER_SDM_HOLDING_REG_METER_CODE, 2);
             find_meter_state++;
             break;
         }
 
-        case 3: {
+        case 5: {
 			uint32_t meter_code = 0xFFFFFFFF;
 			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &meter_code, 2);
 			if(ret) {
@@ -304,6 +335,8 @@ void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *defini
         definition->register_set_address->f = data.f * definition->scale_factor;
     } else if(definition->register_data_type == METER_REGISTER_DATA_TYPE_INT32) {
         definition->register_set_address->f = ((float)data.i32) * definition->scale_factor;
+    } else if(definition->register_data_type == METER_REGISTER_DATA_TYPE_INT16) {
+        definition->register_set_address->f = ((float)data.i16) * definition->scale_factor;
     } else {
         loge("Unsupported data type: %d\n\r", definition->register_data_type);
     }
@@ -359,6 +392,10 @@ void meter_handle_register_set_read_done(void) {
     }
 }
 
+uint8_t meter_get_register_size(uint16_t position) {
+	return meter.current_meter[position].register_data_type >= METER_REGISTER_DATA_TYPE_INT16 ? 1: 2;
+}
+
 void meter_tick(void) {
 	static uint8_t last_state = 255;
 	static bool read_fast = false;
@@ -403,10 +440,10 @@ void meter_tick(void) {
 	switch(meter.state) {
         case 0: { // request
             if(system_timer_is_time_elapsed_ms(meter.register_fast_time, 500) || read_fast) {
-                meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, meter.current_meter[meter.register_fast_position].register_address, 2);
+                meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, meter.current_meter[meter.register_fast_position].register_address, meter_get_register_size(meter.register_fast_position));
 				read_fast = true;
 			} else {
-                meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, meter.current_meter[meter.register_full_position].register_address, 2);
+                meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, meter.current_meter[meter.register_full_position].register_address, meter_get_register_size(meter.register_full_position));
 				read_fast = false;
 			}
 			meter.state++;
@@ -416,7 +453,7 @@ void meter_tick(void) {
 		case 1: { // read
 			bool ret = false;
             MeterRegisterType data;
-            ret = meter_get_read_registers_response(MODBUS_FC_READ_INPUT_REGISTERS, &data, 2);
+            ret = meter_get_read_registers_response(MODBUS_FC_READ_INPUT_REGISTERS, &data, meter_get_register_size(read_fast ? meter.register_fast_position : meter.register_full_position));
 			if(ret) {
                 meter_handle_new_data(data, read_fast ? &meter.current_meter[meter.register_fast_position] : &meter.current_meter[meter.register_full_position]);
 				modbus_clear_request(&rs485);
@@ -455,8 +492,8 @@ void meter_tick(void) {
 				break;
 			}
 
-            // Eltako meter does not have system type configuration
-            if(meter.type == METER_TYPE_DSZ15DZMOD) {
+            // Eltako and YTL meter do not have system type configuration
+            if((meter.type == METER_TYPE_DSZ15DZMOD) || (meter.type == METER_TYPE_DEM4A)) {
                 // For SDM meters this is done during system type check
                 meter_handle_phases_connected();
                 meter.state = 0;

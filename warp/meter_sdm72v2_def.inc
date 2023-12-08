@@ -16,6 +16,7 @@
 {31, &meter_register_set.power_factor[0], 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {33, &meter_register_set.power_factor[1], 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {35, &meter_register_set.power_factor[2], 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
+{43, &meter_register_set.average_line_to_neutral_volts, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {47, &meter_register_set.average_line_current, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {49, &meter_register_set.sum_of_line_currents, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {53, &meter_register_set.total_system_power, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, true},

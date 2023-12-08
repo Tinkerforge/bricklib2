@@ -183,7 +183,10 @@ bool meter_get_write_register_response(uint8_t fc) {
 }
 
 void meter_init(void) {
-	uint32_t relative_energy_save = meter.relative_energy.data;
+	const uint32_t relative_energy_sum_save    = meter.relative_energy_sum.data;
+	const uint32_t relative_energy_import_save = meter.relative_energy_import.data;
+	const uint32_t relative_energy_export_save = meter.relative_energy_export.data;
+
 	memset(&meter, 0, sizeof(Meter));
 
 	// Initialize registers with NaN
@@ -191,9 +194,11 @@ void meter_init(void) {
 		((float*)&meter_register_set)[i] = NAN;
 	}
 
-	meter.relative_energy.data = relative_energy_save;
-	meter.first_tick = system_timer_get_ms();
-	meter.register_fast_time = system_timer_get_ms();
+	meter.relative_energy_sum.data    = relative_energy_sum_save;
+	meter.relative_energy_import.data = relative_energy_import_save;
+	meter.relative_energy_export.data = relative_energy_export_save;
+	meter.first_tick                  = system_timer_get_ms();
+	meter.register_fast_time          = system_timer_get_ms();
 }
 
 // Update phases connected bool array (this is used in communication.c)
@@ -350,8 +355,13 @@ void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *defini
 
 // The complete register set has been read. Handle differences between meters.
 void meter_handle_register_set_read_done(void) {
+	// Update relative values
+	meter_register_set.relative_total_import_kwh.f = meter_register_set.total_import_kwh.f - meter.relative_energy_import.f;
+	meter_register_set.relative_total_export_kwh.f = meter_register_set.total_export_kwh.f - meter.relative_energy_export.f;
+	meter_register_set.relative_total_kwh_sum.f    = meter_register_set.total_kwh_sum.f    - meter.relative_energy_sum.f;
+
     if(meter.type == METER_TYPE_DSZ15DZMOD) {
-        // meter_register_set.total_kwh_sum.f = meter_full_register_set.total_import_kwh.f + meter_full_register_set.total_export_kwh.f;
+        // meter_register_set.total_kwh_sum.f = meter_register_set.total_import_kwh.f + meter_register_set.total_export_kwh.f;
         // Given by DSZ15DZMOD:
         // PF = power_factor (power factor)
         // P  = power (active power)

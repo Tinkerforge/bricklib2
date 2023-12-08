@@ -104,7 +104,11 @@ typedef struct {
 	bool new_system_type;
 
 	bool phases_connected[3];
-	MeterRegisterType relative_energy;
+
+	// The relative values saved as last absolut value
+	MeterRegisterType relative_energy_sum;
+	MeterRegisterType relative_energy_import;
+	MeterRegisterType relative_energy_export;
 
 	const MeterDefinition *current_meter;
 } Meter;
@@ -161,6 +165,9 @@ typedef struct {
 	MeterRegisterType import_kvarh[METER_PHASE_NUM];
 	MeterRegisterType export_kvarh[METER_PHASE_NUM];
 	MeterRegisterType total_kvarh[METER_PHASE_NUM];
+	MeterRegisterType relative_total_import_kwh;
+	MeterRegisterType relative_total_export_kwh;
+	MeterRegisterType relative_total_kwh_sum;
 } __attribute__((__packed__)) MeterRegisterSet;
 
 

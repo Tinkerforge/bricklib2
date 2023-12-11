@@ -345,12 +345,6 @@ void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *defini
     } else {
         loge("Unsupported data type: %d\n\r", definition->register_data_type);
     }
-
-    // The DSZ15DZMOD meter only has import and export register, but we need the sum.
-	// We do this here directly after we read the export register (which comes after the import register)
-    if(definition->register_set_address == &meter_register_set.total_export_kwh) {
-        meter_register_set.total_kwh_sum.f = meter_register_set.total_import_kwh.f + meter_register_set.total_export_kwh.f;
-    }
 }
 
 // The complete register set has been read. Handle differences between meters.
@@ -361,7 +355,9 @@ void meter_handle_register_set_read_done(void) {
 	meter_register_set.relative_total_kwh_sum.f    = meter_register_set.total_kwh_sum.f    - meter.relative_energy_sum.f;
 
     if(meter.type == METER_TYPE_DSZ15DZMOD) {
-        // meter_register_set.total_kwh_sum.f = meter_register_set.total_import_kwh.f + meter_register_set.total_export_kwh.f;
+        // The DSZ15DZMOD meter only has import and export register, but we need the sum.
+        meter_register_set.total_kwh_sum.f = meter_register_set.total_import_kwh.f + meter_register_set.total_export_kwh.f;
+
         // Given by DSZ15DZMOD:
         // PF = power_factor (power factor)
         // P  = power (active power)

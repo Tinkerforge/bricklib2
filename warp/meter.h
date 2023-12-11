@@ -165,9 +165,9 @@ typedef struct {
 	MeterRegisterType import_kvarh[METER_PHASE_NUM];
 	MeterRegisterType export_kvarh[METER_PHASE_NUM];
 	MeterRegisterType total_kvarh[METER_PHASE_NUM];
+	MeterRegisterType relative_total_kwh_sum;
 	MeterRegisterType relative_total_import_kwh;
 	MeterRegisterType relative_total_export_kwh;
-	MeterRegisterType relative_total_kwh_sum;
 } __attribute__((__packed__)) MeterRegisterSet;
 
 

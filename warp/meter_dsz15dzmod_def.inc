@@ -12,6 +12,6 @@
 {35, &meter_register_set.power_factor[2], 0.001, METER_REGISTER_DATA_TYPE_INT32, false},
 {53, &meter_register_set.total_system_power, 1.0, METER_REGISTER_DATA_TYPE_INT32, true},
 {63, &meter_register_set.total_system_power_factor, 0.001, METER_REGISTER_DATA_TYPE_INT32, false},
-{73, &meter_register_set.total_import_kwh, 0.01, METER_REGISTER_DATA_TYPE_INT32, true},
-{75, &meter_register_set.total_export_kwh, 0.01, METER_REGISTER_DATA_TYPE_INT32, true},
+{73, &meter_register_set.total_import_kwh, 0.01, METER_REGISTER_DATA_TYPE_INT32, false},
+{75, &meter_register_set.total_export_kwh, 0.01, METER_REGISTER_DATA_TYPE_INT32, false},
 {0, NULL, 0.0, 0, false},

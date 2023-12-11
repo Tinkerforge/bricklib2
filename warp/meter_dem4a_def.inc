@@ -32,5 +32,5 @@
 {0x40B, &meter_register_set.line3_to_line1_volts, 0.001, METER_REGISTER_DATA_TYPE_INT32, false},
 {0x40F, &meter_register_set.average_line_to_line_volts, 0.001, METER_REGISTER_DATA_TYPE_INT32, false},
 {0x417, &meter_register_set.neutral_current, 0.001, METER_REGISTER_DATA_TYPE_INT32, false},
-{0x123, &meter_register_set.total_kwh_sum, 0.01, METER_REGISTER_DATA_TYPE_INT32, true},
+{0x123, &meter_register_set.total_kwh_sum, 0.01, METER_REGISTER_DATA_TYPE_INT32, false},
 {0, NULL, 0.0, 0, false},

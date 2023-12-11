@@ -31,6 +31,6 @@
 {205, &meter_register_set.line3_to_line1_volts, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {207, &meter_register_set.average_line_to_line_volts, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {225, &meter_register_set.neutral_current, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
-{343, &meter_register_set.total_kwh_sum, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, true},
+{343, &meter_register_set.total_kwh_sum, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {345, &meter_register_set.total_kvarh_sum, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {0, NULL, 0.0, 0, false},

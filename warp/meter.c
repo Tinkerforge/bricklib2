@@ -239,7 +239,7 @@ void meter_set_meter_type(MeterType type) {
         case METER_TYPE_SDM72V2:     meter.slave_address = 0x01; meter.current_meter = &meter_sdm72v2[0];    break;
         case METER_TYPE_SDM630:      meter.slave_address = 0x01; meter.current_meter = &meter_sdm630[0];     break;
         case METER_TYPE_SDM630MCTV2: meter.slave_address = 0x01; meter.current_meter = &meter_sdm630[0];     break;
-        case METER_TYPE_DSZ15DZMOD:  meter.slave_address = 0x37; meter.current_meter = &meter_dsz15dzmod[0]; break;
+        case METER_TYPE_DSZ15DZMOD:  meter.slave_address = 0x01; meter.current_meter = &meter_dsz15dzmod[0]; break;
         case METER_TYPE_DEM4A:       meter.slave_address = 0x01; meter.current_meter = &meter_dem4a[0];      break;
         default:                     meter.slave_address = 0;    meter.current_meter = NULL;                 break;
     }

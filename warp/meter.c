@@ -310,8 +310,8 @@ void meter_find_meter_type(void) {
 
 
         case 4: {
-            // Read meter code register with slave address 0x37 (Eltako)
-            meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, 0x37, METER_SDM_HOLDING_REG_METER_CODE, 2);
+            // Read meter code register with slave address 0x01 (Eltako)
+            meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, 0x01, METER_SDM_HOLDING_REG_METER_CODE, 2);
             find_meter_state++;
             break;
         }

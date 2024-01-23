@@ -470,8 +470,8 @@ void meter_tick(void) {
 			if(ret) {
                 meter_handle_new_data(data, read_fast ? &meter.current_meter[meter.register_fast_position] : &meter.current_meter[meter.register_full_position]);
 				modbus_clear_request(&rs485);
-				meter.state++;
 				if(read_fast) {
+					meter.state = 0;
 					do {
 						meter.register_fast_position++;
 						if(meter.current_meter[meter.register_fast_position].register_set_address == NULL) {
@@ -486,6 +486,7 @@ void meter_tick(void) {
 						}
 					} while(!meter.current_meter[meter.register_fast_position].fast_read);
 				} else {
+					meter.state++;
 					do {
 						meter.register_full_position++;
 						if(meter.current_meter[meter.register_full_position].register_set_address == NULL) {

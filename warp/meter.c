@@ -500,7 +500,7 @@ void meter_tick(void) {
 		}
 
 		case 2: { // request system type from holding register
-			if(meter.register_full_position != 0) {
+			if((meter.register_full_position != 0) || !meter.each_value_read_once) {
 				meter.state = 0;
 				break;
 			}

@@ -150,11 +150,15 @@ bool meter_get_read_registers_response(uint8_t fc, void *data, uint8_t count) {
 		meter.available = true;
 
 		uint8_t *d = &rs485.modbus_rtu.request.rx_frame[3];
-        if(count == 1) {
+        if(count == 1) { // one 16-bit value
 		    *((uint16_t*)data) = (d[0] << 8) | (d[1] << 0);
-        } else if(count == 2) {
+        } else if(count == 2) { // one 32-bit value
 		    *((uint32_t*)data) = (d[0] << 24) | (d[1] << 16) | (d[2] << 8) | (d[3] << 0);
-        }
+        } else { // count/2 32-bit values
+			for(uint8_t i = 0; i < count/2; i++) {
+				((uint32_t*)data)[i] = (d[i*4] << 24) | (d[i*4 + 1] << 16) | (d[i*4 + 2] << 8) | (d[i*4+3] << 0);
+			}
+		}
 	}
 
 	return true; // increment state
@@ -354,17 +358,23 @@ void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *defini
     }
 }
 
+void meter_handle_register_set_fast_read_done(void) {
+	meter.new_fast_value_callback = true;
+}
+
 // The complete register set has been read. Handle differences between meters.
-void meter_handle_register_set_read_done(void) {
-	// Update relative values
-	meter_register_set.relative_total_import_kwh.f = meter_register_set.total_import_kwh.f - meter.relative_energy_import.f;
-	meter_register_set.relative_total_export_kwh.f = meter_register_set.total_export_kwh.f - meter.relative_energy_export.f;
-	meter_register_set.relative_total_kwh_sum.f    = meter_register_set.total_kwh_sum.f    - meter.relative_energy_sum.f;
+// State 0 updates the mandatory values.
+// State 1 to n updates the optional values. Call 1 to n with 1 per tick. It takes about 150us to calculate all values.
+bool meter_handle_register_set_read_done(uint8_t state) {
+	static float value = 0; // temporary value between states
 
-    if(meter.type == METER_TYPE_DSZ15DZMOD) {
-        // The DSZ15DZMOD meter only has import and export register, but we need the sum.
-        meter_register_set.total_kwh_sum.f = meter_register_set.total_import_kwh.f + meter_register_set.total_export_kwh.f;
-
+	if(state == 0) {
+		// Update relative values
+		meter_register_set.relative_total_import_kwh.f = meter_register_set.total_import_kwh.f - meter.relative_energy_import.f;
+		meter_register_set.relative_total_export_kwh.f = meter_register_set.total_export_kwh.f - meter.relative_energy_export.f;
+		meter_register_set.relative_total_kwh_sum.f    = meter_register_set.total_kwh_sum.f    - meter.relative_energy_sum.f;
+		meter.each_value_read_once = true;
+	} else if(meter.type == METER_TYPE_DSZ15DZMOD) {
         // Given by DSZ15DZMOD:
         // PF = power_factor (power factor)
         // P  = power (active power)
@@ -386,27 +396,108 @@ void meter_handle_register_set_read_done(void) {
         // PF = P / S     => S = P / PF
         // S² = P² + Q²   => Q = sqrt(S² - P²)
         // P = S * cos(φ) => φ = arccos(P / S)
-/*
-        for(uint8_t i = 0; i < METER_PHASE_NUM; i++) {
-			if(meter_register_set.power_factor[i].f == 0.0) {
-				meter_register_set.volt_amps[i].f = 0.0;
-				meter_register_set.volt_amps_reactive[i].f = 0.0;
-			} else {
-            	meter_register_set.volt_amps[i].f = meter_full_register_set.power[i].f / meter_full_register_set.power_factor[i].f;
-            	meter_register_set.volt_amps_reactive[i].f = sqrt(meter_full_register_set.volt_amps[i].f * meter_full_register_set.volt_amps[i].f - meter_full_register_set.power[i].f * meter_full_register_set.power[i].f);
-			}
-            if(meter_register_set.volt_amps[i].f == 0.0) {
-				meter_register_set.phase_angle[i].f = 0.0;
-			} else {
-            	meter_register_set.phase_angle[i].f = acosf(meter_full_register_set.power[i].f / meter_full_register_set.volt_amps[i].f);
-			}
+
+		switch(state) {
+			case 1:  meter_register_set.volt_amps[0].f                  = meter_register_set.power_factor[0].f == 0.0 ? 0.0 : meter_register_set.power[0].f / meter_register_set.power_factor[0].f; break;
+			case 2:  meter_register_set.volt_amps[1].f                  = meter_register_set.power_factor[1].f == 0.0 ? 0.0 : meter_register_set.power[1].f / meter_register_set.power_factor[1].f; break;
+			case 3:  meter_register_set.volt_amps[2].f                  = meter_register_set.power_factor[2].f == 0.0 ? 0.0 : meter_register_set.power[2].f / meter_register_set.power_factor[2].f; break;
+			case 4:  meter_register_set.volt_amps_reactive[0].f         = meter_register_set.power_factor[0].f == 0.0 ? 0.0 : sqrt(meter_register_set.volt_amps[0].f * meter_register_set.volt_amps[0].f - meter_register_set.power[0].f * meter_register_set.power[0].f); break;
+			case 5:  meter_register_set.volt_amps_reactive[1].f         = meter_register_set.power_factor[1].f == 0.0 ? 0.0 : sqrt(meter_register_set.volt_amps[1].f * meter_register_set.volt_amps[1].f - meter_register_set.power[1].f * meter_register_set.power[1].f); break;
+			case 6:  meter_register_set.volt_amps_reactive[2].f         = meter_register_set.power_factor[2].f == 0.0 ? 0.0 : sqrt(meter_register_set.volt_amps[2].f * meter_register_set.volt_amps[2].f - meter_register_set.power[2].f * meter_register_set.power[2].f); break;
+			case 7:  meter_register_set.phase_angle[0].f                = meter_register_set.volt_amps[0].f    == 0.0 ? 0.0 : acosf(meter_register_set.power[0].f / meter_register_set.volt_amps[0].f); break;
+			case 8:  meter_register_set.phase_angle[1].f                = meter_register_set.volt_amps[1].f    == 0.0 ? 0.0 : acosf(meter_register_set.power[1].f / meter_register_set.volt_amps[1].f); break;
+			case 9:  meter_register_set.phase_angle[2].f                = meter_register_set.volt_amps[2].f    == 0.0 ? 0.0 : acosf(meter_register_set.power[2].f / meter_register_set.volt_amps[2].f); break;
+			case 10: value                                              = meter_register_set.current[0].f * meter_register_set.current[0].f + meter_register_set.current[1].f * meter_register_set.current[1].f + meter_register_set.current[2].f * meter_register_set.current[2].f - meter_register_set.current[0].f * meter_register_set.current[1].f - meter_register_set.current[0].f * meter_register_set.current[2].f - meter_register_set.current[1].f * meter_register_set.current[2].f; break;
+			case 11: meter_register_set.neutral_current.f               = sqrt(ABS(value)); break;
+			case 12: meter_register_set.average_line_to_neutral_volts.f = (meter_register_set.line_to_neutral_volts[0].f + meter_register_set.line_to_neutral_volts[1].f + meter_register_set.line_to_neutral_volts[2].f) / 3.0f; break;
+			case 13: meter_register_set.average_line_current.f          = (meter_register_set.current[0].f + meter_register_set.current[1].f + meter_register_set.current[2].f) / 3.0f; break;
+			case 14: meter_register_set.sum_of_line_currents.f          = meter_register_set.current[0].f + meter_register_set.current[1].f + meter_register_set.current[2].f; break;
+			case 15: meter_register_set.total_system_volt_amps.f        = meter_register_set.volt_amps[0].f + meter_register_set.volt_amps[1].f + meter_register_set.volt_amps[2].f; break;
+			case 16: meter_register_set.total_system_var.f              = meter_register_set.volt_amps_reactive[0].f + meter_register_set.volt_amps_reactive[1].f + meter_register_set.volt_amps_reactive[2].f; break;
+			case 17: meter_register_set.total_system_power_factor.f     = meter_register_set.power_factor[0].f + meter_register_set.power_factor[1].f + meter_register_set.power_factor[2].f; break;
+			case 18: meter_register_set.total_system_phase_angle.f      = meter_register_set.phase_angle[0].f + meter_register_set.phase_angle[1].f + meter_register_set.phase_angle[2].f; break;
+			case 19: meter_register_set.total_kwh_sum.f                 = meter_register_set.total_import_kwh.f + meter_register_set.total_export_kwh.f; break;
+			default: return false;
 		}
-*/
-    }
+	}
+
+	return true;
 }
 
 uint8_t meter_get_register_size(uint16_t position) {
 	return meter.current_meter[position].register_data_type >= METER_REGISTER_DATA_TYPE_INT16 ? 1: 2;
+}
+
+// Since the eltako meter only has a few registers, we read them all at once.
+// This means we don't need to differentiate between fast and slow read. We can read the complete register set about 3 times per second.
+void meter_tick_eltako(void) {
+	static uint32_t eltako_time_since_read = 0;
+	static MeterRegisterType eltako_data[METER_ELTAKO_REGISTER_COUNT];
+	static bool eltako_data_new = false;
+	static uint8_t eltako_data_i = 0;
+
+	switch(meter.state) {
+		case 0: { // request all registers
+			meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, meter.current_meter[0].register_address, METER_ELTAKO_REGISTER_COUNT);
+			meter.state++;
+			break;
+		}
+		case 1: { // read all registers
+			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_INPUT_REGISTERS, &eltako_data, METER_ELTAKO_REGISTER_COUNT);
+			if(ret) {
+				eltako_time_since_read = system_timer_get_ms();
+				meter.state++;
+				eltako_data_new = true;
+				eltako_data_i = 0;
+			}
+			break;
+		}
+		case 2: { // handle new data
+			if(eltako_data_new) {
+				uint16_t reg = meter.current_meter[eltako_data_i].register_address;
+				if(reg != 0) {
+					XMC_GPIO_SetOutputHigh(P0_5);
+					meter_handle_new_data(eltako_data[(reg-1)/2], &meter.current_meter[eltako_data_i]);
+					XMC_GPIO_SetOutputLow(P0_5);
+					eltako_data_i++;
+				} else {
+					meter.state++;
+					modbus_clear_request(&rs485);
+					meter_handle_phases_connected();
+
+					// reuse new and i for next state and start with i=1
+					eltako_data_new = true;
+					eltako_data_i   = 1;
+				}
+			} else {
+				meter.state++;
+			}
+			break;
+		}
+
+		case 3: { // calculate values from data
+			if(system_timer_is_time_elapsed_ms(eltako_time_since_read, 100)) {
+				eltako_data_new = false;
+				eltako_data_i   = 0;
+				meter.state     = 0;
+			} else if(eltako_data_new) {
+				if(meter_handle_register_set_read_done(eltako_data_i)) {
+					eltako_data_i++;
+				} else {
+					meter_handle_register_set_read_done(0);
+					meter_handle_register_set_fast_read_done();
+					eltako_data_new = false;
+					eltako_data_i   = 0;
+				}
+			}
+			break;
+		}
+
+		default: {
+			meter.state = 0;
+			break;
+		}
+	}
 }
 
 void meter_tick(void) {
@@ -450,6 +541,11 @@ void meter_tick(void) {
 		}
 	}
 
+	if(meter.type == METER_TYPE_DSZ15DZMOD) {
+		meter_tick_eltako();
+		return;
+	}
+
 	switch(meter.state) {
         case 0: { // request
             if(system_timer_is_time_elapsed_ms(meter.register_fast_time, 500) || read_fast) {
@@ -483,6 +579,7 @@ void meter_tick(void) {
 							// We read all fast registers once, go back to full read.
 							// Fast read will start again after 500ms
 							read_fast = false;
+							meter_handle_register_set_fast_read_done();
 						}
 					} while(!meter.current_meter[meter.register_fast_position].fast_read);
 				} else {
@@ -491,8 +588,7 @@ void meter_tick(void) {
 						meter.register_full_position++;
 						if(meter.current_meter[meter.register_full_position].register_set_address == NULL) {
 							meter.register_full_position = 0;
-							meter.each_value_read_once   = true;
-							meter_handle_register_set_read_done();
+							meter_handle_register_set_read_done(0);
 						}
 					} while(meter.current_meter[meter.register_full_position].fast_read);
 				}

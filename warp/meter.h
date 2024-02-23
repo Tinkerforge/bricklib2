@@ -46,6 +46,8 @@
 
 #define METER_SDM_PASSWORD                1000.0f
 
+#define METER_ELTAKO_REGISTER_COUNT       76
+
 typedef enum {
 	METER_TYPE_UNKNOWN     = 0,
 	METER_TYPE_UNSUPPORTED = 1,
@@ -104,6 +106,8 @@ typedef struct {
 	bool new_system_type;
 
 	bool phases_connected[3];
+
+	bool new_fast_value_callback;
 
 	// The relative values saved as last absolut value
 	MeterRegisterType relative_energy_sum;

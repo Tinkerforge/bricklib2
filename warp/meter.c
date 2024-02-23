@@ -456,9 +456,7 @@ void meter_tick_eltako(void) {
 			if(eltako_data_new) {
 				uint16_t reg = meter.current_meter[eltako_data_i].register_address;
 				if(reg != 0) {
-					XMC_GPIO_SetOutputHigh(P0_5);
 					meter_handle_new_data(eltako_data[(reg-1)/2], &meter.current_meter[eltako_data_i]);
-					XMC_GPIO_SetOutputLow(P0_5);
 					eltako_data_i++;
 				} else {
 					meter.state++;

@@ -398,17 +398,17 @@ bool meter_handle_register_set_read_done(uint8_t state) {
         // P = S * cos(φ) => φ = arccos(P / S)
 
 		switch(state) {
-			case 1:  meter_register_set.volt_amps[0].f                  = meter_register_set.power_factor[0].f == 0.0 ? 0.0 : meter_register_set.power[0].f / meter_register_set.power_factor[0].f; break;
-			case 2:  meter_register_set.volt_amps[1].f                  = meter_register_set.power_factor[1].f == 0.0 ? 0.0 : meter_register_set.power[1].f / meter_register_set.power_factor[1].f; break;
-			case 3:  meter_register_set.volt_amps[2].f                  = meter_register_set.power_factor[2].f == 0.0 ? 0.0 : meter_register_set.power[2].f / meter_register_set.power_factor[2].f; break;
-			case 4:  meter_register_set.volt_amps_reactive[0].f         = meter_register_set.power_factor[0].f == 0.0 ? 0.0 : sqrt(meter_register_set.volt_amps[0].f * meter_register_set.volt_amps[0].f - meter_register_set.power[0].f * meter_register_set.power[0].f); break;
-			case 5:  meter_register_set.volt_amps_reactive[1].f         = meter_register_set.power_factor[1].f == 0.0 ? 0.0 : sqrt(meter_register_set.volt_amps[1].f * meter_register_set.volt_amps[1].f - meter_register_set.power[1].f * meter_register_set.power[1].f); break;
-			case 6:  meter_register_set.volt_amps_reactive[2].f         = meter_register_set.power_factor[2].f == 0.0 ? 0.0 : sqrt(meter_register_set.volt_amps[2].f * meter_register_set.volt_amps[2].f - meter_register_set.power[2].f * meter_register_set.power[2].f); break;
-			case 7:  meter_register_set.phase_angle[0].f                = meter_register_set.volt_amps[0].f    == 0.0 ? 0.0 : acosf(meter_register_set.power[0].f / meter_register_set.volt_amps[0].f); break;
-			case 8:  meter_register_set.phase_angle[1].f                = meter_register_set.volt_amps[1].f    == 0.0 ? 0.0 : acosf(meter_register_set.power[1].f / meter_register_set.volt_amps[1].f); break;
-			case 9:  meter_register_set.phase_angle[2].f                = meter_register_set.volt_amps[2].f    == 0.0 ? 0.0 : acosf(meter_register_set.power[2].f / meter_register_set.volt_amps[2].f); break;
+			case 1:  meter_register_set.volt_amps[0].f                  = meter_register_set.power_factor[0].f == 0.0f ? 0.0f : meter_register_set.power[0].f / meter_register_set.power_factor[0].f; break;
+			case 2:  meter_register_set.volt_amps[1].f                  = meter_register_set.power_factor[1].f == 0.0f ? 0.0f : meter_register_set.power[1].f / meter_register_set.power_factor[1].f; break;
+			case 3:  meter_register_set.volt_amps[2].f                  = meter_register_set.power_factor[2].f == 0.0f ? 0.0f : meter_register_set.power[2].f / meter_register_set.power_factor[2].f; break;
+			case 4:  meter_register_set.volt_amps_reactive[0].f         = meter_register_set.power_factor[0].f == 0.0f ? 0.0f : sqrtf(meter_register_set.volt_amps[0].f * meter_register_set.volt_amps[0].f - meter_register_set.power[0].f * meter_register_set.power[0].f); break;
+			case 5:  meter_register_set.volt_amps_reactive[1].f         = meter_register_set.power_factor[1].f == 0.0f ? 0.0f : sqrtf(meter_register_set.volt_amps[1].f * meter_register_set.volt_amps[1].f - meter_register_set.power[1].f * meter_register_set.power[1].f); break;
+			case 6:  meter_register_set.volt_amps_reactive[2].f         = meter_register_set.power_factor[2].f == 0.0f ? 0.0f : sqrtf(meter_register_set.volt_amps[2].f * meter_register_set.volt_amps[2].f - meter_register_set.power[2].f * meter_register_set.power[2].f); break;
+			case 7:  meter_register_set.phase_angle[0].f                = meter_register_set.volt_amps[0].f    == 0.0f ? 0.0f : acosf(meter_register_set.power[0].f / meter_register_set.volt_amps[0].f); break;
+			case 8:  meter_register_set.phase_angle[1].f                = meter_register_set.volt_amps[1].f    == 0.0f ? 0.0f : acosf(meter_register_set.power[1].f / meter_register_set.volt_amps[1].f); break;
+			case 9:  meter_register_set.phase_angle[2].f                = meter_register_set.volt_amps[2].f    == 0.0f ? 0.0f : acosf(meter_register_set.power[2].f / meter_register_set.volt_amps[2].f); break;
 			case 10: value                                              = meter_register_set.current[0].f * meter_register_set.current[0].f + meter_register_set.current[1].f * meter_register_set.current[1].f + meter_register_set.current[2].f * meter_register_set.current[2].f - meter_register_set.current[0].f * meter_register_set.current[1].f - meter_register_set.current[0].f * meter_register_set.current[2].f - meter_register_set.current[1].f * meter_register_set.current[2].f; break;
-			case 11: meter_register_set.neutral_current.f               = sqrt(ABS(value)); break;
+			case 11: meter_register_set.neutral_current.f               = sqrtf(ABS(value)); break;
 			case 12: meter_register_set.average_line_to_neutral_volts.f = (meter_register_set.line_to_neutral_volts[0].f + meter_register_set.line_to_neutral_volts[1].f + meter_register_set.line_to_neutral_volts[2].f) / 3.0f; break;
 			case 13: meter_register_set.average_line_current.f          = (meter_register_set.current[0].f + meter_register_set.current[1].f + meter_register_set.current[2].f) / 3.0f; break;
 			case 14: meter_register_set.sum_of_line_currents.f          = meter_register_set.current[0].f + meter_register_set.current[1].f + meter_register_set.current[2].f; break;

@@ -73,6 +73,14 @@ static void modbus_add_tx_frame_checksum(void) {
 	ringbuffer_add(&rs485.ringbuffer_tx, checksum >> 8);
 }
 
+void meter_reset_error_counter(void) {
+	rs485.modbus_common_error_counters.illegal_function     = 0;
+	rs485.modbus_common_error_counters.illegal_data_address = 0;
+	rs485.modbus_common_error_counters.illegal_data_value   = 0;
+	rs485.modbus_common_error_counters.slave_device_failure = 0;
+	rs485.modbus_common_error_counters.timeout              = 0;
+}
+
 void meter_read_registers(uint8_t fc, uint8_t slave_address, uint16_t starting_address, uint16_t count) {
 	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, 10);
 
@@ -257,7 +265,7 @@ void meter_find_meter_type(void) {
 
     switch(find_meter_state) {
         case 0: {
-            // Read meter code for YTL meters register with slave address 1 (SDM)
+            // Read meter code for YTL meters register with slave address 1
             meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, 1, 0x100D, 1);
             find_meter_state++;
             break;
@@ -268,12 +276,12 @@ void meter_find_meter_type(void) {
 			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &meter_code, 1);
 			if(ret) {
 				if(meter_code != 0xFFFF) {
-					rs485.modbus_common_error_counters.timeout = 0;
+					meter_reset_error_counter();
 				}
 
 				modbus_clear_request(&rs485);
 				switch(meter_code) {
-					case 0x0006: meter_set_meter_type(METER_TYPE_DEM4A); find_meter_state = 0; rs485.modbus_common_error_counters.timeout = 0; return;
+					case 0x0006: meter_set_meter_type(METER_TYPE_DEM4A); find_meter_state = 0; meter_reset_error_counter(); return;
 					default:     meter.type = METER_TYPE_UNKNOWN;                              break;
 				}
 
@@ -294,7 +302,7 @@ void meter_find_meter_type(void) {
 			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &meter_code, 1);
 			if(ret) {
 				if(meter_code != 0xFFFF) {
-					rs485.modbus_common_error_counters.timeout = 0;
+					meter_reset_error_counter();
 				}
 
 				modbus_clear_request(&rs485);
@@ -325,12 +333,12 @@ void meter_find_meter_type(void) {
 			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &meter_code, 2);
 			if(ret) {
 				if(meter_code != 0xFFFFFFFF) {
-					rs485.modbus_common_error_counters.timeout = 0;
+					meter_reset_error_counter();
 				}
 
 				modbus_clear_request(&rs485);
 				switch(meter_code) {
-                    case 0x0000000D: meter_set_meter_type(METER_TYPE_DSZ15DZMOD); find_meter_state = 0; rs485.modbus_common_error_counters.timeout = 0; return;
+                    case 0x0000000D: meter_set_meter_type(METER_TYPE_DSZ15DZMOD); find_meter_state = 0; meter_reset_error_counter(); return;
 					default:         meter.type = METER_TYPE_UNKNOWN;                                   break; 
 				}
 

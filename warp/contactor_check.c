@@ -192,7 +192,7 @@ void contactor_check_tick(void) {
 		}
 
 		// The data that we send to the Brick uses "active high", so we invert the inputs here
-		contactor_check.state = (!check_n_l1) | ((!check_l2_l3) << 1) | ((!(contactor_check.error & 1)) << 2) | ((!contactor) << 3) | ((!phase_switch) << 4);
+		contactor_check.state = (!check_n_l1) | ((!check_l2_l3) << 1) | ((contactor_check.error != 0) << 2) | ((!contactor) << 3) | ((!phase_switch) << 4);
 	}
 #endif
 }

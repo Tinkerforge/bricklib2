@@ -374,8 +374,9 @@ void meter_handle_register_set_fast_read_done(void) {
 // State 0 updates the mandatory values.
 // State 1 to n updates the optional values. Call 1 to n with 1 per tick. It takes about 150us to calculate all values.
 bool meter_handle_register_set_read_done(uint8_t state) {
+#ifdef IS_CHARGER
 	static float value = 0; // temporary value between states
-
+#endif
 	if(state == 0) {
 		// Update relative values
 		meter_register_set.relative_total_import_kwh.f = meter_register_set.total_import_kwh.f - meter.relative_energy_import.f;
@@ -409,6 +410,8 @@ bool meter_handle_register_set_read_done(uint8_t state) {
 			case 1:  meter_register_set.volt_amps[0].f                  = meter_register_set.power_factor[0].f == 0.0f ? 0.0f : meter_register_set.power[0].f / meter_register_set.power_factor[0].f; break;
 			case 2:  meter_register_set.volt_amps[1].f                  = meter_register_set.power_factor[1].f == 0.0f ? 0.0f : meter_register_set.power[1].f / meter_register_set.power_factor[1].f; break;
 			case 3:  meter_register_set.volt_amps[2].f                  = meter_register_set.power_factor[2].f == 0.0f ? 0.0f : meter_register_set.power[2].f / meter_register_set.power_factor[2].f; break;
+// We don't compile support for sqrt and acos in Energy Manager firmware currently
+#ifdef IS_CHARGER
 			case 4:  meter_register_set.volt_amps_reactive[0].f         = meter_register_set.power_factor[0].f == 0.0f ? 0.0f : sqrtf(meter_register_set.volt_amps[0].f * meter_register_set.volt_amps[0].f - meter_register_set.power[0].f * meter_register_set.power[0].f); break;
 			case 5:  meter_register_set.volt_amps_reactive[1].f         = meter_register_set.power_factor[1].f == 0.0f ? 0.0f : sqrtf(meter_register_set.volt_amps[1].f * meter_register_set.volt_amps[1].f - meter_register_set.power[1].f * meter_register_set.power[1].f); break;
 			case 6:  meter_register_set.volt_amps_reactive[2].f         = meter_register_set.power_factor[2].f == 0.0f ? 0.0f : sqrtf(meter_register_set.volt_amps[2].f * meter_register_set.volt_amps[2].f - meter_register_set.power[2].f * meter_register_set.power[2].f); break;
@@ -417,6 +420,7 @@ bool meter_handle_register_set_read_done(uint8_t state) {
 			case 9:  meter_register_set.phase_angle[2].f                = meter_register_set.volt_amps[2].f    == 0.0f ? 0.0f : acosf(meter_register_set.power[2].f / meter_register_set.volt_amps[2].f); break;
 			case 10: value                                              = meter_register_set.current[0].f * meter_register_set.current[0].f + meter_register_set.current[1].f * meter_register_set.current[1].f + meter_register_set.current[2].f * meter_register_set.current[2].f - meter_register_set.current[0].f * meter_register_set.current[1].f - meter_register_set.current[0].f * meter_register_set.current[2].f - meter_register_set.current[1].f * meter_register_set.current[2].f; break;
 			case 11: meter_register_set.neutral_current.f               = sqrtf(ABS(value)); break;
+#endif
 			case 12: meter_register_set.average_line_to_neutral_volts.f = (meter_register_set.line_to_neutral_volts[0].f + meter_register_set.line_to_neutral_volts[1].f + meter_register_set.line_to_neutral_volts[2].f) / 3.0f; break;
 			case 13: meter_register_set.average_line_current.f          = (meter_register_set.current[0].f + meter_register_set.current[1].f + meter_register_set.current[2].f) / 3.0f; break;
 			case 14: meter_register_set.sum_of_line_currents.f          = meter_register_set.current[0].f + meter_register_set.current[1].f + meter_register_set.current[2].f; break;
@@ -427,7 +431,6 @@ bool meter_handle_register_set_read_done(uint8_t state) {
 			default: return false;
 		}
 	}
-
 	return true;
 }
 

@@ -40,7 +40,7 @@
 Meter meter;
 MeterRegisterSet meter_register_set;
 
-static const MeterDefinition meter_sdm630[] = { 
+static const MeterDefinition meter_sdm630[] = {
     #include "meter_sdm630_def.inc"
 };
 static const MeterDefinition meter_sdm72v2[] = {
@@ -197,7 +197,7 @@ bool meter_get_write_register_response(uint8_t fc) {
 			rs485.modbus_common_error_counters.slave_device_failure++;
 		}
 	}
-	
+
 	return true; // increment state
 }
 
@@ -240,7 +240,7 @@ void meter_handle_new_system_type(void) {
 			meter.new_system_type = true;
 		}
 	} else {
-		// Change system type if un-allowed system type is configured 
+		// Change system type if un-allowed system type is configured
 		meter.new_system_type = true;
 	}
 }
@@ -312,7 +312,7 @@ void meter_find_meter_type(void) {
 					case 0x0000: // Some early versions of the SDM630 return 0x0000 instead of 0x0070 for the meter type register.
 					case 0x0070: meter_set_meter_type(METER_TYPE_SDM630);      find_meter_state = 0; return;
 					case 0x0079: meter_set_meter_type(METER_TYPE_SDM630MCTV2); find_meter_state = 0; return;
-					default:     meter.type = METER_TYPE_UNKNOWN;                                    break; 
+					default:     meter.type = METER_TYPE_UNKNOWN;                                    break;
 				}
 
 				find_meter_state++;
@@ -339,7 +339,7 @@ void meter_find_meter_type(void) {
 				modbus_clear_request(&rs485);
 				switch(meter_code) {
                     case 0x0000000D: meter_set_meter_type(METER_TYPE_DSZ15DZMOD); find_meter_state = 0; meter_reset_error_counter(); return;
-					default:         meter.type = METER_TYPE_UNKNOWN;                                   break; 
+					default:         meter.type = METER_TYPE_UNKNOWN;                                   break;
 				}
 
 				find_meter_state++;

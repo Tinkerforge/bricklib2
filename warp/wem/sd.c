@@ -28,6 +28,7 @@
 #include "bricklib2/os/coop_task.h"
 
 #include "configs/config_sdmmc.h"
+#include "configs/config.h"
 #include "sdmmc.h"
 
 #include "xmc_rtc.h"
@@ -41,8 +42,9 @@ CoopTask sd_task;
 
 bool sd_lfs_format = false;
 
-#define SD_POSTFIX_WB 0
-#define SD_POSTFIX_EM 1
+#define SD_POSTFIX_WB          0
+#define SD_POSTFIX_EM          1
+#define SD_POSTFIX_EM_W_PRICES 2
 static const char SD_POSTFIXES[2][4] = {
 	".wb",
 	".em"
@@ -458,7 +460,7 @@ bool sd_write_energy_manager_data_point_new_file(char *f) {
 }
 
 bool sd_write_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, EnergyManager5MinData *data5m) {
-	char *f = sd_get_path_with_filename(0, year, month, day, SD_POSTFIX_EM);
+	char *f = sd_get_path_with_filename(0, year, month, day, SD_POSTFIX_EM_W_PRICES);
 
 	lfs_file_t file;
 	memset(sd.lfs_file_config.buffer, 0, 512);
@@ -509,9 +511,41 @@ bool sd_write_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day
 	return true;
 }
 
-bool sd_read_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t *data, uint16_t amount, uint16_t offset) {
+#ifdef IS_ENERGY_MANAGER_V1
+bool sd_read_energy_manager_data_point_old(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t *data, uint16_t amount, uint16_t offset) {
 	int err = LFS_ERR_OK;
 	lfs_file_t *file = sd_lfs_open_buffered_read(0, year, month, day, SD_POSTFIX_EM, &err);
+	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
+		return true;
+	} else if(err != LFS_ERR_OK) {
+		logw("lfs_file_opencfg: %d\n\r", err);
+		return false;
+	}
+
+	const uint16_t pos = 8 + (hour*12 + minute/5) * sizeof(EnergyManager5MinDataOld) + offset*sizeof(EnergyManager5MinDataOld);
+	lfs_ssize_t size   = lfs_file_seek(&sd.lfs, file, pos, LFS_SEEK_SET);
+	if(size != pos) {
+		logw("lfs_file_seek %d vs %d\n\r", pos, size);
+		err = sd_lfs_close_buffered_read();
+		logw("lfs_file_close %d\n\r", err);
+		return false;
+	}
+
+	size = lfs_file_read(&sd.lfs, file, data, amount*sizeof(EnergyManager5MinDataOld));
+	if(size != amount*sizeof(EnergyManager5MinDataOld)) {
+		logw("lfs_file_read flags size %d vs %d\n\r", size, amount*sizeof(EnergyManager5MinDataOld));
+		err = sd_lfs_close_buffered_read();
+		logw("lfs_file_close %d\n\r", err);
+		return false;
+	}
+
+	return true;
+}
+#endif
+
+bool sd_read_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t *data, uint16_t amount, uint16_t offset) {
+	int err = LFS_ERR_OK;
+	lfs_file_t *file = sd_lfs_open_buffered_read(0, year, month, day, SD_POSTFIX_EM_W_PRICES, &err);
 	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
 		for(uint16_t i = 0; i < amount; i++) {
 			data[i*sizeof(EnergyManager5MinData)] = SD_5MIN_FLAG_NO_DATA;
@@ -520,10 +554,27 @@ bool sd_read_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day,
 				data[i*sizeof(EnergyManager5MinData)+1+j] = 0;
 			}
 		}
+		// Price is in last 4 bytes, them with 0xFF
+		data[amount-1] = 0xFF;
+		data[amount-2] = 0xFF;
+		data[amount-3] = 0xFF;
+		data[amount-4] = 0xFF;
 		return true;
 	} else if(err != LFS_ERR_OK) {
+#ifdef IS_ENERGY_MANAGER_V1
+		bool ret = sd_read_energy_manager_data_point_old(year, month, day, hour, minute, data, amount, offset);
+		if(ret) {
+			// Price is in last 4 bytes, them with 0xFF
+			data[amount-1] = 0xFF;
+			data[amount-2] = 0xFF;
+			data[amount-3] = 0xFF;
+			data[amount-4] = 0xFF;
+		}
+		return ret;
+#else
 		logw("lfs_file_opencfg: %d\n\r", err);
 		return false;
+#endif
 	}
 
 	const uint16_t pos = 8 + (hour*12 + minute/5) * sizeof(EnergyManager5MinData) + offset*sizeof(EnergyManager5MinData);
@@ -575,7 +626,7 @@ bool sd_write_energy_manager_daily_data_point_new_file(char *f) {
 }
 
 bool sd_write_energy_manager_daily_data_point(uint8_t year, uint8_t month, uint8_t day, EnergyManager1DayData *data1d) {
-	char *f = sd_get_path_with_filename(0, year, month, SD_FILE_NO_DAY_IN_PATH, SD_POSTFIX_EM);
+	char *f = sd_get_path_with_filename(0, year, month, SD_FILE_NO_DAY_IN_PATH, SD_POSTFIX_EM_W_PRICES);
 
 	lfs_file_t file;
 	memset(sd.lfs_file_config.buffer, 0, 512);
@@ -623,15 +674,56 @@ bool sd_write_energy_manager_daily_data_point(uint8_t year, uint8_t month, uint8
 	return true;
 }
 
-bool sd_read_energy_manager_daily_data_point(uint8_t year, uint8_t month, uint8_t day, uint8_t *data, uint16_t amount, uint16_t offset) {
+#ifdef IS_ENERGY_MANAGER_V1
+bool sd_read_energy_manager_daily_data_point_old(uint8_t year, uint8_t month, uint8_t day, uint8_t *data, uint16_t amount, uint16_t offset) {
 	int err = LFS_ERR_OK;
 	lfs_file_t *file = sd_lfs_open_buffered_read(0, year, month, SD_FILE_NO_DAY_IN_PATH, SD_POSTFIX_EM, &err);
 	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
-		memset(data, 0xFF, amount*sizeof(EnergyManager1DayData));
 		return true;
 	} else if(err != LFS_ERR_OK) {
 		logw("lfs_file_opencfg: %d\n\r", err);
 		return false;
+	}
+
+	const uint16_t pos = sizeof(SDMetadata) + (day-1) * sizeof(EnergyManager1DayDataOld) + offset*sizeof(EnergyManager1DayDataOld);
+	lfs_ssize_t size = lfs_file_seek(&sd.lfs, file, pos, LFS_SEEK_SET);
+	if(size != pos) {
+		logw("lfs_file_seek %d vs %d\n\r", pos, size);
+		err = sd_lfs_close_buffered_read();
+		logw("lfs_file_close %d\n\r", err);
+	}
+
+	size = lfs_file_read(&sd.lfs, file, data, amount*sizeof(EnergyManager1DayDataOld));
+	if(size != amount*sizeof(EnergyManager1DayDataOld)) {
+		logw("lfs_file_read flags size %d vs %d\n\r", size, amount*sizeof(EnergyManager1DayDataOld));
+		err = sd_lfs_close_buffered_read();
+		logd("lfs_file_close %d\n\r", err);
+		return false;
+	}
+
+	return true;
+}
+#endif
+
+bool sd_read_energy_manager_daily_data_point(uint8_t year, uint8_t month, uint8_t day, uint8_t *data, uint16_t amount, uint16_t offset) {
+	int err = LFS_ERR_OK;
+	lfs_file_t *file = sd_lfs_open_buffered_read(0, year, month, SD_FILE_NO_DAY_IN_PATH, SD_POSTFIX_EM_W_PRICES, &err);
+	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
+		memset(data, 0xFF, amount*sizeof(EnergyManager1DayData));
+		return true;
+	} else if(err != LFS_ERR_OK) {
+		#ifdef IS_ENERGY_MANAGER_V1
+			bool ret = sd_read_energy_manager_daily_data_point_old(year, month, day, data, amount, offset);
+			// Price is in last 4 bytes, fill them with 0xFF
+			data[amount-1] = 0xFF;
+			data[amount-2] = 0xFF;
+			data[amount-3] = 0xFF;
+			data[amount-4] = 0xFF;
+			return ret;
+		#else
+			logw("lfs_file_opencfg: %d\n\r", err);
+			return false;
+		#endif
 	}
 
 	const uint16_t pos = sizeof(SDMetadata) + (day-1) * sizeof(EnergyManager1DayData) + offset*sizeof(EnergyManager1DayData);
@@ -1016,8 +1108,8 @@ void sd_tick_task_handle_energy_manager_data(void) {
 
 	// handle getter
 	if(sd.new_sd_energy_manager_data_points) {
-		for(uint16_t offset = 0; offset < sd.get_sd_energy_manager_data_points.amount*sizeof(EnergyManager5MinData); offset += 58) {
-			uint16_t amount = MIN(2, sd.get_sd_energy_manager_data_points.amount - offset/sizeof(EnergyManager5MinData));
+		for(uint16_t offset = 0; offset < sd.get_sd_energy_manager_data_points.amount*sizeof(EnergyManager5MinData); offset += sizeof(EnergyManager5MinData)*1) {
+			uint16_t amount = MIN(1, sd.get_sd_energy_manager_data_points.amount - offset/sizeof(EnergyManager5MinData));
 			if(!sd_read_energy_manager_data_point(sd.get_sd_energy_manager_data_points.year, sd.get_sd_energy_manager_data_points.month, sd.get_sd_energy_manager_data_points.day, sd.get_sd_energy_manager_data_points.hour, sd.get_sd_energy_manager_data_points.minute, sd.sd_energy_manager_data_points_cb_data, amount, offset/sizeof(EnergyManager5MinData))) {
 				logw("sd_read_energy_manager_data_point failed date %d %d %d %d %d, amount %d, offset %d\n\r", sd.get_sd_energy_manager_data_points.year, sd.get_sd_energy_manager_data_points.month, sd.get_sd_energy_manager_data_points.day, sd.get_sd_energy_manager_data_points.hour, sd.get_sd_energy_manager_data_points.minute, amount, offset);
 
@@ -1082,7 +1174,7 @@ void sd_tick_task_handle_energy_manager_daily_data(void) {
 
 	// handle getter
 	if(sd.new_sd_energy_manager_daily_data_points) {
-		for(uint16_t offset = 0; offset < sd.get_sd_energy_manager_daily_data_points.amount*sizeof(EnergyManager1DayData); offset += 56) {
+		for(uint16_t offset = 0; offset < sd.get_sd_energy_manager_daily_data_points.amount*sizeof(EnergyManager1DayData); offset += sizeof(EnergyManager1DayData)*1) {
 			uint16_t amount = MIN(1, sd.get_sd_energy_manager_daily_data_points.amount - offset/sizeof(EnergyManager1DayData));
 			if(!sd_read_energy_manager_daily_data_point(sd.get_sd_energy_manager_daily_data_points.year, sd.get_sd_energy_manager_daily_data_points.month, sd.get_sd_energy_manager_daily_data_points.day, sd.sd_energy_manager_daily_data_points_cb_data, amount, offset/sizeof(EnergyManager1DayData))) {
 				logw("sd_read_energy_manager_daily_data_point failed date %d %d %d, amount %d, offset %d\n\r", sd.get_sd_energy_manager_data_points.year, sd.get_sd_energy_manager_data_points.month, sd.get_sd_energy_manager_data_points.day, amount, offset/sizeof(uint32_t));

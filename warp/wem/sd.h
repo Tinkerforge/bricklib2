@@ -66,7 +66,7 @@ typedef struct {
 } __attribute__((__packed__)) Wallbox5MinData;
 
 typedef struct {
-    SDMetadata metadata; 
+    SDMetadata metadata;
     Wallbox5MinData data[SD_5MIN_PER_DAY];
 } __attribute__((__packed__)) Wallbox5MinDataFile;
 
@@ -75,7 +75,7 @@ typedef struct {
 } __attribute__((__packed__)) Wallbox1DayData;
 
 typedef struct {
-    SDMetadata metadata; 
+    SDMetadata metadata;
     Wallbox1DayData data[SD_1DAY_PER_MONTH]; // 31 days (one month)
 } __attribute__((__packed__)) Wallbox1DayDataFile;
 
@@ -84,25 +84,49 @@ typedef struct {
 	uint8_t flags; // bit 0 = 1p/3p, bit 1-2 = input, bit 3-4 = output
 	int32_t power_grid; // W
 	int32_t power_general[6]; // W
+	uint32_t price;
 } __attribute__((__packed__)) EnergyManager5MinData;
 
 typedef struct {
-    SDMetadata metadata; 
+    SDMetadata metadata;
     EnergyManager5MinData data[SD_5MIN_PER_DAY];
 } __attribute__((__packed__)) EnergyManager5MinDataFile;
 
 typedef struct {
-	uint32_t energy_grid_in_; // generated in kWh 
+	uint8_t flags; // bit 0 = 1p/3p, bit 1-2 = input, bit 3-4 = output
+	int32_t power_grid; // W
+	int32_t power_general[6]; // W
+} __attribute__((__packed__)) EnergyManager5MinDataOld;
+
+typedef struct {
+    SDMetadata metadata;
+    EnergyManager5MinData data[SD_5MIN_PER_DAY];
+} __attribute__((__packed__)) EnergyManager5MinDataFileOld;
+
+typedef struct {
+	uint32_t energy_grid_in_; // generated in kWh
 	uint32_t energy_grid_out; // consumed in kWh
 	uint32_t energy_general_in[6]; // generated in kWh
 	uint32_t energy_general_out[6]; // consumed in kWh
+	uint32_t price;
 } __attribute__((__packed__)) EnergyManager1DayData;
 
 typedef struct {
-    SDMetadata metadata; 
+    SDMetadata metadata;
     EnergyManager1DayData data[SD_1DAY_PER_MONTH]; // 31 days (one month)
 } __attribute__((__packed__)) EnergyManager1DayDataFile;
 
+typedef struct {
+	uint32_t energy_grid_in_; // generated in kWh
+	uint32_t energy_grid_out; // consumed in kWh
+	uint32_t energy_general_in[6]; // generated in kWh
+	uint32_t energy_general_out[6]; // consumed in kWh
+} __attribute__((__packed__)) EnergyManager1DayDataOld;
+
+typedef struct {
+    SDMetadata metadata;
+    EnergyManager1DayData data[SD_1DAY_PER_MONTH]; // 31 days (one month)
+} __attribute__((__packed__)) EnergyManager1DayDataFileOld;
 
 typedef struct {
 	uint32_t wallbox_id;
@@ -132,7 +156,20 @@ typedef struct {
 	uint8_t flags;
 	int32_t power_grid;
 	int32_t power_general[6];
+	uint32_t price;
 } __attribute__((__packed__)) EnergyManagerDataPoint;
+
+
+typedef struct {
+	uint8_t year;
+	uint8_t month;
+	uint8_t day;
+	uint8_t hour;
+	uint8_t minute;
+	uint8_t flags;
+	int32_t power_grid;
+	int32_t power_general[6];
+} __attribute__((__packed__)) EnergyManagerDataPointOld;
 
 typedef struct {
 	uint8_t year;
@@ -142,7 +179,18 @@ typedef struct {
 	uint32_t energy_grid_out;
 	uint32_t energy_general_in[6];
 	uint32_t energy_general_out[6];
+	uint32_t price;
 } __attribute__((__packed__)) EnergyManagerDailyDataPoint;
+
+typedef struct {
+	uint8_t year;
+	uint8_t month;
+	uint8_t day;
+	uint32_t energy_grid_in;
+	uint32_t energy_grid_out;
+	uint32_t energy_general_in[6];
+	uint32_t energy_general_out[6];
+} __attribute__((__packed__)) EnergyManagerDailyDataPointOld;
 
 typedef struct {
 	uint32_t sd_status;

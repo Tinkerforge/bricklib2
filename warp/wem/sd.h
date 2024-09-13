@@ -244,12 +244,12 @@ typedef struct {
 
     uint16_t sd_energy_manager_data_points_cb_data_length;
     uint16_t sd_energy_manager_data_points_cb_offset;
-    uint8_t sd_energy_manager_data_points_cb_data[58];
+    uint8_t sd_energy_manager_data_points_cb_data[33];
     volatile bool new_sd_energy_manager_data_points_cb;
 
     uint16_t sd_energy_manager_daily_data_points_cb_data_length;
     uint16_t sd_energy_manager_daily_data_points_cb_offset;
-    uint8_t sd_energy_manager_daily_data_points_cb_data[56];
+    uint8_t sd_energy_manager_daily_data_points_cb_data[15*4];
     volatile bool new_sd_energy_manager_daily_data_points_cb;
 
     bool buffered_read_is_open;

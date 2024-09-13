@@ -1237,13 +1237,24 @@ void sd_tick_task(void) {
 		.input_hysteresis = XMC_GPIO_INPUT_HYSTERESIS_STANDARD
 	};
 
-	XMC_GPIO_Init(SD_DETECTED_PIN, &input_pin_config);
+	XMC_GPIO_Init(SDMMC_CDS_PIN, &input_pin_config);
+
+#ifdef IS_ENERGY_MANAGER_V2
+	const XMC_GPIO_CONFIG_t config_low = {
+		.mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
+		.output_level     = XMC_GPIO_OUTPUT_LEVEL_LOW,
+	};
+	// Enable pin is active low
+	XMC_GPIO_Init(SDMMC_ENABLE_PIN, &config_low);
+#endif
+
+	coop_task_sleep_ms(5000);
 
 	while(true) {
 		// If the sd and lfs status are OK and no sd is detected,
 		// we assume that the sd card was hot-removed
 
-		const bool sd_detected = !XMC_GPIO_GetInput(SD_DETECTED_PIN);
+		const bool sd_detected = !XMC_GPIO_GetInput(SDMMC_CDS_PIN);
 		if((sd.sd_status == SDMMC_ERROR_OK) && (sd.lfs_status == LFS_ERR_OK) && !sd_detected) {
 			sd.sd_rw_error_count = 1000;
 			logd("SD card hot-removed? Force error_count=1000 to re-initialize\n\r");
@@ -1256,6 +1267,13 @@ void sd_tick_task(void) {
 
 		if(!sd_detected) {
 			sd.sd_status = SDMMC_ERROR_NO_CARD;
+#ifdef IS_ENERGY_MANAGER_V2
+			//XMC_GPIO_SetOutputHigh(SDMMC_ENABLE_PIN);
+#endif
+		} else {
+#ifdef IS_ENERGY_MANAGER_V2
+			XMC_GPIO_SetOutputLow(SDMMC_ENABLE_PIN);
+#endif
 		}
 
 		if(sd.sd_rw_error_count > 10) {

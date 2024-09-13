@@ -50,8 +50,6 @@
 
 #define SD_CALLBACK_TIMEOUT 1000 // ms
 
-#define SD_DETECTED_PIN P2_1
-
 typedef struct {
     uint16_t magic;
     uint8_t version;

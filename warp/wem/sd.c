@@ -1226,6 +1226,8 @@ void sd_tick_task_handle_storage(void) {
 }
 
 void sd_tick_task(void) {
+	static bool was_detected = false;
+
 	// Pre-initialize sd and lfs status.
 	// If no sd card is inserted, the sd_init code is never called and the status would in this case never be set.
 	sd.sd_status  = 0xFFFFFFFF;
@@ -1240,15 +1242,15 @@ void sd_tick_task(void) {
 	XMC_GPIO_Init(SDMMC_CDS_PIN, &input_pin_config);
 
 #ifdef IS_ENERGY_MANAGER_V2
-	const XMC_GPIO_CONFIG_t config_low = {
+	// In v2 start with SD card disabled and spi deinitialized (i.e. all pins input floating)
+	sdmmc_spi_deinit();
+	const XMC_GPIO_CONFIG_t config_high = {
 		.mode             = XMC_GPIO_MODE_OUTPUT_PUSH_PULL,
-		.output_level     = XMC_GPIO_OUTPUT_LEVEL_LOW,
+		.output_level     = XMC_GPIO_OUTPUT_LEVEL_HIGH,
 	};
 	// Enable pin is active low
-	XMC_GPIO_Init(SDMMC_ENABLE_PIN, &config_low);
+	XMC_GPIO_Init(SDMMC_ENABLE_PIN, &config_high);
 #endif
-
-	coop_task_sleep_ms(5000);
 
 	while(true) {
 		// If the sd and lfs status are OK and no sd is detected,
@@ -1268,11 +1270,21 @@ void sd_tick_task(void) {
 		if(!sd_detected) {
 			sd.sd_status = SDMMC_ERROR_NO_CARD;
 #ifdef IS_ENERGY_MANAGER_V2
-			//XMC_GPIO_SetOutputHigh(SDMMC_ENABLE_PIN);
+			if(was_detected) {
+				was_detected = false;
+				logd("SD card removed\n\r");
+				sdmmc_spi_deinit();
+				XMC_GPIO_SetOutputHigh(SDMMC_ENABLE_PIN);
+			}
 #endif
 		} else {
 #ifdef IS_ENERGY_MANAGER_V2
-			XMC_GPIO_SetOutputLow(SDMMC_ENABLE_PIN);
+			if(!was_detected) {
+				was_detected = true;
+				logd("SD card inserted, sleep for 3 seconds\n\r");
+				XMC_GPIO_SetOutputLow(SDMMC_ENABLE_PIN);
+				coop_task_sleep_ms(3000);
+			}
 #endif
 		}
 

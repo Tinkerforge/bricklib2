@@ -543,6 +543,19 @@ SDMMCError sdmmc_init(void) {
 	// Start initialization with slow speed (300kHz)
 	XMC_USIC_CH_SetBaudrate(SDMMC_USIC, SDMMC_BLOCK_SPI_INIT_SPEED, 2); 
 
+#if 0
+    // Change polarity instead of deselect
+    SDMMC_USIC->PCR_SSCMode = (uint32_t)(USIC_CH_PCR_SSCMode_MSLSEN_Msk |
+                           USIC_CH_PCR_SSCMode_SELCTR_Msk |
+                           XMC_SPI_CH_SLAVE_SEL_SAME_AS_MSLS |
+                           USIC_CH_PCR_SSCMode_FEM_Msk);
+
+    SDMMC_USIC->PCR_SSCMode = (uint32_t)(USIC_CH_PCR_SSCMode_MSLSEN_Msk |
+                           USIC_CH_PCR_SSCMode_SELCTR_Msk |
+                           XMC_SPI_CH_SLAVE_SEL_INV_TO_MSLS |
+                           USIC_CH_PCR_SSCMode_FEM_Msk);
+#endif
+
 	uint8_t buffer[10];
 
 	// allowing 80 clock cycles for initialisation

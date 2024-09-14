@@ -1226,7 +1226,9 @@ void sd_tick_task_handle_storage(void) {
 }
 
 void sd_tick_task(void) {
+#ifdef IS_ENERGY_MANAGER_V2
 	static bool was_detected = false;
+#endif
 
 	// Pre-initialize sd and lfs status.
 	// If no sd card is inserted, the sd_init code is never called and the status would in this case never be set.

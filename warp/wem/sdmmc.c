@@ -223,12 +223,10 @@ bool sdmmc_spi_read(uint8_t *data, uint32_t length) {
 
 void sdmmc_spi_select(void) {
 	XMC_GPIO_SetOutputLow(SDMMC_SELECT_PIN);
-	XMC_SPI_CH_EnableSlaveSelect(SDMMC_USIC, SDMMC_SLAVE);
 }
 
 void sdmmc_spi_deselect(void) {
 	XMC_GPIO_SetOutputHigh(SDMMC_SELECT_PIN);
-	XMC_SPI_CH_DisableSlaveSelect(SDMMC_USIC);
 }
 
 void sdmmc_spi_deinit(void) {

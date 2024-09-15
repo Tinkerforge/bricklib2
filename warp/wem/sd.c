@@ -1283,7 +1283,7 @@ void sd_tick_task(void) {
 #ifdef IS_ENERGY_MANAGER_V2
 			if(!was_detected) {
 				was_detected = true;
-				logd("SD card inserted, sleep for 3 seconds\n\r");
+				logd("SD card inserted, wait for 3 seconds\n\r");
 				XMC_GPIO_SetOutputLow(SDMMC_ENABLE_PIN);
 				coop_task_sleep_ms(3000);
 			}

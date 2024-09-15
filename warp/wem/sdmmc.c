@@ -247,10 +247,10 @@ void sdmmc_spi_deinit(void) {
 	XMC_USIC_CH_RXFIFO_Flush(SDMMC_USIC);
 }
 
-void sdmmc_spi_init(void) {
+void sdmmc_spi_init(const uint32_t baudrate) {
 	// USIC channel configuration
 	const XMC_SPI_CH_CONFIG_t channel_config = {
-		.baudrate       = SDMMC_SPI_BAUDRATE,
+		.baudrate       = baudrate,
 		.bus_mode       = XMC_SPI_CH_BUS_MODE_MASTER,
 		.selo_inversion = XMC_SPI_CH_SLAVE_SEL_INV_TO_MSLS,
 		.parity_mode    = XMC_USIC_CH_PARITY_MODE_NONE
@@ -536,10 +536,8 @@ SDMMCError sdmmc_init(void) {
 	SDMMCError sdmmc_error = SDMMC_ERROR_OK;
 
 	memset(&sdmmc, 0, sizeof(SDMMC));
-	sdmmc_spi_init();
-
 	// Start initialization with slow speed (300kHz)
-	XMC_USIC_CH_SetBaudrate(SDMMC_USIC, SDMMC_BLOCK_SPI_INIT_SPEED, 2); 
+	sdmmc_spi_init(SDMMC_BLOCK_SPI_INIT_SPEED);
 
 #if 0
     // Change polarity instead of deselect
@@ -558,6 +556,7 @@ SDMMCError sdmmc_init(void) {
 
 	// allowing 80 clock cycles for initialisation
 	sdmmc_spi_deselect();
+
 	sdmmc_spi_read(buffer, 10);
 	coop_task_yield();
 
@@ -630,8 +629,8 @@ SDMMCError sdmmc_init(void) {
 	}
 	sdmmc_spi_deselect();
 
-	// Reinitialize SPI to with high speed configured with SDMMC_SPI_BAUDRATE (initialization was done with 300kHz)
-	sdmmc_spi_init();
+	// Reinitialize SPI to with high speed
+	sdmmc_spi_init(SDMMC_SPI_BAUDRATE);
 
 	if(sdmmc.type == 0) {
 		logd("Probably no SD card?\n\r");

@@ -127,7 +127,7 @@ bool sdmmc_spi_transceive_async(const uint8_t *data_mosi, uint8_t *data_miso, ui
 			sdmmc_miso_irq_handler();
 			XMC_USIC_CH_RXFIFO_EnableEvent(SDMMC_USIC, XMC_USIC_CH_RXFIFO_EVENT_CONF_STANDARD | XMC_USIC_CH_RXFIFO_EVENT_CONF_ALTERNATE);
 		}
-		
+
 		// Trigger TX IRQ if the FIFO has less than 8 bytes left. If we missed on IRQ trigger it will not trigger otherwise.
 		if(XMC_USIC_CH_TXFIFO_GetLevel(SDMMC_USIC) < 8) {
 			XMC_USIC_CH_TriggerServiceRequest(SDMMC_USIC, SDMMC_SERVICE_REQUEST_TX);
@@ -180,7 +180,7 @@ bool sdmmc_spi_write(const uint8_t *data, uint32_t length) {
 		while(!ret) {
 			// TODO: Timeout
 			ret = sdmmc_spi_transceive_async(data, NULL, length);
-		} 
+		}
 	}
 
 	// Add one yield per read/write
@@ -216,17 +216,24 @@ bool sdmmc_spi_read(uint8_t *data, uint32_t length) {
 		}
 	}
 
+
 	// Add one yield per read/write
 	coop_task_yield();
 	return true;
 }
 
 void sdmmc_spi_select(void) {
+	uint8_t dummy;
+	sdmmc_spi_read(&dummy, 1);
 	XMC_GPIO_SetOutputLow(SDMMC_SELECT_PIN);
+	sdmmc_spi_read(&dummy, 1);
 }
 
 void sdmmc_spi_deselect(void) {
+	uint8_t dummy;
+	sdmmc_spi_read(&dummy, 1);
 	XMC_GPIO_SetOutputHigh(SDMMC_SELECT_PIN);
+	sdmmc_spi_read(&dummy, 1);
 }
 
 void sdmmc_spi_deinit(void) {
@@ -365,10 +372,15 @@ SDMMCError sdmmc_response(uint8_t response) {
 
 uint8_t sdmmc_send_command(uint8_t cmd, uint32_t arg) {
 	uint8_t data = 0;
+	sdmmc_spi_read(data, 1);
+	data = 0;
 
-	if(sdmmc_wait_until_ready() != 0xFF) {
-		logd("sdmmc_send_command timeout\n\r");
-		return 0xFF; // TODO: Maybe use SDMCError as return and uint8_t *response as argument?
+	// CMD0 is issued after 80 clock cycles while CS is high, without checking fir ready state
+	if (cmd != SDMMC_CMD0) {
+		if(sdmmc_wait_until_ready() != 0xFF) {
+			logd("sdmmc_send_command timeout\n\r");
+			return 0xFF; // TODO: Maybe use SDMCError as return and uint8_t *response as argument?
+		}
 	}
 
 	if(cmd & 0x80) {
@@ -381,6 +393,8 @@ uint8_t sdmmc_send_command(uint8_t cmd, uint32_t arg) {
 
 			// when the card is busy, MSB in R1 is 1
 			if(!(data & 0x80)) {
+				uint8_t dummy;
+				sdmmc_spi_read(dummy, 1);
 				break;
 			}
 		}
@@ -396,6 +410,8 @@ uint8_t sdmmc_send_command(uint8_t cmd, uint32_t arg) {
 		data_cmd[5] = 0x95;
 	} else if(cmd == SDMMC_CMD8) {
 		data_cmd[5] = 0x87;
+	} else if(cmd == SDMMC_CMD41) {
+		data_cmd[5] = 0x77;
 	}
 	sdmmc_spi_write(data_cmd, 6);
 
@@ -454,7 +470,7 @@ int16_t sdmmc_init_csd(void) {
 		sdmmc_spi_deselect();
 		return SDMMC_ERROR_CSD_CMD9;
 	}
-		
+
 	sdmmc_spi_deselect();
 
 	logd("CSD v2:\n\r");
@@ -517,7 +533,7 @@ int16_t sdmmc_init_cid(void) {
 		sdmmc_spi_deselect();
 		return SDMMC_ERROR_CID_CMD10;
 	}
-		
+
 	sdmmc_spi_deselect();
 
 	logd("CID:\n\r");
@@ -569,14 +585,23 @@ SDMMCError sdmmc_init(void) {
 			// SDv2
 			sdmmc_spi_read(buffer, 4);
 			if(buffer[2] == 0x01 && buffer[3] == 0xAA) {
+				sdmmc_spi_deselect();
+				coop_task_yield();
+				sdmmc_spi_select();
 				// ACMD41
 				uint8_t retry;
 				for(retry = 0; retry < SDMMC_READ_RETRY_COUNT; retry++) {
 					uint8_t ret = sdmmc_send_command(SDMMC_ACMD41, SDMMC_ARG_ACMD41);
+					sdmmc_spi_read(buffer, 4); // ACMD41 can be R3 response?
 					if(ret == 0) {
 						break;
+					} else {
+						sdmmc_spi_deselect();
+						coop_task_yield();
+						sdmmc_spi_select();
 					}
 				}
+
 				if(retry != SDMMC_READ_RETRY_COUNT) {
 					// CMD58
 					if(sdmmc_send_command(SDMMC_CMD58, 0) == 0) {

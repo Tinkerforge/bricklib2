@@ -372,7 +372,7 @@ SDMMCError sdmmc_response(uint8_t response) {
 
 uint8_t sdmmc_send_command(uint8_t cmd, uint32_t arg) {
 	uint8_t data = 0;
-	sdmmc_spi_read(data, 1);
+	sdmmc_spi_read(&data, 1);
 	data = 0;
 
 	// CMD0 is issued after 80 clock cycles while CS is high, without checking fir ready state
@@ -394,7 +394,7 @@ uint8_t sdmmc_send_command(uint8_t cmd, uint32_t arg) {
 			// when the card is busy, MSB in R1 is 1
 			if(!(data & 0x80)) {
 				uint8_t dummy;
-				sdmmc_spi_read(dummy, 1);
+				sdmmc_spi_read(&dummy, 1);
 				break;
 			}
 		}

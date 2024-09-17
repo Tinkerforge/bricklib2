@@ -841,7 +841,7 @@ void sd_init_task(void) {
 
 	// lfs disk version
 #ifdef IS_ENERGY_MANAGER_V1
-	sd.lfs_config.disk_version = 0x00020000
+	sd.lfs_config.disk_version = 0x00020000;
 #endif
 
 	// lfs file config

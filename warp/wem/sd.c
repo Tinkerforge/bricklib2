@@ -45,9 +45,10 @@ bool sd_lfs_format = false;
 #define SD_POSTFIX_WB          0
 #define SD_POSTFIX_EM          1
 #define SD_POSTFIX_EM_W_PRICES 2
-static const char SD_POSTFIXES[2][4] = {
+static const char SD_POSTFIXES[3][4] = {
 	".wb",
-	".em"
+	".em",
+	".e2"
 };
 
 static const char BASE58_ALPHABET[] = "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";

@@ -1285,6 +1285,7 @@ void sd_tick_task(void) {
 				was_detected = true;
 				logd("SD card inserted, wait for 3 seconds\n\r");
 				XMC_GPIO_SetOutputLow(SDMMC_ENABLE_PIN);
+				sd.sdmmc_init_last = system_timer_get_ms();
 				coop_task_sleep_ms(3000);
 			}
 #endif

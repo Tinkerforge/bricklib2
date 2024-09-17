@@ -840,7 +840,7 @@ void sd_init_task(void) {
 	sd.lfs_config.lookahead_buffer = sd.lfs_lookahead_buffer;
 
 	// lfs disk version
-#if IS_ENERGY_MANAGER_V1
+#ifdef IS_ENERGY_MANAGER_V1
 	sd.lfs_config.disk_version = 0x00020000
 #endif
 

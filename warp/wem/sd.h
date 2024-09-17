@@ -48,6 +48,11 @@
 #define SD_ENERGY_MANAGER_DATA_POINT_LENGTH 8
 #define SD_ENERGY_MANAGER_DAILY_DATA_POINT_LENGTH 2
 
+#define SD_WALLBOX_DATA_POINT_PER_CB 20
+#define SD_WALLBOX_DAILY_DATA_POINT_PER_CB 15
+#define SD_ENERGY_MANAGER_DATA_POINT_PER_CB 1
+#define SD_ENERGY_MANAGER_DAILY_DATA_POINT_PER_CB 1
+
 #define SD_CALLBACK_TIMEOUT 1000 // ms
 
 typedef struct {
@@ -190,6 +195,12 @@ typedef struct {
 	uint32_t energy_general_out[6];
 } __attribute__((__packed__)) EnergyManagerDailyDataPointOld;
 
+
+#define SD_WALLBOX_DATA_POINT_CB_LENGTH (SD_WALLBOX_DATA_POINT_PER_CB*sizeof(Wallbox5MinData))
+#define SD_WALLBOX_DAILY_DATA_POINT_CB_LENGTH (SD_WALLBOX_DAILY_DATA_POINT_PER_CB*sizeof(Wallbox1DayData))
+#define SD_ENERGY_MANAGER_DATA_POINT_CB_LENGTH (SD_ENERGY_MANAGER_DATA_POINT_PER_CB*sizeof(EnergyManager5MinData))
+#define SD_ENERGY_MANAGER_DAILY_DATA_POINT_CB_LENGTH (SD_ENERGY_MANAGER_DAILY_DATA_POINT_PER_CB*sizeof(EnergyManager1DayData))
+
 typedef struct {
 	uint32_t sd_status;
 	uint32_t lfs_status;
@@ -234,22 +245,22 @@ typedef struct {
 
     uint16_t sd_wallbox_data_points_cb_data_length;
     uint16_t sd_wallbox_data_points_cb_offset;
-    uint8_t sd_wallbox_data_points_cb_data[60];
+    uint8_t sd_wallbox_data_points_cb_data[SD_WALLBOX_DATA_POINT_CB_LENGTH];
     volatile bool new_sd_wallbox_data_points_cb;
 
     uint16_t sd_wallbox_daily_data_points_cb_data_length;
     uint16_t sd_wallbox_daily_data_points_cb_offset;
-    uint32_t sd_wallbox_daily_data_points_cb_data[15];
+    uint8_t sd_wallbox_daily_data_points_cb_data[SD_WALLBOX_DAILY_DATA_POINT_CB_LENGTH];
     volatile bool new_sd_wallbox_daily_data_points_cb;
 
     uint16_t sd_energy_manager_data_points_cb_data_length;
     uint16_t sd_energy_manager_data_points_cb_offset;
-    uint8_t sd_energy_manager_data_points_cb_data[33];
+    uint8_t sd_energy_manager_data_points_cb_data[SD_ENERGY_MANAGER_DATA_POINT_CB_LENGTH];
     volatile bool new_sd_energy_manager_data_points_cb;
 
     uint16_t sd_energy_manager_daily_data_points_cb_data_length;
     uint16_t sd_energy_manager_daily_data_points_cb_offset;
-    uint8_t sd_energy_manager_daily_data_points_cb_data[15*4];
+    uint8_t sd_energy_manager_daily_data_points_cb_data[SD_ENERGY_MANAGER_DAILY_DATA_POINT_CB_LENGTH];
     volatile bool new_sd_energy_manager_daily_data_points_cb;
 
     bool buffered_read_is_open;

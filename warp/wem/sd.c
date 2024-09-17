@@ -376,12 +376,12 @@ bool sd_write_wallbox_daily_data_point(uint32_t wallbox_id, uint8_t year, uint8_
 	return true;
 }
 
-bool sd_read_wallbox_daily_data_point(uint32_t wallbox_id, uint8_t year, uint8_t month, uint8_t day, uint32_t *data, uint16_t amount, uint16_t offset) {
+bool sd_read_wallbox_daily_data_point(uint32_t wallbox_id, uint8_t year, uint8_t month, uint8_t day, uint8_t *data, uint16_t amount, uint16_t offset) {
 	int err = LFS_ERR_OK;
 	lfs_file_t *file = sd_lfs_open_buffered_read(wallbox_id, year, month, SD_FILE_NO_DAY_IN_PATH, SD_POSTFIX_WB, &err);
 	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
-		for(uint16_t i = 0; i < amount; i++) {
-			data[i] = UINT32_MAX;
+		for(uint16_t i = 0; i < amount*sizeof(Wallbox1DayData); i++) {
+			data[i] = 0xFF;
 		}
 		return true;
 	} else if(err != LFS_ERR_OK) {
@@ -981,8 +981,8 @@ void sd_tick_task_handle_wallbox_data(void) {
 
 	// handle getter
 	if(sd.new_sd_wallbox_data_points) {
-		for(uint16_t offset = 0; offset < sd.get_sd_wallbox_data_points.amount*sizeof(Wallbox5MinData); offset += 60) {
-			uint16_t amount = MIN(20, sd.get_sd_wallbox_data_points.amount - offset/sizeof(Wallbox5MinData));
+		for(uint16_t offset = 0; offset < sd.get_sd_wallbox_data_points.amount*sizeof(Wallbox5MinData); offset += SD_WALLBOX_DATA_POINT_CB_LENGTH) {
+			uint16_t amount = MIN(SD_WALLBOX_DATA_POINT_PER_CB, sd.get_sd_wallbox_data_points.amount - offset/sizeof(Wallbox5MinData));
 			if(!sd_read_wallbox_data_point(sd.get_sd_wallbox_data_points.wallbox_id, sd.get_sd_wallbox_data_points.year, sd.get_sd_wallbox_data_points.month, sd.get_sd_wallbox_data_points.day, sd.get_sd_wallbox_data_points.hour, sd.get_sd_wallbox_data_points.minute, sd.sd_wallbox_data_points_cb_data, amount, offset/sizeof(Wallbox5MinData))) {
 				logw("sd_read_wallbox_data_point failed wb %d, date %d %d %d %d %d, amount %d, offset %d\n\r", sd.get_sd_wallbox_data_points.wallbox_id, sd.get_sd_wallbox_data_points.year, sd.get_sd_wallbox_data_points.month, sd.get_sd_wallbox_data_points.day, sd.get_sd_wallbox_data_points.hour, sd.get_sd_wallbox_data_points.minute, amount, offset);
 
@@ -1048,8 +1048,8 @@ void sd_tick_task_handle_wallbox_daily_data(void) {
 
 	// handle getter
 	if(sd.new_sd_wallbox_daily_data_points) {
-		for(uint16_t offset = 0; offset < sd.get_sd_wallbox_daily_data_points.amount*sizeof(Wallbox1DayData); offset += 60) {
-			uint16_t amount = MIN(15, sd.get_sd_wallbox_daily_data_points.amount - offset/sizeof(Wallbox1DayData));
+		for(uint16_t offset = 0; offset < sd.get_sd_wallbox_daily_data_points.amount*sizeof(Wallbox1DayData); offset += SD_WALLBOX_DAILY_DATA_POINT_CB_LENGTH) {
+			uint16_t amount = MIN(SD_WALLBOX_DAILY_DATA_POINT_PER_CB, sd.get_sd_wallbox_daily_data_points.amount - offset/sizeof(Wallbox1DayData));
 			if(!sd_read_wallbox_daily_data_point(sd.get_sd_wallbox_daily_data_points.wallbox_id, sd.get_sd_wallbox_daily_data_points.year, sd.get_sd_wallbox_daily_data_points.month, sd.get_sd_wallbox_daily_data_points.day, sd.sd_wallbox_daily_data_points_cb_data, amount, offset/sizeof(Wallbox1DayData))) {
 				logw("sd_read_wallbox_daily_data_point failed wb %d, date %d %d %d, amount %d, offset %d\n\r", sd.get_sd_wallbox_data_points.wallbox_id, sd.get_sd_wallbox_data_points.year, sd.get_sd_wallbox_data_points.month, sd.get_sd_wallbox_data_points.day, amount, offset/sizeof(uint32_t));
 
@@ -1114,8 +1114,8 @@ void sd_tick_task_handle_energy_manager_data(void) {
 
 	// handle getter
 	if(sd.new_sd_energy_manager_data_points) {
-		for(uint16_t offset = 0; offset < sd.get_sd_energy_manager_data_points.amount*sizeof(EnergyManager5MinData); offset += sizeof(EnergyManager5MinData)*1) {
-			uint16_t amount = MIN(1, sd.get_sd_energy_manager_data_points.amount - offset/sizeof(EnergyManager5MinData));
+		for(uint16_t offset = 0; offset < sd.get_sd_energy_manager_data_points.amount*sizeof(EnergyManager5MinData); offset += SD_ENERGY_MANAGER_DATA_POINT_CB_LENGTH) {
+			uint16_t amount = MIN(SD_ENERGY_MANAGER_DATA_POINT_PER_CB, sd.get_sd_energy_manager_data_points.amount - offset/sizeof(EnergyManager5MinData));
 			if(!sd_read_energy_manager_data_point(sd.get_sd_energy_manager_data_points.year, sd.get_sd_energy_manager_data_points.month, sd.get_sd_energy_manager_data_points.day, sd.get_sd_energy_manager_data_points.hour, sd.get_sd_energy_manager_data_points.minute, sd.sd_energy_manager_data_points_cb_data, amount, offset/sizeof(EnergyManager5MinData))) {
 				logw("sd_read_energy_manager_data_point failed date %d %d %d %d %d, amount %d, offset %d\n\r", sd.get_sd_energy_manager_data_points.year, sd.get_sd_energy_manager_data_points.month, sd.get_sd_energy_manager_data_points.day, sd.get_sd_energy_manager_data_points.hour, sd.get_sd_energy_manager_data_points.minute, amount, offset);
 
@@ -1180,8 +1180,8 @@ void sd_tick_task_handle_energy_manager_daily_data(void) {
 
 	// handle getter
 	if(sd.new_sd_energy_manager_daily_data_points) {
-		for(uint16_t offset = 0; offset < sd.get_sd_energy_manager_daily_data_points.amount*sizeof(EnergyManager1DayData); offset += sizeof(EnergyManager1DayData)*1) {
-			uint16_t amount = MIN(1, sd.get_sd_energy_manager_daily_data_points.amount - offset/sizeof(EnergyManager1DayData));
+		for(uint16_t offset = 0; offset < sd.get_sd_energy_manager_daily_data_points.amount*sizeof(EnergyManager1DayData); offset += SD_ENERGY_MANAGER_DAILY_DATA_POINT_CB_LENGTH) {
+			uint16_t amount = MIN(SD_ENERGY_MANAGER_DAILY_DATA_POINT_PER_CB, sd.get_sd_energy_manager_daily_data_points.amount - offset/sizeof(EnergyManager1DayData));
 			if(!sd_read_energy_manager_daily_data_point(sd.get_sd_energy_manager_daily_data_points.year, sd.get_sd_energy_manager_daily_data_points.month, sd.get_sd_energy_manager_daily_data_points.day, sd.sd_energy_manager_daily_data_points_cb_data, amount, offset/sizeof(EnergyManager1DayData))) {
 				logw("sd_read_energy_manager_daily_data_point failed date %d %d %d, amount %d, offset %d\n\r", sd.get_sd_energy_manager_data_points.year, sd.get_sd_energy_manager_data_points.month, sd.get_sd_energy_manager_data_points.day, amount, offset/sizeof(uint32_t));
 

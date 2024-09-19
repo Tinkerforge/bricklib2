@@ -55,6 +55,8 @@
 
 #define SD_CALLBACK_TIMEOUT 1000 // ms
 
+#define SD_FILE_NO_EXIST_CACHE_LENGTH 4
+
 typedef struct {
     uint16_t magic;
     uint8_t version;
@@ -195,6 +197,10 @@ typedef struct {
 	uint32_t energy_general_out[6];
 } __attribute__((__packed__)) EnergyManagerDailyDataPointOld;
 
+typedef struct FileNoExistCache {
+	uint32_t wallbox_id;
+	uint32_t ymdp; // year, month, day, postfix
+} FileNoExistCache;
 
 #define SD_WALLBOX_DATA_POINT_CB_LENGTH (SD_WALLBOX_DATA_POINT_PER_CB*sizeof(Wallbox5MinData))
 #define SD_WALLBOX_DAILY_DATA_POINT_CB_LENGTH (SD_WALLBOX_DAILY_DATA_POINT_PER_CB*sizeof(Wallbox1DayData))
@@ -271,6 +277,9 @@ typedef struct {
     uint8_t buffered_read_current_day;
     uint8_t buffered_read_current_postfix;
     lfs_file_t buffered_read_file;
+
+	FileNoExistCache file_no_exist_cache[SD_FILE_NO_EXIST_CACHE_LENGTH];
+	uint8_t file_no_exist_index;
 } SD;
 
 extern SD sd;

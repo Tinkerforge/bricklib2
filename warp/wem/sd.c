@@ -132,6 +132,24 @@ void sd_make_path(uint8_t year, uint8_t month, uint8_t day) {
 	lfs_mkdir(&sd.lfs, path);
 }
 
+void sd_set_file_no_exist(uint32_t wallbox_id, uint8_t year, uint8_t month, uint8_t day, uint8_t postfix) {
+	sd.file_no_exist_cache[sd.file_no_exist_index].wallbox_id = wallbox_id;
+	sd.file_no_exist_cache[sd.file_no_exist_index].ymdp       = (year << 24) | (month << 16) | (day << 8) | postfix;
+
+	sd.file_no_exist_index = (sd.file_no_exist_index + 1) % SD_FILE_NO_EXIST_CACHE_LENGTH;
+}
+
+bool sd_get_file_no_exist(uint32_t wallbox_id, uint8_t year, uint8_t month, uint8_t day, uint8_t postfix) {
+	for(uint8_t i = 0; i < SD_FILE_NO_EXIST_CACHE_LENGTH; i++) {
+		if((sd.file_no_exist_cache[i].wallbox_id == wallbox_id) &&
+		   (sd.file_no_exist_cache[i].ymdp == ((year << 24) | (month << 16) | (day << 8) | postfix))) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool sd_write_wallbox_data_point_new_file(char *f) {
 	lfs_file_t file;
 
@@ -214,6 +232,11 @@ bool sd_write_wallbox_data_point(uint32_t wallbox_id, uint8_t year, uint8_t mont
 }
 
 lfs_file_t* sd_lfs_open_buffered_read(uint32_t wallbox_id, uint8_t year, uint8_t month, uint8_t day, uint8_t postfix, int *err) {
+	if(sd_get_file_no_exist(wallbox_id, year, month, day, postfix)) {
+		*err = LFS_ERR_NOENT;
+		return NULL;
+	}
+
 	// Check if file is already open
 	if(sd.buffered_read_is_open) {
 		// Check if open file is same as requested file
@@ -251,6 +274,9 @@ lfs_file_t* sd_lfs_open_buffered_read(uint32_t wallbox_id, uint8_t year, uint8_t
 	if(sd.buffered_read_current_err != LFS_ERR_OK) {
 		logw("lfs_file_opencfg %s: %d\n\r", f, sd.buffered_read_current_err);
 		sd.buffered_read_is_open = false;
+		if((sd.buffered_read_current_err == LFS_ERR_EXIST) || (sd.buffered_read_current_err == LFS_ERR_NOENT)) {
+			sd_set_file_no_exist(wallbox_id, year, month, day, postfix);
+		}
 	} else {
 		sd.buffered_read_is_open =  true;
 	}
@@ -517,6 +543,13 @@ bool sd_read_energy_manager_data_point_old(uint8_t year, uint8_t month, uint8_t 
 	int err = LFS_ERR_OK;
 	lfs_file_t *file = sd_lfs_open_buffered_read(0, year, month, day, SD_POSTFIX_EM, &err);
 	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
+		for(uint16_t i = 0; i < amount; i++) {
+			data[i*sizeof(EnergyManager5MinDataOld)] = SD_5MIN_FLAG_NO_DATA;
+			// 4 byte grid and 6*4 byte general
+			for(uint8_t j = 0; j < 4*7; j++) {
+				data[i*sizeof(EnergyManager5MinDataOld)+1+j] = 0;
+			}
+		}
 		return true;
 	} else if(err != LFS_ERR_OK) {
 		logw("lfs_file_opencfg: %d\n\r", err);
@@ -548,34 +581,34 @@ bool sd_read_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day,
 	int err = LFS_ERR_OK;
 	lfs_file_t *file = sd_lfs_open_buffered_read(0, year, month, day, SD_POSTFIX_EM_W_PRICES, &err);
 	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
+#ifdef IS_ENERGY_MANAGER_V1
+		const bool ret = sd_read_energy_manager_data_point_old(year, month, day, hour, minute, data, amount, offset);
+		// Price is in last 4 bytes, fill them with 0xFF
+		for(uint16_t i = 0; i < amount; i++) {
+			data[(i+1)*sizeof(EnergyManager5MinData)-1] = 0xFF;
+			data[(i+1)*sizeof(EnergyManager5MinData)-2] = 0xFF;
+			data[(i+1)*sizeof(EnergyManager5MinData)-3] = 0xFF;
+			data[(i+1)*sizeof(EnergyManager5MinData)-4] = 0xFF;
+		}
+		return ret;
+#else
 		for(uint16_t i = 0; i < amount; i++) {
 			data[i*sizeof(EnergyManager5MinData)] = SD_5MIN_FLAG_NO_DATA;
 			// 4 byte grid and 6*4 byte general
 			for(uint8_t j = 0; j < 4*7; j++) {
 				data[i*sizeof(EnergyManager5MinData)+1+j] = 0;
 			}
+			data[(i+1)*sizeof(EnergyManager5MinData)-1] = 0xFF;
+			data[(i+1)*sizeof(EnergyManager5MinData)-2] = 0xFF;
+			data[(i+1)*sizeof(EnergyManager5MinData)-3] = 0xFF;
+			data[(i+1)*sizeof(EnergyManager5MinData)-4] = 0xFF;
 		}
-		// Price is in last 4 bytes, them with 0xFF
-		data[amount-1] = 0xFF;
-		data[amount-2] = 0xFF;
-		data[amount-3] = 0xFF;
-		data[amount-4] = 0xFF;
+
 		return true;
+#endif
 	} else if(err != LFS_ERR_OK) {
-#ifdef IS_ENERGY_MANAGER_V1
-		bool ret = sd_read_energy_manager_data_point_old(year, month, day, hour, minute, data, amount, offset);
-		if(ret) {
-			// Price is in last 4 bytes, them with 0xFF
-			data[amount-1] = 0xFF;
-			data[amount-2] = 0xFF;
-			data[amount-3] = 0xFF;
-			data[amount-4] = 0xFF;
-		}
-		return ret;
-#else
 		logw("lfs_file_opencfg: %d\n\r", err);
 		return false;
-#endif
 	}
 
 	const uint16_t pos = 8 + (hour*12 + minute/5) * sizeof(EnergyManager5MinData) + offset*sizeof(EnergyManager5MinData);
@@ -680,6 +713,7 @@ bool sd_read_energy_manager_daily_data_point_old(uint8_t year, uint8_t month, ui
 	int err = LFS_ERR_OK;
 	lfs_file_t *file = sd_lfs_open_buffered_read(0, year, month, SD_FILE_NO_DAY_IN_PATH, SD_POSTFIX_EM, &err);
 	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
+		memset(data, 0xFF, amount*sizeof(EnergyManager1DayDataOld));
 		return true;
 	} else if(err != LFS_ERR_OK) {
 		logw("lfs_file_opencfg: %d\n\r", err);
@@ -710,21 +744,23 @@ bool sd_read_energy_manager_daily_data_point(uint8_t year, uint8_t month, uint8_
 	int err = LFS_ERR_OK;
 	lfs_file_t *file = sd_lfs_open_buffered_read(0, year, month, SD_FILE_NO_DAY_IN_PATH, SD_POSTFIX_EM_W_PRICES, &err);
 	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
+#ifdef IS_ENERGY_MANAGER_V1
+		const bool ret = sd_read_energy_manager_daily_data_point_old(year, month, day, data, amount, offset);
+		// Price is in last 4 bytes, fill them with 0xFF
+		for(uint16_t i = 0; i < amount; i++) {
+			data[(i+1)*sizeof(EnergyManager1DayData)-1] = 0xFF;
+			data[(i+1)*sizeof(EnergyManager1DayData)-2] = 0xFF;
+			data[(i+1)*sizeof(EnergyManager1DayData)-3] = 0xFF;
+			data[(i+1)*sizeof(EnergyManager1DayData)-4] = 0xFF;
+		}
+		return ret;
+#else
 		memset(data, 0xFF, amount*sizeof(EnergyManager1DayData));
 		return true;
+#endif
 	} else if(err != LFS_ERR_OK) {
-		#ifdef IS_ENERGY_MANAGER_V1
-			bool ret = sd_read_energy_manager_daily_data_point_old(year, month, day, data, amount, offset);
-			// Price is in last 4 bytes, fill them with 0xFF
-			data[amount-1] = 0xFF;
-			data[amount-2] = 0xFF;
-			data[amount-3] = 0xFF;
-			data[amount-4] = 0xFF;
-			return ret;
-		#else
-			logw("lfs_file_opencfg: %d\n\r", err);
-			return false;
-		#endif
+		logw("lfs_file_opencfg: %d\n\r", err);
+		return false;
 	}
 
 	const uint16_t pos = sizeof(SDMetadata) + (day-1) * sizeof(EnergyManager1DayData) + offset*sizeof(EnergyManager1DayData);

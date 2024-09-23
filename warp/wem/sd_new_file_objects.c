@@ -72,6 +72,7 @@ const EnergyManager1DayDataFile sd_new_file_em_1day = {
             .energy_grid_out = UINT32_MAX,
             .energy_general_in = {UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX},
             .energy_general_out = {UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX},
+            .price = UINT32_MAX,
         },
     },
 };

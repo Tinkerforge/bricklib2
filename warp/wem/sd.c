@@ -295,9 +295,16 @@ bool sd_read_wallbox_data_point(uint32_t wallbox_id, uint8_t year, uint8_t month
 	lfs_file_t *file = sd_lfs_open_buffered_read(wallbox_id, year, month, day, SD_POSTFIX_WB, &err);
 	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
 		for(uint16_t i = 0; i < amount; i++) {
-			data[i*sizeof(Wallbox5MinData)]   = SD_5MIN_FLAG_NO_DATA;
+#ifdef IS_ENERGY_MANAGER_V1
+			data[i*sizeof(Wallbox5MinData)+0] = SD_5MIN_FLAG_NO_DATA;
 			data[i*sizeof(Wallbox5MinData)+1] = 0;
 			data[i*sizeof(Wallbox5MinData)+2] = 0;
+#else
+			data[i*sizeof(Wallbox5MinData)+0] = (SD_5MIN_FLAG_NO_DATA << 0) & 0xFF;
+			data[i*sizeof(Wallbox5MinData)+1] = (SD_5MIN_FLAG_NO_DATA << 8) & 0xFF;
+			data[i*sizeof(Wallbox5MinData)+2] = 0;
+			data[i*sizeof(Wallbox5MinData)+3] = 0;
+#endif
 		}
 		return true;
 	} else if(err != LFS_ERR_OK) {
@@ -593,7 +600,12 @@ bool sd_read_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day,
 		return ret;
 #else
 		for(uint16_t i = 0; i < amount; i++) {
+#ifdef IS_ENERGY_MANAGER_V1
 			data[i*sizeof(EnergyManager5MinData)] = SD_5MIN_FLAG_NO_DATA;
+#else
+			data[i*sizeof(EnergyManager5MinData)+0] = (SD_5MIN_FLAG_NO_DATA << 0) & 0xFF;
+			data[i*sizeof(EnergyManager5MinData)+1] = (SD_5MIN_FLAG_NO_DATA << 8) & 0xFF;
+#endif
 			// 4 byte grid and 6*4 byte general
 			for(uint8_t j = 0; j < 4*7; j++) {
 				data[i*sizeof(EnergyManager5MinData)+1+j] = 0;

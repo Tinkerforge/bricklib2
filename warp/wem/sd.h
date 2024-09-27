@@ -40,7 +40,11 @@
 
 #define SD_5MIN_PER_DAY (12*24)
 #define SD_1DAY_PER_MONTH (31)
+#ifdef IS_ENERGY_MANAGER_V1
 #define SD_5MIN_FLAG_NO_DATA (1 << 7)
+#else
+#define SD_5MIN_FLAG_NO_DATA (1 << 15)
+#endif
 #define SD_FILE_NO_DAY_IN_PATH 0xFF
 
 #define SD_WALLBOX_DATA_POINT_LENGTH 8
@@ -48,7 +52,11 @@
 #define SD_ENERGY_MANAGER_DATA_POINT_LENGTH 8
 #define SD_ENERGY_MANAGER_DAILY_DATA_POINT_LENGTH 2
 
+#ifdef IS_ENERGY_MANAGER_V1
 #define SD_WALLBOX_DATA_POINT_PER_CB 20
+#else
+#define SD_WALLBOX_DATA_POINT_PER_CB 15
+#endif
 #define SD_WALLBOX_DAILY_DATA_POINT_PER_CB 15
 #define SD_ENERGY_MANAGER_DATA_POINT_PER_CB 1
 #define SD_ENERGY_MANAGER_DAILY_DATA_POINT_PER_CB 1
@@ -66,7 +74,11 @@ typedef struct {
 
 
 typedef struct {
+#ifdef IS_ENERGY_MANAGER_V1
     uint8_t flags; // IEC_STATE (bit 0-2) + future use
+#else
+    uint16_t flags; // IEC_STATE (bit 0-2) + future use
+#endif
     uint16_t power; // W
 } __attribute__((__packed__)) Wallbox5MinData;
 
@@ -86,7 +98,11 @@ typedef struct {
 
 
 typedef struct {
+#ifdef IS_ENERGY_MANAGER_V1
 	uint8_t flags; // bit 0 = 1p/3p, bit 1-2 = input, bit 3-4 = output
+#else
+	uint16_t flags; // bit 0-7: IO
+#endif
 	int32_t power_grid; // W
 	int32_t power_general[6]; // W
 	uint32_t price;
@@ -140,7 +156,11 @@ typedef struct {
 	uint8_t day;
 	uint8_t hour;
 	uint8_t minute;
+#ifdef IS_ENERGY_MANAGER_V1
 	uint8_t flags;
+#else
+	uint16_t flags;
+#endif
 	uint16_t power;
 } __attribute__((__packed__)) WallboxDataPoint;
 
@@ -158,7 +178,11 @@ typedef struct {
 	uint8_t day;
 	uint8_t hour;
 	uint8_t minute;
+#ifdef IS_ENERGY_MANAGER_V1
 	uint8_t flags;
+#else
+	uint16_t flags;
+#endif
 	int32_t power_grid;
 	int32_t power_general[6];
 	uint32_t price;

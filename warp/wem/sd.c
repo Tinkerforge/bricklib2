@@ -300,8 +300,8 @@ bool sd_read_wallbox_data_point(uint32_t wallbox_id, uint8_t year, uint8_t month
 			data[i*sizeof(Wallbox5MinData)+1] = 0;
 			data[i*sizeof(Wallbox5MinData)+2] = 0;
 #else
-			data[i*sizeof(Wallbox5MinData)+0] = (SD_5MIN_FLAG_NO_DATA << 0) & 0xFF;
-			data[i*sizeof(Wallbox5MinData)+1] = (SD_5MIN_FLAG_NO_DATA << 8) & 0xFF;
+			data[i*sizeof(Wallbox5MinData)+0] = (SD_5MIN_FLAG_NO_DATA >> 0) & 0xFF;
+			data[i*sizeof(Wallbox5MinData)+1] = (SD_5MIN_FLAG_NO_DATA >> 8) & 0xFF;
 			data[i*sizeof(Wallbox5MinData)+2] = 0;
 			data[i*sizeof(Wallbox5MinData)+3] = 0;
 #endif

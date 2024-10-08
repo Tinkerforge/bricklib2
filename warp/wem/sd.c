@@ -603,12 +603,12 @@ bool sd_read_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day,
 #ifdef IS_ENERGY_MANAGER_V1
 			data[i*sizeof(EnergyManager5MinData)] = SD_5MIN_FLAG_NO_DATA;
 #else
-			data[i*sizeof(EnergyManager5MinData)+0] = (SD_5MIN_FLAG_NO_DATA << 0) & 0xFF;
-			data[i*sizeof(EnergyManager5MinData)+1] = (SD_5MIN_FLAG_NO_DATA << 8) & 0xFF;
+			data[i*sizeof(EnergyManager5MinData)+0] = (SD_5MIN_FLAG_NO_DATA >> 0) & 0xFF;
+			data[i*sizeof(EnergyManager5MinData)+1] = (SD_5MIN_FLAG_NO_DATA >> 8) & 0xFF;
 #endif
 			// 4 byte grid and 6*4 byte general
 			for(uint8_t j = 0; j < 4*7; j++) {
-				data[i*sizeof(EnergyManager5MinData)+1+j] = 0;
+				data[i*sizeof(EnergyManager5MinData)+2+j] = 0;
 			}
 			data[(i+1)*sizeof(EnergyManager5MinData)-1] = 0xFF;
 			data[(i+1)*sizeof(EnergyManager5MinData)-2] = 0xFF;

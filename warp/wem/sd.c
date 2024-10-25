@@ -859,6 +859,7 @@ bool sd_read_storage(uint8_t page) {
 
 	int err = lfs_file_opencfg(&sd.lfs, &file, f, LFS_O_RDONLY, &sd.lfs_file_config);
 	if((err == LFS_ERR_EXIST) || (err == LFS_ERR_NOENT)) {
+		data_storage.file_not_found[page] = true;
 		return true;
 	}
 
@@ -875,6 +876,7 @@ bool sd_read_storage(uint8_t page) {
 		return false;
 	}
 
+	data_storage.file_not_found[page] = false;
 	return true;
 }
 

@@ -34,6 +34,7 @@ typedef struct {
     uint32_t last_change_time[DATA_STORAGE_PAGES];
     bool write_to_sd[DATA_STORAGE_PAGES];
     bool read_from_sd[DATA_STORAGE_PAGES];
+    bool file_not_found[DATA_STORAGE_PAGES];
 } DataStorage;
 
 extern DataStorage data_storage;

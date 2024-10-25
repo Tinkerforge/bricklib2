@@ -150,6 +150,16 @@ bool sd_get_file_no_exist(uint32_t wallbox_id, uint8_t year, uint8_t month, uint
 	return false;
 }
 
+void sd_remove_file_no_exist(uint32_t wallbox_id, uint8_t year, uint8_t month, uint8_t day, uint8_t postfix) {
+	for(uint8_t i = 0; i < SD_FILE_NO_EXIST_CACHE_LENGTH; i++) {
+		if((sd.file_no_exist_cache[i].wallbox_id == wallbox_id) &&
+		   (sd.file_no_exist_cache[i].ymdp == ((year << 24) | (month << 16) | (day << 8) | postfix))) {
+			sd.file_no_exist_cache[i].wallbox_id = 0;
+			sd.file_no_exist_cache[i].ymdp       = 0;
+		}
+	}
+}
+
 bool sd_write_wallbox_data_point_new_file(char *f) {
 	lfs_file_t file;
 
@@ -204,6 +214,7 @@ bool sd_write_wallbox_data_point(uint32_t wallbox_id, uint8_t year, uint8_t mont
 			logw("lfs_file_opencfg %s: %d\n\r", f, err);
 			return false;
 		}
+		sd_remove_file_no_exist(wallbox_id, year, month, day, SD_POSTFIX_WB);
 	}
 
 	const uint16_t pos = sizeof(SDMetadata) + (hour*12 + minute/5) * sizeof(Wallbox5MinData);
@@ -382,6 +393,8 @@ bool sd_write_wallbox_daily_data_point(uint32_t wallbox_id, uint8_t year, uint8_
 			logw("lfs_file_opencfg %s: %d\n\r", f, err);
 			return false;
 		}
+
+		sd_remove_file_no_exist(wallbox_id, year, month, SD_FILE_NO_DAY_IN_PATH, SD_POSTFIX_WB);
 	}
 
 	const uint16_t pos = sizeof(SDMetadata) + (day-1) * sizeof(Wallbox1DayData);
@@ -517,6 +530,8 @@ bool sd_write_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day
 			logw("lfs_file_opencfg %s: %d\n\r", f, err);
 			return false;
 		}
+
+		sd_remove_file_no_exist(0, year, month, day, SD_POSTFIX_EM_W_PRICES);
 	}
 
 	const uint16_t pos = sizeof(SDMetadata) + (hour*12 + minute/5) * sizeof(EnergyManager5MinData);
@@ -693,6 +708,8 @@ bool sd_write_energy_manager_daily_data_point(uint8_t year, uint8_t month, uint8
 			logw("lfs_file_opencfg %s: %d\n\r", f, err);
 			return false;
 		}
+
+		sd_remove_file_no_exist(0, year, month, SD_FILE_NO_DAY_IN_PATH, SD_POSTFIX_EM_W_PRICES);
 	}
 
 	const uint16_t pos = sizeof(SDMetadata) + (day-1) * sizeof(EnergyManager1DayData);

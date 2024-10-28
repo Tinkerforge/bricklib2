@@ -1011,10 +1011,6 @@ void sd_init_task(void) {
 	// Set sd status at the end, to make sure that everything is completely initialized
 	// before any other code tries to access the sd card
 	sd.sd_status = sdmmc_error;
-
-	for(uint8_t i = 0; i < DATA_STORAGE_PAGES; i++) {
-		data_storage.read_from_sd[i] = true;
-	}
 }
 
 void sd_tick_task_handle_wallbox_data(void) {

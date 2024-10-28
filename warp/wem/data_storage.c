@@ -43,4 +43,7 @@ void data_storage_tick(void) {
 
 void data_storage_init(void) {
     memset(&data_storage, 0, sizeof(DataStorage));
+	for(uint8_t i = 0; i < DATA_STORAGE_PAGES; i++) {
+		data_storage.read_from_sd[i] = true;
+	}
 }

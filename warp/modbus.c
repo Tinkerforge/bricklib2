@@ -410,11 +410,11 @@ void modbus_report_exception(RS485 *rs485, uint8_t function_code, ModbusExceptio
 	modbus_exception_response.function_code = function_code + 0x80;
 	modbus_exception_response.exception_code = (uint8_t)exception_code;
 	modbus_exception_response.checksum = crc16_modbus(modbus_exception_response_ptr,
-	                                                  sizeof(ModbusExceptionResponse) - 2);
+													  sizeof(ModbusExceptionResponse) - 2);
 
 	ringbuffer_init(&rs485->ringbuffer_tx,
-	                RS485_BUFFER_SIZE - rs485->buffer_size_rx,
-	                &rs485->buffer[rs485->buffer_size_rx]);
+					RS485_BUFFER_SIZE - rs485->buffer_size_rx,
+					&rs485->buffer[rs485->buffer_size_rx]);
 
 	for(uint8_t i = 0; i < sizeof(ModbusExceptionResponse); i++) {
 		ringbuffer_add(&rs485->ringbuffer_tx, modbus_exception_response_ptr[i]);

@@ -29,12 +29,12 @@
 #define DATA_STORAGE_SIZE  64
 
 typedef struct {
-    uint8_t storage[DATA_STORAGE_PAGES][DATA_STORAGE_SIZE];
+	uint8_t storage[DATA_STORAGE_PAGES][DATA_STORAGE_SIZE];
 
-    uint32_t last_change_time[DATA_STORAGE_PAGES];
-    bool write_to_sd[DATA_STORAGE_PAGES];
-    bool read_from_sd[DATA_STORAGE_PAGES];
-    bool file_not_found[DATA_STORAGE_PAGES];
+	uint32_t last_change_time[DATA_STORAGE_PAGES];
+	bool write_to_sd[DATA_STORAGE_PAGES];
+	bool read_from_sd[DATA_STORAGE_PAGES];
+	bool file_not_found[DATA_STORAGE_PAGES];
 } DataStorage;
 
 extern DataStorage data_storage;

@@ -26,31 +26,31 @@
 #include <stdbool.h>
 
 typedef enum {
-    CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_NLIVE = 0,
-    CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_NLIVE  = 1,
-    CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_LIVE  = 2,
-    CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_LIVE   = 3,
+	CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_NLIVE = 0,
+	CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_NLIVE  = 1,
+	CONTACTOR_CHECK_STATE_AC1_NLIVE_AC2_LIVE  = 2,
+	CONTACTOR_CHECK_STATE_AC1_LIVE_AC2_LIVE   = 3,
 } ContactorCheckState;
 
 typedef struct {
-    uint32_t ac1_edge_count;
-    uint32_t ac2_edge_count;
+	uint32_t ac1_edge_count;
+	uint32_t ac2_edge_count;
 
-    bool ac1_last_value;
-    bool ac2_last_value;
+	bool ac1_last_value;
+	bool ac2_last_value;
 
-    uint32_t last_check;
+	uint32_t last_check;
 
-    uint8_t invalid_counter;
+	uint8_t invalid_counter;
 
-    ContactorCheckState state;
-    uint8_t error;
+	ContactorCheckState state;
+	uint8_t error;
 
-    uint32_t pe_edge_count;
+	uint32_t pe_edge_count;
 
-    bool pe_last_value;
+	bool pe_last_value;
 
-    uint32_t last_error_time;
+	uint32_t last_error_time;
 } ContactorCheck;
 
 extern ContactorCheck contactor_check;

@@ -68,5 +68,5 @@ void eeprom_save_config(void) {
 }
 
 void eeprom_init(void) {
-    eeprom_load_config();
+	eeprom_load_config();
 }

@@ -22,57 +22,57 @@
 #include "sd_new_file_objects.h"
 
 const Wallbox5MinDataFile sd_new_file_wb_5min = {
-    .metadata = {
-        .magic   = SD_METADATA_MAGIC,
-        .version = SD_METADATA_VERSION,
-        .type    = SD_METADATA_TYPE_WB_5MIN,
-    },
-    .data = {
-        [0 ... SD_5MIN_PER_DAY-1] = {
-            .flags = SD_5MIN_FLAG_NO_DATA,
-        },
-    },
+	.metadata = {
+		.magic   = SD_METADATA_MAGIC,
+		.version = SD_METADATA_VERSION,
+		.type    = SD_METADATA_TYPE_WB_5MIN,
+	},
+	.data = {
+		[0 ... SD_5MIN_PER_DAY-1] = {
+			.flags = SD_5MIN_FLAG_NO_DATA,
+		},
+	},
 };
 
 const Wallbox1DayDataFile sd_new_file_wb_1day = {
-    .metadata = {
-        .magic   = SD_METADATA_MAGIC,
-        .version = SD_METADATA_VERSION,
-        .type    = SD_METADATA_TYPE_WB_1DAY,
-    },
-    .data = {
-        [0 ... SD_1DAY_PER_MONTH-1] = {
-            .energy = UINT32_MAX,
-        },
-    },
+	.metadata = {
+		.magic   = SD_METADATA_MAGIC,
+		.version = SD_METADATA_VERSION,
+		.type    = SD_METADATA_TYPE_WB_1DAY,
+	},
+	.data = {
+		[0 ... SD_1DAY_PER_MONTH-1] = {
+			.energy = UINT32_MAX,
+		},
+	},
 };
 
 const EnergyManager5MinDataFile sd_new_file_em_5min = {
-    .metadata = {
-        .magic   = SD_METADATA_MAGIC,
-        .version = SD_METADATA_VERSION,
-        .type    = SD_METADATA_TYPE_EM_5MIN,
-    },
-    .data = {
-        [0 ... SD_5MIN_PER_DAY-1] = {
-            .flags = SD_5MIN_FLAG_NO_DATA,
-        },
-    },
+	.metadata = {
+		.magic   = SD_METADATA_MAGIC,
+		.version = SD_METADATA_VERSION,
+		.type    = SD_METADATA_TYPE_EM_5MIN,
+	},
+	.data = {
+		[0 ... SD_5MIN_PER_DAY-1] = {
+			.flags = SD_5MIN_FLAG_NO_DATA,
+		},
+	},
 };
 
 const EnergyManager1DayDataFile sd_new_file_em_1day = {
-    .metadata = {
-        .magic   = SD_METADATA_MAGIC,
-        .version = SD_METADATA_VERSION,
-        .type    = SD_METADATA_TYPE_EM_1DAY,
-    },
-    .data = {
-        [0 ... SD_1DAY_PER_MONTH-1] = {
-            .energy_grid_in_ = UINT32_MAX,
-            .energy_grid_out = UINT32_MAX,
-            .energy_general_in = {UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX},
-            .energy_general_out = {UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX},
-            .price = UINT32_MAX,
-        },
-    },
+	.metadata = {
+		.magic   = SD_METADATA_MAGIC,
+		.version = SD_METADATA_VERSION,
+		.type    = SD_METADATA_TYPE_EM_1DAY,
+	},
+	.data = {
+		[0 ... SD_1DAY_PER_MONTH-1] = {
+			.energy_grid_in_ = UINT32_MAX,
+			.energy_grid_out = UINT32_MAX,
+			.energy_general_in = {UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX},
+			.energy_general_out = {UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX, UINT32_MAX},
+			.price = UINT32_MAX,
+		},
+	},
 };

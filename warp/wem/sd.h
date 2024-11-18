@@ -66,34 +66,34 @@
 #define SD_FILE_NO_EXIST_CACHE_LENGTH 4
 
 typedef struct {
-    uint16_t magic;
-    uint8_t version;
-    uint8_t type;
-    uint8_t future_use[4];
+	uint16_t magic;
+	uint8_t version;
+	uint8_t type;
+	uint8_t future_use[4];
 } __attribute__((__packed__)) SDMetadata;
 
 
 typedef struct {
 #ifdef IS_ENERGY_MANAGER_V1
-    uint8_t flags; // IEC_STATE (bit 0-2) + future use
+	uint8_t flags; // IEC_STATE (bit 0-2) + future use
 #else
-    uint16_t flags; // IEC_STATE (bit 0-2) + future use
+	uint16_t flags; // IEC_STATE (bit 0-2) + future use
 #endif
-    uint16_t power; // W
+	uint16_t power; // W
 } __attribute__((__packed__)) Wallbox5MinData;
 
 typedef struct {
-    SDMetadata metadata;
-    Wallbox5MinData data[SD_5MIN_PER_DAY];
+	SDMetadata metadata;
+	Wallbox5MinData data[SD_5MIN_PER_DAY];
 } __attribute__((__packed__)) Wallbox5MinDataFile;
 
 typedef struct {
-    uint32_t energy; // kWh
+	uint32_t energy; // kWh
 } __attribute__((__packed__)) Wallbox1DayData;
 
 typedef struct {
-    SDMetadata metadata;
-    Wallbox1DayData data[SD_1DAY_PER_MONTH]; // 31 days (one month)
+	SDMetadata metadata;
+	Wallbox1DayData data[SD_1DAY_PER_MONTH]; // 31 days (one month)
 } __attribute__((__packed__)) Wallbox1DayDataFile;
 
 
@@ -109,8 +109,8 @@ typedef struct {
 } __attribute__((__packed__)) EnergyManager5MinData;
 
 typedef struct {
-    SDMetadata metadata;
-    EnergyManager5MinData data[SD_5MIN_PER_DAY];
+	SDMetadata metadata;
+	EnergyManager5MinData data[SD_5MIN_PER_DAY];
 } __attribute__((__packed__)) EnergyManager5MinDataFile;
 
 typedef struct {
@@ -120,8 +120,8 @@ typedef struct {
 } __attribute__((__packed__)) EnergyManager5MinDataOld;
 
 typedef struct {
-    SDMetadata metadata;
-    EnergyManager5MinData data[SD_5MIN_PER_DAY];
+	SDMetadata metadata;
+	EnergyManager5MinData data[SD_5MIN_PER_DAY];
 } __attribute__((__packed__)) EnergyManager5MinDataFileOld;
 
 typedef struct {
@@ -133,8 +133,8 @@ typedef struct {
 } __attribute__((__packed__)) EnergyManager1DayData;
 
 typedef struct {
-    SDMetadata metadata;
-    EnergyManager1DayData data[SD_1DAY_PER_MONTH]; // 31 days (one month)
+	SDMetadata metadata;
+	EnergyManager1DayData data[SD_1DAY_PER_MONTH]; // 31 days (one month)
 } __attribute__((__packed__)) EnergyManager1DayDataFile;
 
 typedef struct {
@@ -145,8 +145,8 @@ typedef struct {
 } __attribute__((__packed__)) EnergyManager1DayDataOld;
 
 typedef struct {
-    SDMetadata metadata;
-    EnergyManager1DayData data[SD_1DAY_PER_MONTH]; // 31 days (one month)
+	SDMetadata metadata;
+	EnergyManager1DayData data[SD_1DAY_PER_MONTH]; // 31 days (one month)
 } __attribute__((__packed__)) EnergyManager1DayDataFileOld;
 
 typedef struct {
@@ -241,66 +241,66 @@ typedef struct {
 	char product_name[5];
 	uint8_t manufacturer_id;
 
-    lfs_t lfs;
-    struct lfs_config lfs_config;
-    struct lfs_file_config lfs_file_config;
-    uint8_t lfs_file_buffer[512];
-    uint8_t lfs_read_buffer[512];
-    uint8_t lfs_prog_buffer[512];
-    uint8_t lfs_lookahead_buffer[512];
+	lfs_t lfs;
+	struct lfs_config lfs_config;
+	struct lfs_file_config lfs_file_config;
+	uint8_t lfs_file_buffer[512];
+	uint8_t lfs_read_buffer[512];
+	uint8_t lfs_prog_buffer[512];
+	uint8_t lfs_lookahead_buffer[512];
 
-    uint32_t sd_rw_error_count;
+	uint32_t sd_rw_error_count;
 
-    uint32_t sdmmc_init_last;
+	uint32_t sdmmc_init_last;
 
-    WallboxDataPoint wallbox_data_point[SD_WALLBOX_DATA_POINT_LENGTH];
-    uint8_t wallbox_data_point_end;
-    WallboxDailyDataPoint wallbox_daily_data_point[SD_WALLBOX_DAILY_DATA_POINT_LENGTH];
-    uint8_t wallbox_daily_data_point_end;
-    EnergyManagerDataPoint energy_manager_data_point[SD_ENERGY_MANAGER_DATA_POINT_LENGTH];
-    uint8_t energy_manager_data_point_end;
-    EnergyManagerDailyDataPoint energy_manager_daily_data_point[SD_ENERGY_MANAGER_DAILY_DATA_POINT_LENGTH];
-    uint8_t energy_manager_daily_data_point_end;
-
-
-    GetSDWallboxDataPoints get_sd_wallbox_data_points;
-    volatile bool new_sd_wallbox_data_points;
-    GetSDWallboxDailyDataPoints get_sd_wallbox_daily_data_points;
-    volatile bool new_sd_wallbox_daily_data_points;
-    GetSDEnergyManagerDataPoints get_sd_energy_manager_data_points;
-    volatile bool new_sd_energy_manager_data_points;
-    GetSDEnergyManagerDailyDataPoints get_sd_energy_manager_daily_data_points;
-    volatile bool new_sd_energy_manager_daily_data_points;
+	WallboxDataPoint wallbox_data_point[SD_WALLBOX_DATA_POINT_LENGTH];
+	uint8_t wallbox_data_point_end;
+	WallboxDailyDataPoint wallbox_daily_data_point[SD_WALLBOX_DAILY_DATA_POINT_LENGTH];
+	uint8_t wallbox_daily_data_point_end;
+	EnergyManagerDataPoint energy_manager_data_point[SD_ENERGY_MANAGER_DATA_POINT_LENGTH];
+	uint8_t energy_manager_data_point_end;
+	EnergyManagerDailyDataPoint energy_manager_daily_data_point[SD_ENERGY_MANAGER_DAILY_DATA_POINT_LENGTH];
+	uint8_t energy_manager_daily_data_point_end;
 
 
-    uint16_t sd_wallbox_data_points_cb_data_length;
-    uint16_t sd_wallbox_data_points_cb_offset;
-    uint8_t sd_wallbox_data_points_cb_data[SD_WALLBOX_DATA_POINT_CB_LENGTH];
-    volatile bool new_sd_wallbox_data_points_cb;
+	GetSDWallboxDataPoints get_sd_wallbox_data_points;
+	volatile bool new_sd_wallbox_data_points;
+	GetSDWallboxDailyDataPoints get_sd_wallbox_daily_data_points;
+	volatile bool new_sd_wallbox_daily_data_points;
+	GetSDEnergyManagerDataPoints get_sd_energy_manager_data_points;
+	volatile bool new_sd_energy_manager_data_points;
+	GetSDEnergyManagerDailyDataPoints get_sd_energy_manager_daily_data_points;
+	volatile bool new_sd_energy_manager_daily_data_points;
 
-    uint16_t sd_wallbox_daily_data_points_cb_data_length;
-    uint16_t sd_wallbox_daily_data_points_cb_offset;
-    uint8_t sd_wallbox_daily_data_points_cb_data[SD_WALLBOX_DAILY_DATA_POINT_CB_LENGTH];
-    volatile bool new_sd_wallbox_daily_data_points_cb;
 
-    uint16_t sd_energy_manager_data_points_cb_data_length;
-    uint16_t sd_energy_manager_data_points_cb_offset;
-    uint8_t sd_energy_manager_data_points_cb_data[SD_ENERGY_MANAGER_DATA_POINT_CB_LENGTH];
-    volatile bool new_sd_energy_manager_data_points_cb;
+	uint16_t sd_wallbox_data_points_cb_data_length;
+	uint16_t sd_wallbox_data_points_cb_offset;
+	uint8_t sd_wallbox_data_points_cb_data[SD_WALLBOX_DATA_POINT_CB_LENGTH];
+	volatile bool new_sd_wallbox_data_points_cb;
 
-    uint16_t sd_energy_manager_daily_data_points_cb_data_length;
-    uint16_t sd_energy_manager_daily_data_points_cb_offset;
-    uint8_t sd_energy_manager_daily_data_points_cb_data[SD_ENERGY_MANAGER_DAILY_DATA_POINT_CB_LENGTH];
-    volatile bool new_sd_energy_manager_daily_data_points_cb;
+	uint16_t sd_wallbox_daily_data_points_cb_data_length;
+	uint16_t sd_wallbox_daily_data_points_cb_offset;
+	uint8_t sd_wallbox_daily_data_points_cb_data[SD_WALLBOX_DAILY_DATA_POINT_CB_LENGTH];
+	volatile bool new_sd_wallbox_daily_data_points_cb;
 
-    bool buffered_read_is_open;
-    int buffered_read_current_err;
-    uint32_t buffered_read_current_wallbox_id;
-    uint8_t buffered_read_current_year;
-    uint8_t buffered_read_current_month;
-    uint8_t buffered_read_current_day;
-    uint8_t buffered_read_current_postfix;
-    lfs_file_t buffered_read_file;
+	uint16_t sd_energy_manager_data_points_cb_data_length;
+	uint16_t sd_energy_manager_data_points_cb_offset;
+	uint8_t sd_energy_manager_data_points_cb_data[SD_ENERGY_MANAGER_DATA_POINT_CB_LENGTH];
+	volatile bool new_sd_energy_manager_data_points_cb;
+
+	uint16_t sd_energy_manager_daily_data_points_cb_data_length;
+	uint16_t sd_energy_manager_daily_data_points_cb_offset;
+	uint8_t sd_energy_manager_daily_data_points_cb_data[SD_ENERGY_MANAGER_DAILY_DATA_POINT_CB_LENGTH];
+	volatile bool new_sd_energy_manager_daily_data_points_cb;
+
+	bool buffered_read_is_open;
+	int buffered_read_current_err;
+	uint32_t buffered_read_current_wallbox_id;
+	uint8_t buffered_read_current_year;
+	uint8_t buffered_read_current_month;
+	uint8_t buffered_read_current_day;
+	uint8_t buffered_read_current_postfix;
+	lfs_file_t buffered_read_file;
 
 	FileNoExistCache file_no_exist_cache[SD_FILE_NO_EXIST_CACHE_LENGTH];
 	uint8_t file_no_exist_index;

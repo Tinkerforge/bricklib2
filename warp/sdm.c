@@ -344,7 +344,7 @@ bool sdm_write_register_response(void) {
 			rs485.modbus_common_error_counters.slave_device_failure++;
 		}
 	}
-	
+
 	return true; // increment state
 }
 
@@ -365,7 +365,7 @@ void sdm_handle_new_system_type(void) {
 			sdm.new_system_type = true;
 		}
 	} else {
-		// Change system type if un-allowed system type is configured 
+		// Change system type if un-allowed system type is configured
 		sdm.new_system_type = true;
 	}
 }

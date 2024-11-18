@@ -27,22 +27,22 @@
 DataStorage data_storage;
 
 void data_storage_tick(void) {
-    for(uint8_t i = 0; i < DATA_STORAGE_PAGES; i++) {
-        if(data_storage.last_change_time[i] == 0) {
-            continue;
-        }
+	for(uint8_t i = 0; i < DATA_STORAGE_PAGES; i++) {
+		if(data_storage.last_change_time[i] == 0) {
+			continue;
+		}
 
-        // 10 minutes after data storage change we write it to SD card
-        // This ensures that we write new data with a maximum frequency of 10 minutes
-        if(system_timer_is_time_elapsed_ms(data_storage.last_change_time[i], 1000*60*10)) {
-            data_storage.last_change_time[i] = 0;
-            data_storage.write_to_sd[i]      = true;
-        }
-    }
+		// 10 minutes after data storage change we write it to SD card
+		// This ensures that we write new data with a maximum frequency of 10 minutes
+		if(system_timer_is_time_elapsed_ms(data_storage.last_change_time[i], 1000*60*10)) {
+			data_storage.last_change_time[i] = 0;
+			data_storage.write_to_sd[i]      = true;
+		}
+	}
 }
 
 void data_storage_init(void) {
-    memset(&data_storage, 0, sizeof(DataStorage));
+	memset(&data_storage, 0, sizeof(DataStorage));
 	for(uint8_t i = 0; i < DATA_STORAGE_PAGES; i++) {
 		data_storage.read_from_sd[i] = true;
 	}

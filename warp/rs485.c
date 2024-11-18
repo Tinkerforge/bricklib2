@@ -253,7 +253,7 @@ void rs485_init(void) {
 
 	rs485_init_buffer();
 	rs485_init_hardware();
-    timer_init();
+	timer_init();
 
 	if(rs485.mode == MODE_MODBUS_SLAVE_RTU || rs485.mode == MODE_MODBUS_MASTER_RTU) {
 		modbus_init(&rs485);

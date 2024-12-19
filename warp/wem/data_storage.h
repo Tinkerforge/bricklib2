@@ -35,6 +35,8 @@ typedef struct {
 	bool write_to_sd[DATA_STORAGE_PAGES];
 	bool read_from_sd[DATA_STORAGE_PAGES];
 	bool file_not_found[DATA_STORAGE_PAGES];
+
+	bool has_been_written_once[DATA_STORAGE_PAGES];
 } DataStorage;
 
 extern DataStorage data_storage;

@@ -845,6 +845,8 @@ bool sd_write_storage(uint8_t page) {
 		return false;
 	}
 
+	data_storage.has_been_written_once[page] = true;
+
 	return true;
 }
 

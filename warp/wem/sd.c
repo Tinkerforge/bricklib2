@@ -1329,7 +1329,9 @@ void sd_tick_task(void) {
 		// If the sd and lfs status are OK and no sd is detected,
 		// we assume that the sd card was hot-removed
 
-		const bool sd_detected = !XMC_GPIO_GetInput(SDMMC_CDS_PIN);
+		// Always assume that a sd is inserted, the SDMMC_CDS_PIN can be unreliable and we don't
+		// really need hotplug functionality for the WEM...
+		const bool sd_detected = true; //!XMC_GPIO_GetInput(SDMMC_CDS_PIN);
 		if((sd.sd_status == SDMMC_ERROR_OK) && (sd.lfs_status == LFS_ERR_OK) && !sd_detected) {
 			sd.sd_rw_error_count = 1000;
 			logd("SD card hot-removed? Force error_count=1000 to re-initialize\n\r");

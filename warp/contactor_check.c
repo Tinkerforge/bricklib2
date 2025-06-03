@@ -54,7 +54,7 @@ void contactor_check_init(void) {
 		contactor_check.ac1_last_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC1_PIN);
 		contactor_check.ac2_last_value = XMC_GPIO_GetInput(CONTACTOR_CHECK_AC2_PIN);
 #ifdef HAS_HARDWARE_VERSION
-	} else {
+	} else { // v3 and v4
 		XMC_GPIO_Init(CONTACTOR_CHECK_FB1_PIN, &pin_config_input);
 		XMC_GPIO_Init(CONTACTOR_CHECK_FB2_PIN, &pin_config_input);
 		XMC_GPIO_Init(CONTACTOR_CHECK_PE_PIN, &pin_config_input);
@@ -65,6 +65,11 @@ void contactor_check_init(void) {
 }
 
 void contactor_check_tick(void) {
+	// First call, initialize last check time
+	if(contactor_check.last_check == 0) {
+		contactor_check.last_check = system_timer_get_ms();
+	}
+
 #ifdef HAS_HARDWARE_VERSION
 	if(hardware_version.is_v2) {
 #endif
@@ -119,7 +124,7 @@ void contactor_check_tick(void) {
 			contactor_check.ac2_edge_count = 0;
 		}
 #ifdef HAS_HARDWARE_VERSION
-	} else {
+	} else { // v3 and v4
 		const bool check_n_l1   = XMC_GPIO_GetInput(CONTACTOR_CHECK_FB1_PIN); // low = contactor active, high = contactor not active
 		const bool check_l2_l3  = XMC_GPIO_GetInput(CONTACTOR_CHECK_FB2_PIN); // low = contactor active, high = contactor not active
 		const bool check_pe     = XMC_GPIO_GetInput(CONTACTOR_CHECK_PE_PIN);  // 50hz = PE check OK, constant = PE check fail

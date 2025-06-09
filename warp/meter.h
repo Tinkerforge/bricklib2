@@ -49,14 +49,15 @@
 #define METER_ELTAKO_REGISTER_COUNT       76
 
 typedef enum {
-	METER_TYPE_UNKNOWN     = 0,
-	METER_TYPE_UNSUPPORTED = 1,
-	METER_TYPE_SDM630      = 2, // Eastron
-	METER_TYPE_SDM72V2     = 3, // Eastron
-	METER_TYPE_SDM72CTM    = 4, // Eastron
-	METER_TYPE_SDM630MCTV2 = 5, // Eastron
-	METER_TYPE_DSZ15DZMOD  = 6, // Eltako
-	METER_TYPE_DEM4A       = 7  // YTL
+	METER_TYPE_UNKNOWN       = 0,
+	METER_TYPE_UNSUPPORTED   = 1,
+	METER_TYPE_SDM630        = 2, // Eastron
+	METER_TYPE_SDM72V2       = 3, // Eastron
+	METER_TYPE_SDM72CTM      = 4, // Eastron
+	METER_TYPE_SDM630MCTV2   = 5, // Eastron
+	METER_TYPE_DSZ15DZMOD    = 6, // Eltako
+	METER_TYPE_DEM4A         = 7, // YTL
+	METER_TYPE_DMED341MID7ER = 8  // Lovato
 } MeterType;
 
 typedef enum {

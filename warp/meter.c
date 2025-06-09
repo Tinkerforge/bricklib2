@@ -52,6 +52,9 @@ static const MeterDefinition meter_dsz15dzmod[] = {
 static const MeterDefinition meter_dem4a[] = {
 	#include "meter_dem4a_def.inc"
 };
+static const MeterDefinition meter_dmed341mid7er[] = {
+	#include "meter_dmed341mid7er_def.inc"
+};
 
 static void modbus_store_tx_frame_data_bytes(const uint8_t *data, const uint16_t length) {
 	for(uint16_t i = 0; i < length; i++) {
@@ -248,12 +251,13 @@ void meter_handle_new_system_type(void) {
 void meter_set_meter_type(MeterType type) {
 	meter.type = type;
 	switch(type) {
-		case METER_TYPE_SDM72V2:     meter.slave_address = 0x01; meter.current_meter = &meter_sdm72v2[0];    break;
-		case METER_TYPE_SDM630:      meter.slave_address = 0x01; meter.current_meter = &meter_sdm630[0];     break;
-		case METER_TYPE_SDM630MCTV2: meter.slave_address = 0x01; meter.current_meter = &meter_sdm630[0];     break;
-		case METER_TYPE_DSZ15DZMOD:  meter.slave_address = 0x01; meter.current_meter = &meter_dsz15dzmod[0]; break;
-		case METER_TYPE_DEM4A:       meter.slave_address = 0x01; meter.current_meter = &meter_dem4a[0];      break;
-		default:                     meter.slave_address = 0;    meter.current_meter = NULL;                 break;
+		case METER_TYPE_SDM72V2:       meter.slave_address = 0x01; meter.current_meter = &meter_sdm72v2[0];       break;
+		case METER_TYPE_SDM630:        meter.slave_address = 0x01; meter.current_meter = &meter_sdm630[0];        break;
+		case METER_TYPE_SDM630MCTV2:   meter.slave_address = 0x01; meter.current_meter = &meter_sdm630[0];        break;
+		case METER_TYPE_DSZ15DZMOD:    meter.slave_address = 0x01; meter.current_meter = &meter_dsz15dzmod[0];    break;
+		case METER_TYPE_DEM4A:         meter.slave_address = 0x01; meter.current_meter = &meter_dem4a[0];         break;
+		case METER_TYPE_DMED341MID7ER: meter.slave_address = 0x01; meter.current_meter = &meter_dmed341mid7er[0]; break;
+		default:                       meter.slave_address = 0;    meter.current_meter = NULL;                    break;
 	}
 
 	// Reset meter timeout

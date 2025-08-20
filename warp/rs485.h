@@ -36,6 +36,9 @@
 #define RS485_MODBUS_RTU_FRAME_SIZE_MAX 256
 #define MODBUS_DEFAULT_MASTER_REQUEST_TIMEOUT 1000 // Milliseconds.
 
+#define MODBUS_USE_MS_RESOLUTION_FOR_TIMER
+#define MODBUS_WAIT_AFTER_READ_MS 5 // fixed for 9600 baud (should be 4.1666ms)
+
 typedef enum {
 	MODE_RS485 = 0,
 	MODE_MODBUS_MASTER_RTU = 1,
@@ -116,7 +119,11 @@ typedef struct {
 
 typedef struct {
 	bool tx_done;
+#ifdef MODBUS_USE_MS_RESOLUTION_FOR_TIMER
+	uint32_t time_4_chars_ms;
+#else
 	uint32_t time_4_chars_us;
+#endif
 	uint16_t rx_rb_last_length;
 	RS485ModbusRequest request;
 	RS485ModbusRTUWireState state_wire;

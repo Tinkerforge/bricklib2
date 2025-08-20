@@ -23,7 +23,9 @@
 #include "configs/config_rs485.h"
 
 #include "modbus.h"
+#ifndef MODBUS_USE_MS_RESOLUTION_FOR_TIMER
 #include "timer.h"
+#endif
 
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "bricklib2/utility/ringbuffer.h"
@@ -79,7 +81,11 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) rs
 		}
 	}
 
+#ifdef MODBUS_USE_MS_RESOLUTION_FOR_TIMER
+	rs485.modbus_rtu.time_4_chars_ms = system_timer_get_ms();
+#else
 	TIMER_RESET();
+#endif
 }
 
 
@@ -253,7 +259,9 @@ void rs485_init(void) {
 
 	rs485_init_buffer();
 	rs485_init_hardware();
+#ifndef MODBUS_USE_MS_RESOLUTION_FOR_TIMER
 	timer_init();
+#endif
 
 	if(rs485.mode == MODE_MODBUS_SLAVE_RTU || rs485.mode == MODE_MODBUS_MASTER_RTU) {
 		modbus_init(&rs485);
@@ -295,7 +303,11 @@ void rs485_tick(void) {
 	}
 
 	if(new_data) {
+#ifdef MODBUS_USE_MS_RESOLUTION_FOR_TIMER
+		rs485.modbus_rtu.time_4_chars_ms = system_timer_get_ms();
+#else
 		TIMER_RESET();
+#endif
 	}
 	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_RXA);
 	NVIC_EnableIRQ((IRQn_Type)RS485_IRQ_RX);

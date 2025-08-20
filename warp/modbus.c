@@ -21,7 +21,9 @@
 
 #include "modbus.h"
 
+#ifndef MODBUS_USE_MS_RESOLUTION_FOR_TIMER
 #include "timer.h"
+#endif
 
 #include "bricklib2/utility/crc16.h"
 #include "bricklib2/hal/system_timer/system_timer.h"
@@ -29,9 +31,13 @@
 #include "xmc_uart.h"
 #include "xmc_scu.h"
 
+
 RS485ModbusStreamChunking modbus_stream_chunking;
 
 void modbus_init(RS485 *rs485) {
+#ifdef MODBUS_USE_MS_RESOLUTION_FOR_TIMER
+	rs485->modbus_rtu.time_4_chars_ms = system_timer_get_ms();
+#else
 	if(rs485->baudrate > 19200) {
 		rs485->modbus_rtu.time_4_chars_us = 1750;
 	}
@@ -49,6 +55,7 @@ void modbus_init(RS485 *rs485) {
 
 		rs485->modbus_rtu.time_4_chars_us = (4 * bit_count * 1000000) / rs485->baudrate;
 	}
+#endif
 
 	rs485->modbus_rtu.request.id = 1;
 	rs485->modbus_rtu.tx_done = false;
@@ -331,7 +338,11 @@ void modbus_update_rtu_wire_state_machine(RS485 *rs485) {
 		}
 	}
 	else if(rs485->modbus_rtu.state_wire == MODBUS_RTU_WIRE_STATE_RX) {
+#ifdef MODBUS_USE_MS_RESOLUTION_FOR_TIMER
+		if(system_timer_is_time_elapsed_ms(rs485->modbus_rtu.time_4_chars_ms, MODBUS_WAIT_AFTER_READ_MS)) {
+#else
 		if(timer_us_elapsed_since_last_timer_reset(rs485->modbus_rtu.time_4_chars_us)) {
+#endif
 			rs485->modbus_rtu.state_wire = MODBUS_RTU_WIRE_STATE_IDLE;
 		}
 	}

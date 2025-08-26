@@ -533,6 +533,7 @@ bool meter_handle_register_set_read_done(uint8_t state) {
 	} else if(meter.type == METER_TYPE_DSZ16DZE) {
 		// Convert phase angle from acos(phi) to degrees
 		switch(state) {
+#ifdef IS_CHARGER
 			case 1: meter_register_set.phase_angle[0].f                 = acosf(meter_register_set.phase_angle[0].f); break;
 			case 2: meter_register_set.phase_angle[0].f                 = (meter_register_set.volt_amps_reactive[0].f < 0) ? -meter_register_set.phase_angle[0].f*57.29577951308232 : meter_register_set.phase_angle[0].f*57.29577951308232; break;
 			case 3: meter_register_set.phase_angle[1].f                 = acosf(meter_register_set.phase_angle[1].f); break;
@@ -541,6 +542,7 @@ bool meter_handle_register_set_read_done(uint8_t state) {
 			case 6: meter_register_set.phase_angle[2].f                 = (meter_register_set.volt_amps_reactive[2].f < 0) ? -meter_register_set.phase_angle[2].f*57.29577951308232 : meter_register_set.phase_angle[2].f*57.29577951308232; break;
 			case 7: meter_register_set.total_system_phase_angle.f       = acosf(meter_register_set.total_system_phase_angle.f); break;
 			case 8: meter_register_set.total_system_phase_angle.f       = (meter_register_set.total_system_var.f < 0) ? -meter_register_set.total_system_phase_angle.f*57.29577951308232 : meter_register_set.total_system_phase_angle.f*57.29577951308232; break;
+#endif
 			default: return false;
 		}
 	}

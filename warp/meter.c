@@ -37,6 +37,10 @@
 #include "rs485.h"
 #include "modbus.h"
 
+#ifdef HAS_HARDWARE_VERSION
+#include "hardware_version.h"
+#endif
+
 Meter meter;
 MeterRegisterSet meter_register_set;
 
@@ -48,6 +52,9 @@ static const MeterDefinition meter_sdm72v2[] = {
 };
 static const MeterDefinition meter_dsz15dzmod[] = {
 	#include "meter_dsz15dzmod_def.inc"
+};
+static const MeterDefinition meter_dsz16dze[] = {
+	#include "meter_dsz16dze_def.inc"
 };
 static const MeterDefinition meter_dem4a[] = {
 	#include "meter_dem4a_def.inc"
@@ -118,10 +125,14 @@ void meter_write_register(uint8_t fc, uint8_t slave_address, uint16_t starting_a
 	modbus_store_tx_frame_data_bytes(&slave_address, 1); // Slave address.
 	modbus_store_tx_frame_data_bytes(&fc, 1); // Function code.
 	modbus_store_tx_frame_data_bytes((uint8_t *)&starting_address, 2); // Starting address.
-	modbus_store_tx_frame_data_bytes((uint8_t *)&count, 2); // Count.
-	modbus_store_tx_frame_data_bytes((uint8_t *)&byte_count, 1); // Byte count.
-	modbus_store_tx_frame_data_shorts(&payload->u16[1], 1);
-	modbus_store_tx_frame_data_shorts(&payload->u16[0], 1);
+	if(fc == MODBUS_FC_WRITE_MULTIPLE_REGISTERS) {
+		modbus_store_tx_frame_data_bytes((uint8_t *)&count, 2); // Count.
+		modbus_store_tx_frame_data_bytes((uint8_t *)&byte_count, 1); // Byte count.
+		modbus_store_tx_frame_data_shorts(&payload->u16[1], 1);
+		modbus_store_tx_frame_data_shorts(&payload->u16[0], 1);
+	} else if(fc == MODBUS_FC_WRITE_SINGLE_REGISTER) {
+		modbus_store_tx_frame_data_shorts(&payload->u16[0], 1);
+	}
 	modbus_add_tx_frame_checksum();
 
 	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, 13);
@@ -257,6 +268,7 @@ void meter_set_meter_type(MeterType type) {
 		case METER_TYPE_DSZ15DZMOD:    meter.slave_address = 0x01; meter.current_meter = &meter_dsz15dzmod[0];    break;
 		case METER_TYPE_DEM4A:         meter.slave_address = 0x01; meter.current_meter = &meter_dem4a[0];         break;
 		case METER_TYPE_DMED341MID7ER: meter.slave_address = 0x01; meter.current_meter = &meter_dmed341mid7er[0]; break;
+		case METER_TYPE_DSZ16DZE:      meter.slave_address = 0x01; meter.current_meter = &meter_dsz16dze[0];      break;
 		default:                       meter.slave_address = 0;    meter.current_meter = NULL;                    break;
 	}
 
@@ -313,7 +325,18 @@ void meter_find_meter_type(void) {
 				switch(meter_code) {
 					case 0x0084: meter_set_meter_type(METER_TYPE_UNSUPPORTED); find_meter_state = 0; return;  // 0x0084 is SDM72V1 (not supported)
 					case 0x0089: meter_set_meter_type(METER_TYPE_SDM72V2);     find_meter_state = 0; return;  // Compare datasheet page 16 meter code
-					case 0x0000: // Some early versions of the SDM630 return 0x0000 instead of 0x0070 for the meter type register.
+					// Some early versions of the SDM630 return 0x0000 instead of 0x0070 for the meter type register.
+#ifdef HAS_HARDWARE_VERSION
+					case 0x0000: {
+						if(!hardware_version.is_v2) {
+							meter.type = METER_TYPE_UNKNOWN;
+							break;
+						}
+						// else fall-through
+					}
+#else
+					case 0x0000: // fall-through for energy manager
+#endif
 					case 0x0070: meter_set_meter_type(METER_TYPE_SDM630);      find_meter_state = 0; return;
 					case 0x0079: meter_set_meter_type(METER_TYPE_SDM630MCTV2); find_meter_state = 0; return;
 					default:     meter.type = METER_TYPE_UNKNOWN;                                    break;
@@ -324,15 +347,40 @@ void meter_find_meter_type(void) {
 			break;
 		}
 
-
 		case 4: {
-			// Read meter code register with slave address 0x01 (Eltako)
-			meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, 0x01, METER_SDM_HOLDING_REG_METER_CODE, 2);
+			// Read manufacturing code register with slave address 0x01 (Eltako)
+			meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, 0x01, METER_ELTAKO_HOLDING_REG_MANUFACTURING_CODE, 2);
 			find_meter_state++;
 			break;
 		}
 
 		case 5: {
+			uint32_t manufacturing_code = 0xFFFFFFFF;
+			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &manufacturing_code, 2);
+			if(ret) {
+				if(manufacturing_code != 0xFFFFFFFF) {
+					meter_reset_error_counter();
+				}
+
+				modbus_clear_request(&rs485);
+				switch(manufacturing_code) {
+					case 0x0000000D: break; // Manufacturer is Eltako (handled in next state)
+					default: meter.type = METER_TYPE_UNKNOWN; find_meter_state = 0; return;
+				}
+
+				find_meter_state++;
+			}
+			break;
+		}
+
+		case 6: {
+			// Read meter code register with slave address 0x01 (Eltako)
+			meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, 0x01, METER_ELTAKO_HOLDING_REG_METER_CODE, 2);
+			find_meter_state++;
+			break;
+		}
+
+		case 7: {
 			uint32_t meter_code = 0xFFFFFFFF;
 			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &meter_code, 2);
 			if(ret) {
@@ -342,11 +390,59 @@ void meter_find_meter_type(void) {
 
 				modbus_clear_request(&rs485);
 				switch(meter_code) {
-					case 0x0000000D: meter_set_meter_type(METER_TYPE_DSZ15DZMOD); find_meter_state = 0; meter_reset_error_counter(); return;
-					default:         meter.type = METER_TYPE_UNKNOWN;                                   break;
+					case 0x00000001: meter_set_meter_type(METER_TYPE_DSZ15DZMOD); find_meter_state = 0; meter_reset_error_counter(); return;
+					case 0x00000003: break; // For DSZ16DZE we have to configure direction
+					// Assume DSZ15DZMOD as default
+					default:         meter_set_meter_type(METER_TYPE_DSZ15DZMOD); find_meter_state = 0; meter_reset_error_counter(); return;                                   break;
 				}
 
 				find_meter_state++;
+			}
+			break;
+		}
+
+		// case 8-11: Set direction for DSZ16DZE.
+		// This is done with two single register writes.
+		// DSZ16DZE does not seem to support multiple register writes.
+		case 8: {
+			// Set reverse direction first word (only DSZ16DZE)
+			MeterRegisterType direction;
+			direction.u16[0] = 0;
+
+			modbus_clear_request(&rs485);
+			meter_write_register(MODBUS_FC_WRITE_SINGLE_REGISTER, 0x01, METER_ELTAKO_HOLDING_REG_REVERSE_DIRECTION, &direction);
+			find_meter_state++;
+			break;
+		}
+
+		case 9: { // check direction
+			bool ret = meter_get_write_register_response(MODBUS_FC_WRITE_SINGLE_REGISTER);
+			if(ret) {
+				modbus_clear_request(&rs485);
+				find_meter_state++;
+			}
+			break;
+		}
+
+		case 10: {
+			// Set reverse direction second word (only DSZ16DZE)
+			MeterRegisterType direction;
+			direction.u16[0] = 1;
+
+			modbus_clear_request(&rs485);
+			meter_write_register(MODBUS_FC_WRITE_SINGLE_REGISTER, 0x01, METER_ELTAKO_HOLDING_REG_REVERSE_DIRECTION+1, &direction);
+			find_meter_state++;
+			break;
+		}
+
+		case 11: { // check direction
+			bool ret = meter_get_write_register_response(MODBUS_FC_WRITE_SINGLE_REGISTER);
+			if(ret) {
+				modbus_clear_request(&rs485);
+
+				meter_set_meter_type(METER_TYPE_DSZ16DZE);
+				find_meter_state = 0;
+				meter_reset_error_counter();
 			}
 			break;
 		}
@@ -432,6 +528,19 @@ bool meter_handle_register_set_read_done(uint8_t state) {
 			case 16: meter_register_set.total_system_var.f              = meter_register_set.volt_amps_reactive[0].f + meter_register_set.volt_amps_reactive[1].f + meter_register_set.volt_amps_reactive[2].f; break;
 			case 17: meter_register_set.total_system_phase_angle.f      = meter_register_set.phase_angle[0].f + meter_register_set.phase_angle[1].f + meter_register_set.phase_angle[2].f; break;
 			case 18: meter_register_set.total_kwh_sum.f                 = meter_register_set.total_import_kwh.f + meter_register_set.total_export_kwh.f; break;
+			default: return false;
+		}
+	} else if(meter.type == METER_TYPE_DSZ16DZE) {
+		// Convert phase angle from acos(phi) to degrees
+		switch(state) {
+			case 1: meter_register_set.phase_angle[0].f                 = acosf(meter_register_set.phase_angle[0].f); break;
+			case 2: meter_register_set.phase_angle[0].f                 = (meter_register_set.volt_amps_reactive[0].f < 0) ? -meter_register_set.phase_angle[0].f*57.29577951308232 : meter_register_set.phase_angle[0].f*57.29577951308232; break;
+			case 3: meter_register_set.phase_angle[1].f                 = acosf(meter_register_set.phase_angle[1].f); break;
+			case 4: meter_register_set.phase_angle[1].f                 = (meter_register_set.volt_amps_reactive[1].f < 0) ? -meter_register_set.phase_angle[1].f*57.29577951308232 : meter_register_set.phase_angle[1].f*57.29577951308232; break;
+			case 5: meter_register_set.phase_angle[2].f                 = acosf(meter_register_set.phase_angle[2].f); break;
+			case 6: meter_register_set.phase_angle[2].f                 = (meter_register_set.volt_amps_reactive[2].f < 0) ? -meter_register_set.phase_angle[2].f*57.29577951308232 : meter_register_set.phase_angle[2].f*57.29577951308232; break;
+			case 7: meter_register_set.total_system_phase_angle.f       = acosf(meter_register_set.total_system_phase_angle.f); break;
+			case 8: meter_register_set.total_system_phase_angle.f       = (meter_register_set.total_system_var.f < 0) ? -meter_register_set.total_system_phase_angle.f*57.29577951308232 : meter_register_set.total_system_phase_angle.f*57.29577951308232; break;
 			default: return false;
 		}
 	}
@@ -553,7 +662,7 @@ void meter_tick(void) {
 		}
 	}
 
-	if(meter.type == METER_TYPE_DSZ15DZMOD) {
+	if((meter.type == METER_TYPE_DSZ15DZMOD) || (meter.type == METER_TYPE_DSZ16DZE)) {
 		meter_tick_eltako();
 		return;
 	}

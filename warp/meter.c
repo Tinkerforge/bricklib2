@@ -279,13 +279,15 @@ void meter_find_meter_type(void) {
 		default: find_meter_state = 0; return;
 	}
 
+	// During the detection phase we expect timeout errors,
+	// so we reset the error counter here to not confuse the user.
+	meter_reset_error_counter();
 	if(meter_type == METER_TYPE_DETECTION) { // detection ongoing
 		return;
 	}
 
 	if(meter_type != METER_TYPE_UNKNOWN) { // meter found
 		meter_set_meter_type(meter_type);
-		meter_reset_error_counter();
 		find_meter_state = 0;
 		return;
 	}

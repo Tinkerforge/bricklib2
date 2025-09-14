@@ -44,6 +44,8 @@
 #define METER_ELTAKO_HOLDING_REG_METER_CODE          64525 // 464525
 #define METER_ELTAKO_HOLDING_REG_REVERSE_DIRECTION   63767 // 464767
 
+#define METER_ISKRA_INPUT_REG_MODEL_NUMBER 2
+
 #define METER_SDM_SYSTEM_TYPE_1P2W        1.0f
 #define METER_SDM_SYSTEM_TYPE_3P43        2.0f
 #define METER_SDM_SYSTEM_TYPE_3P4W        3.0f
@@ -53,6 +55,7 @@
 #define METER_ELTAKO_REGISTER_COUNT       76
 
 typedef enum {
+	METER_TYPE_DETECTION     = -1, // Detection ongoing
 	METER_TYPE_UNKNOWN       = 0,
 	METER_TYPE_UNSUPPORTED   = 1,
 	METER_TYPE_SDM630        = 2, // Eastron
@@ -62,20 +65,31 @@ typedef enum {
 	METER_TYPE_DSZ15DZMOD    = 6, // Eltako
 	METER_TYPE_DEM4A         = 7, // YTL
 	METER_TYPE_DMED341MID7ER = 8, // Lovato
-	METER_TYPE_DSZ16DZE      = 9  // Eltako
+	METER_TYPE_DSZ16DZE      = 9, // Eltako
+	METER_TYPE_WM3M4C        = 10 // Iskra
 } MeterType;
 
 typedef enum {
 	METER_REGISTER_DATA_TYPE_FLOAT = 0,
 	METER_REGISTER_DATA_TYPE_INT32 = 1,
-	METER_REGISTER_DATA_TYPE_INT16 = 2
+	METER_REGISTER_DATA_TYPE_INT16 = 2,
+	METER_REGISTER_DATA_TYPE_T2    = 3, // Iskra types
+	METER_REGISTER_DATA_TYPE_T3    = 4,
+	METER_REGISTER_DATA_TYPE_T5    = 5,
+	METER_REGISTER_DATA_TYPE_T6    = 6,
+	METER_REGISTER_DATA_TYPE_T7    = 7,
+	METER_REGISTER_DATA_TYPE_T16   = 8,
+	METER_REGISTER_DATA_TYPE_T17   = 9
+
 } MeterRegisterDataType;
 
 typedef union {
 	float f;
 	uint32_t data;
 	int32_t i32;
-	int16_t i16;
+	uint32_t u32;
+	int16_t i16_single;
+	uint16_t u16_single;
 	uint16_t u16[2];
 } MeterRegisterType;
 
@@ -186,5 +200,15 @@ extern MeterRegisterSet meter_register_set;
 
 void meter_init(void);
 void meter_tick(void);
+
+void meter_read_registers(uint8_t fc, uint8_t slave_address, uint16_t starting_address, uint16_t count);
+void meter_write_register(uint8_t fc, uint8_t slave_address, uint16_t starting_address, MeterRegisterType *payload);
+bool meter_get_read_registers_response(uint8_t fc, void *data, uint8_t count);
+bool meter_get_write_register_response(uint8_t fc);
+void meter_handle_phases_connected(void);
+void meter_handle_register_set_read_done(void);
+void meter_handle_register_set_fast_read_done(void);
+void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *definition);
+uint8_t meter_get_register_size(uint16_t position);
 
 #endif

@@ -32,23 +32,22 @@
 {121, &meter_register_set.line2_to_line3_volts, 1.0, METER_REGISTER_DATA_TYPE_T5, false},
 {123, &meter_register_set.line3_to_line1_volts, 1.0, METER_REGISTER_DATA_TYPE_T5, false},
 {125, &meter_register_set.average_line_to_line_volts, 1.0, METER_REGISTER_DATA_TYPE_T5, false},
-{5583, &meter_register_set.ln_volts_thd[0], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
-{5584, &meter_register_set.ln_volts_thd[1], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
-{5585, &meter_register_set.ln_volts_thd[2], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
-{5589, &meter_register_set.current_thd[0], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
-{5590, &meter_register_set.current_thd[1], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
-{5591, &meter_register_set.current_thd[2], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
-//{344, &meter_register_set.total_kwh_sum, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
+{183, &meter_register_set.ln_volts_thd[0], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
+{184, &meter_register_set.ln_volts_thd[1], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
+{185, &meter_register_set.ln_volts_thd[2], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
+{189, &meter_register_set.current_thd[0], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
+{190, &meter_register_set.current_thd[1], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
+{191, &meter_register_set.current_thd[2], 1.0, METER_REGISTER_DATA_TYPE_T16, false},
 
-// TODO: Add energy counter variable (0 = active energy import, 1 = active energy export)
-/*
-{415, &meter_wm3m4c_energy_counter_exponent[0], 1.0, METER_REGISTER_DATA_TYPE_T2, false},
-{416, &meter_wm3m4c_energy_counter_exponent[1], 1.0, METER_REGISTER_DATA_TYPE_T2, false},
-{419, &meter_wm3m4c_energy_counter[0], 1.0, METER_REGISTER_DATA_TYPE_T3, false},
-{421, &meter_wm3m4c_energy_counter[1], 1.0, METER_REGISTER_DATA_TYPE_T3, false},
-{435, &meter_wm3m4c_energy_counter_1000x[0], 1.0, METER_REGISTER_DATA_TYPE_T3, false},
-{437, &meter_wm3m4c_energy_counter_1000x[1], 1.0, METER_REGISTER_DATA_TYPE_T3, false},
-{5582, &meter_wm3m4c_temperature, 1.0, METER_REGISTER_DATA_TYPE_T17, false}, // TODO: Add temperature variable
-{5000, &meter_wm3m4c_uptime, 1.0, METER_REGISTER_DATA_TYPE_T3, false}, // TODO: Add uptime variable
-*/
+// 0 = active energy import, 1 = active energy export
+{415, &meter_iskra.energy_counter_exponent[0], 1.0, METER_REGISTER_DATA_TYPE_T2, false},
+{416, &meter_iskra.energy_counter_exponent[1], 1.0, METER_REGISTER_DATA_TYPE_T2, false},
+{419, &meter_iskra.energy_counter[0], 1.0, METER_REGISTER_DATA_TYPE_T3, false},
+{421, &meter_iskra.energy_counter[1], 1.0, METER_REGISTER_DATA_TYPE_T3, false},
+{435, &meter_iskra.energy_counter_1000x[0], 1.0, METER_REGISTER_DATA_TYPE_T3, false},
+{437, &meter_iskra.energy_counter_1000x[1], 1.0, METER_REGISTER_DATA_TYPE_T3, false},
+
+// Additional useful registers
+{5582, &meter_iskra.temperature, 1.0, METER_REGISTER_DATA_TYPE_T17, false},
+{5000, &meter_iskra.uptime, 1.0, METER_REGISTER_DATA_TYPE_T3, false},
 {0, NULL, 0.0, 0, false},

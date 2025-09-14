@@ -33,6 +33,8 @@
 #include "hardware_version.h"
 #endif
 
+MeterIskra meter_iskra;
+
 MeterType meter_iskra_is_connected(void) {
 	static uint8_t find_meter_state = 0;
 
@@ -71,7 +73,14 @@ MeterType meter_iskra_is_connected(void) {
 }
 
 void meter_iskra_handle_register_set_read_done() {
+	// TODO: It is currently unclear how this works with the exponent and x1000.
+	//       We need to figure this out with real-world measurements.
+	meter_register_set.total_import_kwh.f = meter_iskra.energy_counter[0].f;
+	meter_register_set.total_export_kwh.f = meter_iskra.energy_counter[1].f;
+	meter_register_set.total_kwh_sum.f    = meter_register_set.total_import_kwh.f - meter_register_set.total_export_kwh.f;
+
 	meter_handle_register_set_read_done();
+	meter_handle_register_set_fast_read_done();
 }
 
 // The Iskra meter uses a baudrate of 115200, so we don't need the "fast-read" mechanic.
@@ -95,8 +104,7 @@ void meter_iskra_tick(void) {
 				meter.register_full_position++;
 				if(meter.current_meter[meter.register_full_position].register_set_address == NULL) {
 					meter.register_full_position = 0;
-					meter_handle_register_set_read_done();
-					meter_handle_register_set_fast_read_done();
+					meter_iskra_handle_register_set_read_done();
 				}
 			}
 			break;

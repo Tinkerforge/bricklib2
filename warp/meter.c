@@ -387,9 +387,9 @@ void meter_handle_register_set_fast_read_done(void) {
 // State 1 to n updates the optional values. Call 1 to n with 1 per tick. It takes about 150us to calculate all values.
 void meter_handle_register_set_read_done(void) {
 	// Update relative values
-	meter_register_set.EnergyActiveLSumImportResettable.f  = meter_register_set.EnergyActiveLSumImport.f - meter.relative_energy_import.f;
-	meter_register_set.EnergyActiveLSumExportResettable.f  = meter_register_set.EnergyActiveLSumExport.f - meter.relative_energy_export.f;
-	meter_register_set.EnergyActiveLSumImExSumResettable.f = meter_register_set.EnergyActiveLSumImExSum.f    - meter.relative_energy_sum.f;
+	meter_register_set.EnergyActiveLSumImportResettable.f  = meter_register_set.EnergyActiveLSumImport.f  - meter.relative_energy_import.f;
+	meter_register_set.EnergyActiveLSumExportResettable.f  = meter_register_set.EnergyActiveLSumExport.f  - meter.relative_energy_export.f;
+	meter_register_set.EnergyActiveLSumImExSumResettable.f = meter_register_set.EnergyActiveLSumImExSum.f - meter.relative_energy_sum.f;
 	meter.each_value_read_once = true;
 }
 

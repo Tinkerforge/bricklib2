@@ -225,41 +225,41 @@ bool meter_eltako_handle_register_set_read_done(uint8_t state) {
 		// P = S * cos(φ) => φ = arccos(P / S)
 
 		switch(state) {
-			case 1:  meter_register_set.volt_amps[0].f                  = meter_register_set.power_factor[0].f == 0.0f ? 0.0f : meter_register_set.power[0].f / meter_register_set.power_factor[0].f; break;
-			case 2:  meter_register_set.volt_amps[1].f                  = meter_register_set.power_factor[1].f == 0.0f ? 0.0f : meter_register_set.power[1].f / meter_register_set.power_factor[1].f; break;
-			case 3:  meter_register_set.volt_amps[2].f                  = meter_register_set.power_factor[2].f == 0.0f ? 0.0f : meter_register_set.power[2].f / meter_register_set.power_factor[2].f; break;
+			case 1:  meter_register_set.PowerApparentL1ImExSum.f      = meter_register_set.PowerFactorL1Directional.f == 0.0f ? 0.0f : meter_register_set.PowerActiveL1ImExDiff.f / meter_register_set.PowerFactorL1Directional.f; break;
+			case 2:  meter_register_set.PowerApparentL2ImExSum.f      = meter_register_set.PowerFactorL2Directional.f == 0.0f ? 0.0f : meter_register_set.PowerActiveL2ImExDiff.f / meter_register_set.PowerFactorL2Directional.f; break;
+			case 3:  meter_register_set.PowerApparentL3ImExSum.f      = meter_register_set.PowerFactorL3Directional.f == 0.0f ? 0.0f : meter_register_set.PowerActiveL3ImExDiff.f / meter_register_set.PowerFactorL3Directional.f; break;
 // We don't compile support for sqrt and acos in Energy Manager firmware currently
 #ifdef IS_CHARGER
-			case 4:  meter_register_set.volt_amps_reactive[0].f         = meter_register_set.power_factor[0].f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.volt_amps[0].f * meter_register_set.volt_amps[0].f - meter_register_set.power[0].f * meter_register_set.power[0].f); break;
-			case 5:  meter_register_set.volt_amps_reactive[1].f         = meter_register_set.power_factor[1].f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.volt_amps[1].f * meter_register_set.volt_amps[1].f - meter_register_set.power[1].f * meter_register_set.power[1].f); break;
-			case 6:  meter_register_set.volt_amps_reactive[2].f         = meter_register_set.power_factor[2].f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.volt_amps[2].f * meter_register_set.volt_amps[2].f - meter_register_set.power[2].f * meter_register_set.power[2].f); break;
-			case 7:  meter_register_set.phase_angle[0].f                = meter_register_set.volt_amps[0].f    == 0.0f ? 0.0f : simple_acosf(meter_register_set.power[0].f / meter_register_set.volt_amps[0].f); break;
-			case 8:  meter_register_set.phase_angle[1].f                = meter_register_set.volt_amps[1].f    == 0.0f ? 0.0f : simple_acosf(meter_register_set.power[1].f / meter_register_set.volt_amps[1].f); break;
-			case 9:  meter_register_set.phase_angle[2].f                = meter_register_set.volt_amps[2].f    == 0.0f ? 0.0f : simple_acosf(meter_register_set.power[2].f / meter_register_set.volt_amps[2].f); break;
-			case 10: value                                              = meter_register_set.current[0].f * meter_register_set.current[0].f + meter_register_set.current[1].f * meter_register_set.current[1].f + meter_register_set.current[2].f * meter_register_set.current[2].f - meter_register_set.current[0].f * meter_register_set.current[1].f - meter_register_set.current[0].f * meter_register_set.current[2].f - meter_register_set.current[1].f * meter_register_set.current[2].f; break;
-			case 11: meter_register_set.neutral_current.f               = simple_sqrtf(ABS(value)); break;
+			case 4:  meter_register_set.PowerReactiveL1IndCapDiff.f   = meter_register_set.PowerFactorL1Directional.f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.PowerApparentL1ImExSum.f * meter_register_set.PowerApparentL1ImExSum.f - meter_register_set.PowerActiveL1ImExDiff.f * meter_register_set.PowerActiveL1ImExDiff.f); break;
+			case 5:  meter_register_set.PowerReactiveL2IndCapDiff.f   = meter_register_set.PowerFactorL2Directional.f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.PowerApparentL2ImExSum.f * meter_register_set.PowerApparentL2ImExSum.f - meter_register_set.PowerActiveL2ImExDiff.f * meter_register_set.PowerActiveL2ImExDiff.f); break;
+			case 6:  meter_register_set.PowerReactiveL3IndCapDiff.f   = meter_register_set.PowerFactorL3Directional.f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.PowerApparentL3ImExSum.f * meter_register_set.PowerApparentL3ImExSum.f - meter_register_set.PowerActiveL3ImExDiff.f * meter_register_set.PowerActiveL3ImExDiff.f); break;
+			case 7:  meter_register_set.PhaseAngleL1.f                = meter_register_set.PowerApparentL1ImExSum.f == 0.0f ? 0.0f : simple_acosf(meter_register_set.PowerActiveL1ImExDiff.f / meter_register_set.PowerApparentL1ImExSum.f); break;
+			case 8:  meter_register_set.PhaseAngleL2.f                = meter_register_set.PowerApparentL2ImExSum.f == 0.0f ? 0.0f : simple_acosf(meter_register_set.PowerActiveL2ImExDiff.f / meter_register_set.PowerApparentL2ImExSum.f); break;
+			case 9:  meter_register_set.PhaseAngleL3.f                = meter_register_set.PowerApparentL3ImExSum.f == 0.0f ? 0.0f : simple_acosf(meter_register_set.PowerActiveL3ImExDiff.f / meter_register_set.PowerApparentL3ImExSum.f); break;
+			case 10: value                                            = meter_register_set.CurrentL1ImExSum.f * meter_register_set.CurrentL1ImExSum.f + meter_register_set.CurrentL2ImExSum.f * meter_register_set.CurrentL2ImExSum.f + meter_register_set.CurrentL3ImExSum.f * meter_register_set.CurrentL3ImExSum.f - meter_register_set.CurrentL1ImExSum.f * meter_register_set.CurrentL2ImExSum.f - meter_register_set.CurrentL1ImExSum.f * meter_register_set.CurrentL3ImExSum.f - meter_register_set.CurrentL2ImExSum.f * meter_register_set.CurrentL3ImExSum.f; break;
+			case 11: meter_register_set.CurrentNImExSum.f             = simple_sqrtf(ABS(value)); break;
 #endif
-			case 12: meter_register_set.average_line_to_neutral_volts.f = (meter_register_set.line_to_neutral_volts[0].f + meter_register_set.line_to_neutral_volts[1].f + meter_register_set.line_to_neutral_volts[2].f) / 3.0f; break;
-			case 13: meter_register_set.average_line_current.f          = (meter_register_set.current[0].f + meter_register_set.current[1].f + meter_register_set.current[2].f) / 3.0f; break;
-			case 14: meter_register_set.sum_of_line_currents.f          = meter_register_set.current[0].f + meter_register_set.current[1].f + meter_register_set.current[2].f; break;
-			case 15: meter_register_set.total_system_volt_amps.f        = meter_register_set.volt_amps[0].f + meter_register_set.volt_amps[1].f + meter_register_set.volt_amps[2].f; break;
-			case 16: meter_register_set.total_system_var.f              = meter_register_set.volt_amps_reactive[0].f + meter_register_set.volt_amps_reactive[1].f + meter_register_set.volt_amps_reactive[2].f; break;
-			case 17: meter_register_set.total_system_phase_angle.f      = meter_register_set.phase_angle[0].f + meter_register_set.phase_angle[1].f + meter_register_set.phase_angle[2].f; break;
-			case 18: meter_register_set.total_kwh_sum.f                 = meter_register_set.total_import_kwh.f + meter_register_set.total_export_kwh.f; break;
+			case 12: meter_register_set.VoltageLNAvg.f                = (meter_register_set.VoltageL1N.f + meter_register_set.VoltageL2N.f + meter_register_set.VoltageL3N.f) / 3.0f; break;
+			case 13: meter_register_set.CurrentLAvgImExSum.f          = (meter_register_set.CurrentL1ImExSum.f + meter_register_set.CurrentL2ImExSum.f + meter_register_set.CurrentL3ImExSum.f) / 3.0f; break;
+			case 14: meter_register_set.CurrentLSumImExSum.f          = meter_register_set.CurrentL1ImExSum.f + meter_register_set.CurrentL2ImExSum.f + meter_register_set.CurrentL3ImExSum.f; break;
+			case 15: meter_register_set.PowerApparentLSumImExSum.f    = meter_register_set.PowerApparentL1ImExSum.f + meter_register_set.PowerApparentL2ImExSum.f + meter_register_set.PowerApparentL3ImExSum.f; break;
+			case 16: meter_register_set.PowerReactiveLSumIndCapDiff.f = meter_register_set.PowerReactiveL1IndCapDiff.f + meter_register_set.PowerReactiveL2IndCapDiff.f + meter_register_set.PowerReactiveL3IndCapDiff.f; break;
+			case 17: meter_register_set.PhaseAngleLSum.f              = meter_register_set.PhaseAngleL1.f + meter_register_set.PhaseAngleL2.f + meter_register_set.PhaseAngleL3.f; break;
+			case 18: meter_register_set.EnergyActiveLSumImExSum.f     = meter_register_set.EnergyActiveLSumImport.f + meter_register_set.EnergyActiveLSumExport.f; break;
 			default: return false;
 		}
 	} else if(meter.type == METER_TYPE_DSZ16DZE) {
 		// Convert phase angle from acos(phi) to degrees
 		switch(state) {
 #ifdef IS_CHARGER
-			case 1: meter_register_set.phase_angle[0].f                 = simple_acosf(meter_register_set.phase_angle[0].f); break;
-			case 2: meter_register_set.phase_angle[0].f                 = (meter_register_set.volt_amps_reactive[0].f < 0) ? -meter_register_set.phase_angle[0].f*57.29577951308232f : meter_register_set.phase_angle[0].f*57.29577951308232f; break;
-			case 3: meter_register_set.phase_angle[1].f                 = simple_acosf(meter_register_set.phase_angle[1].f); break;
-			case 4: meter_register_set.phase_angle[1].f                 = (meter_register_set.volt_amps_reactive[1].f < 0) ? -meter_register_set.phase_angle[1].f*57.29577951308232f : meter_register_set.phase_angle[1].f*57.29577951308232f; break;
-			case 5: meter_register_set.phase_angle[2].f                 = simple_acosf(meter_register_set.phase_angle[2].f); break;
-			case 6: meter_register_set.phase_angle[2].f                 = (meter_register_set.volt_amps_reactive[2].f < 0) ? -meter_register_set.phase_angle[2].f*57.29577951308232f : meter_register_set.phase_angle[2].f*57.29577951308232f; break;
-			case 7: meter_register_set.total_system_phase_angle.f       = simple_acosf(meter_register_set.total_system_phase_angle.f); break;
-			case 8: meter_register_set.total_system_phase_angle.f       = (meter_register_set.total_system_var.f < 0) ? -meter_register_set.total_system_phase_angle.f*57.29577951308232f : meter_register_set.total_system_phase_angle.f*57.29577951308232f; break;
+			case 1: meter_register_set.PhaseAngleL1.f   = simple_acosf(meter_register_set.PhaseAngleL1.f); break;
+			case 2: meter_register_set.PhaseAngleL1.f   = (meter_register_set.PowerReactiveL1IndCapDiff.f < 0) ? -meter_register_set.PhaseAngleL1.f*57.29577951308232f : meter_register_set.PhaseAngleL1.f*57.29577951308232f; break;
+			case 3: meter_register_set.PhaseAngleL2.f   = simple_acosf(meter_register_set.PhaseAngleL2.f); break;
+			case 4: meter_register_set.PhaseAngleL2.f   = (meter_register_set.PowerReactiveL2IndCapDiff.f < 0) ? -meter_register_set.PhaseAngleL2.f*57.29577951308232f : meter_register_set.PhaseAngleL2.f*57.29577951308232f; break;
+			case 5: meter_register_set.PhaseAngleL3.f   = simple_acosf(meter_register_set.PhaseAngleL3.f); break;
+			case 6: meter_register_set.PhaseAngleL3.f   = (meter_register_set.PowerReactiveL3IndCapDiff.f < 0) ? -meter_register_set.PhaseAngleL3.f*57.29577951308232f : meter_register_set.PhaseAngleL3.f*57.29577951308232f; break;
+			case 7: meter_register_set.PhaseAngleLSum.f = simple_acosf(meter_register_set.PhaseAngleLSum.f); break;
+			case 8: meter_register_set.PhaseAngleLSum.f = (meter_register_set.PowerReactiveLSumIndCapDiff.f < 0) ? -meter_register_set.PhaseAngleLSum.f*57.29577951308232f : meter_register_set.PhaseAngleLSum.f*57.29577951308232f; break;
 #endif
 			default: return false;
 		}

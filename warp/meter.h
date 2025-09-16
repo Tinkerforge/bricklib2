@@ -137,61 +137,84 @@ typedef struct {
 	const MeterDefinition *current_meter;
 } Meter;
 
+// Use the same names as in esp32 firmware for easier comparison
 typedef struct {
-	MeterRegisterType line_to_neutral_volts[METER_PHASE_NUM];
-	MeterRegisterType current[METER_PHASE_NUM];
-	MeterRegisterType power[METER_PHASE_NUM];
-	MeterRegisterType volt_amps[METER_PHASE_NUM];
-	MeterRegisterType volt_amps_reactive[METER_PHASE_NUM];
-	MeterRegisterType power_factor[METER_PHASE_NUM];
-	MeterRegisterType phase_angle[METER_PHASE_NUM];
-	MeterRegisterType average_line_to_neutral_volts;
-	MeterRegisterType average_line_current;
-	MeterRegisterType sum_of_line_currents;
-	MeterRegisterType total_system_power;
-	MeterRegisterType total_system_volt_amps;
-	MeterRegisterType total_system_var;
-	MeterRegisterType total_system_power_factor;
-	MeterRegisterType total_system_phase_angle;
-	MeterRegisterType frequency_of_supply_voltages;
-	MeterRegisterType total_import_kwh;
-	MeterRegisterType total_export_kwh;
-	MeterRegisterType total_import_kvarh;
-	MeterRegisterType total_export_kvarh;
-	MeterRegisterType total_vah;
-	MeterRegisterType ah;
-	MeterRegisterType total_system_power_demand;
-	MeterRegisterType maximum_total_system_power_demand;
-	MeterRegisterType total_system_va_demand;
-	MeterRegisterType maximum_total_system_va_demand;
-	MeterRegisterType neutral_current_demand;
-	MeterRegisterType maximum_neutral_current_demand;
-	MeterRegisterType line1_to_line2_volts;
-	MeterRegisterType line2_to_line3_volts;
-	MeterRegisterType line3_to_line1_volts;
-	MeterRegisterType average_line_to_line_volts;
-	MeterRegisterType neutral_current;
-	MeterRegisterType ln_volts_thd[METER_PHASE_NUM];
-	MeterRegisterType current_thd[METER_PHASE_NUM];
-	MeterRegisterType average_line_to_neutral_volts_thd;
-	MeterRegisterType average_line_to_current_thd;
-	MeterRegisterType current_demand[METER_PHASE_NUM];
-	MeterRegisterType maximum_current_demand[METER_PHASE_NUM];
-	MeterRegisterType line1_to_line2_volts_thd;
-	MeterRegisterType line2_to_line3_volts_thd;
-	MeterRegisterType line3_to_line1_volts_thd;
-	MeterRegisterType average_line_to_line_volts_thd;
-	MeterRegisterType total_kwh_sum;
-	MeterRegisterType total_kvarh_sum;
-	MeterRegisterType import_kwh[METER_PHASE_NUM];
-	MeterRegisterType export_kwh[METER_PHASE_NUM];
-	MeterRegisterType total_kwh[METER_PHASE_NUM];
-	MeterRegisterType import_kvarh[METER_PHASE_NUM];
-	MeterRegisterType export_kvarh[METER_PHASE_NUM];
-	MeterRegisterType total_kvarh[METER_PHASE_NUM];
-	MeterRegisterType relative_total_kwh_sum;
-	MeterRegisterType relative_total_import_kwh;
-	MeterRegisterType relative_total_export_kwh;
+	MeterRegisterType VoltageL1N; // line_to_neutral_volts[0]
+	MeterRegisterType VoltageL2N; // line_to_neutral_volts[1]
+	MeterRegisterType VoltageL3N; // line_to_neutral_volts[2]
+	MeterRegisterType CurrentL1ImExSum; // current[0]
+	MeterRegisterType CurrentL2ImExSum; // current[1]
+	MeterRegisterType CurrentL3ImExSum; // current[2]
+	MeterRegisterType PowerActiveL1ImExDiff; // power[0]
+	MeterRegisterType PowerActiveL2ImExDiff; // power[1]
+	MeterRegisterType PowerActiveL3ImExDiff; // power[2]
+	MeterRegisterType PowerApparentL1ImExSum; // volt_amps[0]
+	MeterRegisterType PowerApparentL2ImExSum; // volt_amps[1]
+	MeterRegisterType PowerApparentL3ImExSum; // volt_amps[2]
+	MeterRegisterType PowerReactiveL1IndCapDiff; // volt_amps_reactive[0]
+	MeterRegisterType PowerReactiveL2IndCapDiff; // volt_amps_reactive[1]
+	MeterRegisterType PowerReactiveL3IndCapDiff; // volt_amps_reactive[2]
+	MeterRegisterType PowerFactorL1Directional; // power_factor[0]
+	MeterRegisterType PowerFactorL2Directional; // power_factor[1]
+	MeterRegisterType PowerFactorL3Directional; // power_factor[2]
+	MeterRegisterType PhaseAngleL1; // phase_angle[0]
+	MeterRegisterType PhaseAngleL2; // phase_angle[1]
+	MeterRegisterType PhaseAngleL3; // phase_angle[2]
+	MeterRegisterType VoltageLNAvg; // average_line_to_neutral_volts
+	MeterRegisterType CurrentLAvgImExSum; // average_line_current
+	MeterRegisterType CurrentLSumImExSum; // sum_of_line_currents
+	MeterRegisterType PowerActiveLSumImExDiff; // total_system_power
+	MeterRegisterType PowerApparentLSumImExSum; // total_system_volt_amps
+	MeterRegisterType PowerReactiveLSumIndCapDiff; // total_system_var
+	MeterRegisterType PowerFactorLSumDirectional; // total_system_power_factor
+	MeterRegisterType PhaseAngleLSum; // total_system_phase_angle
+	MeterRegisterType FrequencyLAvg; // frequency_of_supply_voltages
+	MeterRegisterType EnergyActiveLSumImport; // total_import_kwh
+	MeterRegisterType EnergyActiveLSumExport; // total_export_kwh
+	MeterRegisterType EnergyReactiveLSumInductive; // total_import_kvarh
+	MeterRegisterType EnergyReactiveLSumCapacitive; // total_export_kvarh
+	MeterRegisterType EnergyApparentLSumImExSum; // total_vah
+	MeterRegisterType ElectricCharge; // ah
+	MeterRegisterType VoltageL1L2; // line1_to_line2_volts
+	MeterRegisterType VoltageL2L3; // line2_to_line3_volts
+	MeterRegisterType VoltageL3L1; // line3_to_line1_volts
+	MeterRegisterType VoltageLLAvg; // average_line_to_line_volts
+	MeterRegisterType CurrentNImExSum; // neutral_current
+	MeterRegisterType VoltageTHDL1N; // ln_volts_thd[0]
+	MeterRegisterType VoltageTHDL2N; // ln_volts_thd[1]
+	MeterRegisterType VoltageTHDL3N; // ln_volts_thd[2]
+	MeterRegisterType CurrentTHDL1; // current_thd[0]
+	MeterRegisterType CurrentTHDL2; // current_thd[1]
+	MeterRegisterType CurrentTHDL3; // current_thd[2]
+	MeterRegisterType VoltageTHDLNAvg; // average_line_to_neutral_volts_thd
+	MeterRegisterType CurrentTHDLAvg; // average_line_to_current_thd
+	MeterRegisterType VoltageTHDL1L2; // line1_to_line2_volts_thd
+	MeterRegisterType VoltageTHDL2L3; // line2_to_line3_volts_thd
+	MeterRegisterType VoltageTHDL3L1; // line3_to_line1_volts_thd
+	MeterRegisterType VoltageTHDLLAvg; // average_line_to_line_volts_thd
+	MeterRegisterType EnergyActiveLSumImExSum; // total_kwh_sum
+	MeterRegisterType EnergyReactiveLSumIndCapSum; // total_kvarh_sum
+	MeterRegisterType EnergyActiveL1Import; // import_kwh[0]
+	MeterRegisterType EnergyActiveL2Import; // import_kwh[1]
+	MeterRegisterType EnergyActiveL3Import; // import_kwh[2]
+	MeterRegisterType EnergyActiveL1Export; // export_kwh[0]
+	MeterRegisterType EnergyActiveL2Export; // export_kwh[1]
+	MeterRegisterType EnergyActiveL3Export; // export_kwh[2]
+	MeterRegisterType EnergyActiveL1ImExSum; // total_kwh[0]
+	MeterRegisterType EnergyActiveL2ImExSum; // total_kwh[1]
+	MeterRegisterType EnergyActiveL3ImExSum; // total_kwh[2]
+	MeterRegisterType EnergyReactiveL1Inductive; // import_kvarh[0]
+	MeterRegisterType EnergyReactiveL2Inductive; // import_kvarh[1]
+	MeterRegisterType EnergyReactiveL3Inductive; // import_kvarh[2]
+	MeterRegisterType EnergyReactiveL1Capacitive; // export_kvarh[0]
+	MeterRegisterType EnergyReactiveL2Capacitive; // export_kvarh[1]
+	MeterRegisterType EnergyReactiveL3Capacitive; // export_kvarh[2]
+	MeterRegisterType EnergyReactiveL1IndCapSum; // total_kvarh[0]
+	MeterRegisterType EnergyReactiveL2IndCapSum; // total_kvarh[1]
+	MeterRegisterType EnergyReactiveL3IndCapSum; // total_kvarh[2]
+	MeterRegisterType EnergyActiveLSumImExSumResettable; // relative_total_kwh_sum
+	MeterRegisterType EnergyActiveLSumImportResettable; // relative_total_import_kwh
+	MeterRegisterType EnergyActiveLSumExportResettable; // relative_total_export_kwh
 } __attribute__((__packed__)) MeterRegisterSet;
 
 

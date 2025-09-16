@@ -51,12 +51,12 @@ void eeprom_save_config(void) {
 
 	page[EEPROM_CONFIG_MAGIC_POS]          = EEPROM_CONFIG_MAGIC;
 	if(meter.reset_energy_meter) {
-		page[EEPROM_CONFIG_REL_SUM_POS]    = meter_register_set.total_kwh_sum.data;
-		page[EEPROM_CONFIG_REL_IMPORT_POS] = meter_register_set.total_import_kwh.data;
-		page[EEPROM_CONFIG_REL_EXPORT_POS] = meter_register_set.total_export_kwh.data;
-		meter.relative_energy_sum.data     = meter_register_set.total_kwh_sum.data;
-		meter.relative_energy_import.data  = meter_register_set.total_import_kwh.data;
-		meter.relative_energy_export.data  = meter_register_set.total_export_kwh.data;
+		page[EEPROM_CONFIG_REL_SUM_POS]    = meter_register_set.EnergyActiveLSumImExSum.data;
+		page[EEPROM_CONFIG_REL_IMPORT_POS] = meter_register_set.EnergyActiveLSumImport.data;
+		page[EEPROM_CONFIG_REL_EXPORT_POS] = meter_register_set.EnergyActiveLSumExport.data;
+		meter.relative_energy_sum.data     = meter_register_set.EnergyActiveLSumImExSum.data;
+		meter.relative_energy_import.data  = meter_register_set.EnergyActiveLSumImport.data;
+		meter.relative_energy_export.data  = meter_register_set.EnergyActiveLSumExport.data;
 	} else {
 		page[EEPROM_CONFIG_REL_SUM_POS]    = meter.relative_energy_sum.data;
 		page[EEPROM_CONFIG_REL_IMPORT_POS] = meter.relative_energy_import.data;

@@ -243,9 +243,9 @@ void meter_init(void) {
 
 // Update phases connected bool array (this is used in communication.c)
 void meter_handle_phases_connected(void) {
-	meter.phases_connected[0] = meter_register_set.line_to_neutral_volts[0].f > 180.0f;
-	meter.phases_connected[1] = meter_register_set.line_to_neutral_volts[1].f > 180.0f;
-	meter.phases_connected[2] = meter_register_set.line_to_neutral_volts[2].f > 180.0f;
+	meter.phases_connected[0] = meter_register_set.VoltageL1N.f > 180.0f;
+	meter.phases_connected[1] = meter_register_set.VoltageL2N.f > 180.0f;
+	meter.phases_connected[2] = meter_register_set.VoltageL3N.f > 180.0f;
 }
 
 void meter_set_meter_type(MeterType type) {
@@ -387,9 +387,9 @@ void meter_handle_register_set_fast_read_done(void) {
 // State 1 to n updates the optional values. Call 1 to n with 1 per tick. It takes about 150us to calculate all values.
 void meter_handle_register_set_read_done(void) {
 	// Update relative values
-	meter_register_set.relative_total_import_kwh.f = meter_register_set.total_import_kwh.f - meter.relative_energy_import.f;
-	meter_register_set.relative_total_export_kwh.f = meter_register_set.total_export_kwh.f - meter.relative_energy_export.f;
-	meter_register_set.relative_total_kwh_sum.f    = meter_register_set.total_kwh_sum.f    - meter.relative_energy_sum.f;
+	meter_register_set.EnergyActiveLSumImportResettable.f  = meter_register_set.EnergyActiveLSumImport.f - meter.relative_energy_import.f;
+	meter_register_set.EnergyActiveLSumExportResettable.f  = meter_register_set.EnergyActiveLSumExport.f - meter.relative_energy_export.f;
+	meter_register_set.EnergyActiveLSumImExSumResettable.f = meter_register_set.EnergyActiveLSumImExSum.f    - meter.relative_energy_sum.f;
 	meter.each_value_read_once = true;
 }
 

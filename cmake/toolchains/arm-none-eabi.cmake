@@ -4,7 +4,6 @@ SET(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 SET(CMAKE_SYSTEM_NAME Generic)
 
 # which compilers to use for C and C++
-SET(CMAKE_C_FLAGS --specs=nosys.specs)
 SET(CMAKE_C_COMPILER arm-none-eabi-gcc)
 SET(CMAKE_CXX_COMPILER arm-none-eabi-g++)
 SET(CMAKE_CXX_COMPILER_WORKS 1)

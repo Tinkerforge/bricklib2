@@ -53,11 +53,11 @@ check:
 		echo "Could not find xmclib in bricklib2. Please download xmclib from infineon and symlink it into the bricklib2/ folder."; \
 		exit 1; \
 	fi
-# Then we check if docker is available and if the build_environment_c container
+# Then we check if docker is available and if the build_environment_comcu container
 # is available. If both is the case, we start the docker container, call this
 # Makefile in the docker container and write a temporary file
 	@if command -v docker >/dev/null 2>&1 ; then \
-		if [ $$(docker images -q tinkerforge/build_environment_c) ]; then \
+		if [ $$(docker images -q tinkerforge/build_environment_comcu) ]; then \
 			echo "Using docker image to build."; \
 			docker run $(DOCKER_FLAGS) \
 			-v $(ROOT_DIR)/../:$(ROOT_DIR)/../ -u $$(id -u):$$(id -g) \
@@ -67,7 +67,7 @@ check:
 			-v $(BRICKLETBOOT_XMC_BRICKLIB2_PATH)/:$(BRICKLETBOOT_XMC_BRICKLIB2_PATH)/ -u $$(id -u):$$(id -g) \
 			-v $(BOOTSTRAPPER_XMC_PATH)/:$(BOOTSTRAPPER_XMC_PATH)/ -u $$(id -u):$$(id -g) \
 			-v $(BOOTSTRAPPER_XMC_BRICKLIB2_PATH)/:$(BOOTSTRAPPER_XMC_BRICKLIB2_PATH)/ -u $$(id -u):$$(id -g) \
-			tinkerforge/build_environment_c /bin/bash \
+			tinkerforge/build_environment_comcu /bin/bash \
 			-c "cd $(ROOT_DIR) ; make $(MAKECMDGOALS)" && \
 			touch $(DOCKER_LOCK_FILE); \
 		else \

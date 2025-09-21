@@ -1,8 +1,8 @@
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}.elf -lc_nano)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}.elf)
 
 # define compile flags
 SET_TARGET_PROPERTIES(${PROJECT_NAME}.elf PROPERTIES COMPILE_FLAGS
-	"${DEBUG} -mcpu=${MCU} -std=gnu99  -Wall --specs=nano.specs -mlong-calls -ffunction-sections -fdata-sections -O${OPTIMIZATION_LEVEL}"
+	"${DEBUG} -mcpu=${MCU} -std=gnu99  -Wall --specs=nosys.specs -mlong-calls -ffunction-sections -fdata-sections -O${OPTIMIZATION_LEVEL}"
 )
 
 # Add defines for linker script (default is with standard start address of flash and sram with 16kb flash)
@@ -25,4 +25,15 @@ endif()
 # define linker flags
 SET_TARGET_PROPERTIES(${PROJECT_NAME}.elf PROPERTIES LINK_FLAGS
 	"-nostartfiles -mcpu=${MCU} -Wl,--gc-sections -T\"${PROJECT_SOURCE_DIR}/src/bricklib2/linker_script/${LINKER_SCRIPT_NAME}\" -Wl,--defsym,FLASH_ORIGIN=${FLASH_ORIGIN} -Wl,--defsym,FLASH_LENGTH=${FLASH_LENGTH} -Wl,--defsym,SRAM_ORIGIN=${SRAM_ORIGIN} -Wl,--defsym,SRAM_LENGTH=${SRAM_LENGTH}" 
+)
+
+# Find all .c files under XMCLib
+file(GLOB_RECURSE XMCLIB_SOURCES
+    "${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/*.c"
+    "${PROJECT_SOURCE_DIR}/src/bricklib2/xmclib/*.h"
+)
+
+# XMCLib throws some bogus array-bounds warnings, ignore them
+set_source_files_properties(${XMCLIB_SOURCES}
+    PROPERTIES COMPILE_FLAGS "-Wno-array-bounds"
 )

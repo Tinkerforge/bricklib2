@@ -34,3 +34,8 @@
 {343, &meter_register_set.EnergyActiveLSumImExSum, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {345, &meter_register_set.EnergyReactiveLSumIndCapSum, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {0, NULL, 0.0, 0, false},
+
+// Add calculated values after stop marker
+{0, &meter_register_set.EnergyActiveLSumImportResettable, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumExportResettable, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumImExSumResettable, 0, 0, false},

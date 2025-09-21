@@ -39,3 +39,8 @@
 {0x1A60, &meter_register_set.EnergyReactiveL3Inductive, 0.001, METER_REGISTER_DATA_TYPE_INT32, false},
 {0x1A62, &meter_register_set.EnergyReactiveL3Capacitive, 0.001, METER_REGISTER_DATA_TYPE_INT32, false},
 {0, NULL, 0.0, 0, false},
+
+// Add calculated values after stop marker
+{0, &meter_register_set.EnergyActiveLSumImportResettable, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumExportResettable, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumImExSumResettable, 0, 0, false},

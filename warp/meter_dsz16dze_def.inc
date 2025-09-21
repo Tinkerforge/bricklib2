@@ -28,3 +28,12 @@
 {73, &meter_register_set.EnergyActiveLSumImport, 0.01, METER_REGISTER_DATA_TYPE_INT32, false},
 {75, &meter_register_set.EnergyActiveLSumExport, 0.01, METER_REGISTER_DATA_TYPE_INT32, false},
 {0, NULL, 0.0, 0, false},
+
+// Add calculated values after stop marker
+{0, &meter_register_set.PhaseAngleL1, 0, 0, false},
+{0, &meter_register_set.PhaseAngleL2, 0, 0, false},
+{0, &meter_register_set.PhaseAngleL3, 0, 0, false},
+{0, &meter_register_set.PhaseAngleLSum, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumImportResettable, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumExportResettable, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumImExSumResettable, 0, 0, false},

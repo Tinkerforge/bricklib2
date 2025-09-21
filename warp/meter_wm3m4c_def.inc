@@ -51,3 +51,8 @@
 {5582, &meter_iskra.temperature, 1.0, METER_REGISTER_DATA_TYPE_T17, false},
 {5000, &meter_iskra.uptime, 1.0, METER_REGISTER_DATA_TYPE_T3, false},
 {0, NULL, 0.0, 0, false},
+
+// Add calculated values after stop marker
+{0, &meter_register_set.EnergyActiveLSumImportResettable, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumExportResettable, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumImExSumResettable, 0, 0, false},

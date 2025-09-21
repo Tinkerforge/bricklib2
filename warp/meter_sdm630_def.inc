@@ -72,3 +72,8 @@
 {379, &meter_register_set.EnergyReactiveL2IndCapSum, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {381, &meter_register_set.EnergyReactiveL3IndCapSum, 1.0, METER_REGISTER_DATA_TYPE_FLOAT, false},
 {0, NULL, 0.0, 0, false},
+
+// Add calculated values after stop marker
+{0, &meter_register_set.EnergyActiveLSumImportResettable, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumExportResettable, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumImExSumResettable, 0, 0, false},

@@ -248,6 +248,52 @@ void meter_handle_phases_connected(void) {
 	meter.phases_connected[2] = meter_register_set.VoltageL3N.f > 180.0f;
 }
 
+void meter_update_size() {
+	if(meter.current_meter == NULL) {
+		meter.current_meter_size = 0;
+		meter.current_meter_definition_size = 0;
+		return;
+	}
+
+	switch (meter.type) {
+		case METER_TYPE_SDM72V2:       meter.current_meter_definition_size = sizeof(meter_sdm72v2)       / sizeof(MeterDefinition); break;
+		case METER_TYPE_SDM630:        meter.current_meter_definition_size = sizeof(meter_sdm630)        / sizeof(MeterDefinition); break;
+		case METER_TYPE_SDM630MCTV2:   meter.current_meter_definition_size = sizeof(meter_sdm630)        / sizeof(MeterDefinition); break;
+		case METER_TYPE_DSZ15DZMOD:    meter.current_meter_definition_size = sizeof(meter_dsz15dzmod)    / sizeof(MeterDefinition); break;
+		case METER_TYPE_DEM4A:         meter.current_meter_definition_size = sizeof(meter_dem4a)         / sizeof(MeterDefinition); break;
+		case METER_TYPE_DMED341MID7ER: meter.current_meter_definition_size = sizeof(meter_dmed341mid7er) / sizeof(MeterDefinition); break;
+		case METER_TYPE_DSZ16DZE:      meter.current_meter_definition_size = sizeof(meter_dsz16dze)      / sizeof(MeterDefinition); break;
+		case METER_TYPE_WM3M4C:        meter.current_meter_definition_size = sizeof(meter_wm3m4c)        / sizeof(MeterDefinition); break;
+		default:                       meter.current_meter_definition_size = 0;                                                     break;
+	}
+
+	if(meter.current_meter_definition_size == 0) {
+		meter.current_meter_size = 0;
+		return;
+	}
+
+	const MeterRegisterType *start = &meter_register_set.VoltageL1N;
+	const MeterRegisterType *end   = start + sizeof(MeterRegisterSet)/sizeof(MeterRegisterType);
+
+	meter.current_meter_size = 0;
+	for(uint8_t i = 0; i < meter.current_meter_definition_size; i++) {
+		MeterRegisterType *mrt = meter.current_meter[i].register_set_address;
+
+		// Check if mrt is end marker
+		if(mrt == NULL) {
+			continue;
+		}
+
+		// Check if mrt is within the register set memory range
+		// If it is not, it is a temporary variable and we skip it
+		if((mrt < start) || (mrt >= end)) {
+			continue;
+		}
+
+		meter.current_meter_size++;
+	}
+}
+
 void meter_set_meter_type(MeterType type) {
 	meter.type = type;
 	switch(type) {
@@ -261,6 +307,7 @@ void meter_set_meter_type(MeterType type) {
 		case METER_TYPE_WM3M4C:        meter.slave_address = 0x21; meter.current_meter = &meter_wm3m4c[0];        break;
 		default:                       meter.slave_address = 0;    meter.current_meter = NULL;                    break;
 	}
+	meter_update_size();
 
 	// Reset meter timeout
 	meter.timeout = system_timer_get_ms();
@@ -409,6 +456,66 @@ uint8_t meter_get_register_size(uint16_t position) {
 	}
 }
 
+// For get all meter values
+float meter_get_next_value() {
+	const MeterRegisterType *start = &meter_register_set.VoltageL1N;
+	const MeterRegisterType *end   = start + sizeof(MeterRegisterSet)/sizeof(MeterRegisterType);
+
+	if((meter.current_meter == NULL) || (meter.current_meter_size == 0)) {
+		return NAN;
+	}
+
+	while(true) {
+		if(meter.current_meter_index >= meter.current_meter_definition_size) {
+			return NAN;
+		}
+
+		MeterRegisterType *mrt = meter.current_meter[meter.current_meter_index].register_set_address;
+		meter.current_meter_index++;
+
+		// Check if mrt is end marker
+		if(mrt == NULL) {
+			continue;
+		}
+
+		// Check if mrt is within the register set memory range
+		// If it is not, it is a temporary variable and we skip it
+		if((mrt < start) || (mrt >= end)) {
+			continue;
+		}
+
+		return mrt->f;
+	}
+}
+
+BootloaderHandleMessageResponse meter_fill_communication_values(GenericMeterValues_Response *response) {
+	response->header.length = sizeof(GenericMeterValues_Response);
+	static uint32_t packet_payload_index = 0;
+
+	response->values_length = meter.current_meter_size;
+
+	const uint8_t packet_length = 60 / sizeof(float); // 60 byte payload max, each float is 4 byte
+	const uint16_t start        = packet_payload_index * packet_length;
+	const uint16_t end          = MIN(start + packet_length, meter.current_meter_size);
+	const uint16_t copy_num     = end - start;
+
+	if(packet_payload_index == 0) {
+		meter.current_meter_index = 0; // Reset index
+	}
+
+	response->values_chunk_offset = start;
+	for(uint8_t i = 0; i < copy_num; i++) {
+		response->values_chunk_data[i] = meter_get_next_value();
+	}
+
+	if(end < meter.current_meter_size) {
+		packet_payload_index++;
+	} else {
+		packet_payload_index = 0;
+	}
+
+	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
+}
 
 
 void meter_tick(void) {

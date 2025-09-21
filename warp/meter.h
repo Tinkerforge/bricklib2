@@ -25,6 +25,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+// For BootloaderHandleMessageResponse
+#include "bricklib2/bootloader/bootloader.h"
+
 #define METER_PHASE_NUM 3
 
 // TODO: find out actual register num
@@ -135,6 +138,9 @@ typedef struct {
 	MeterRegisterType relative_energy_export;
 
 	const MeterDefinition *current_meter;
+	uint8_t current_meter_size;
+	uint8_t current_meter_index;
+	uint8_t current_meter_definition_size;
 } Meter;
 
 // Use the same names as in esp32 firmware for easier comparison
@@ -215,7 +221,7 @@ typedef struct {
 	MeterRegisterType EnergyActiveLSumImExSumResettable; // relative_total_kwh_sum
 	MeterRegisterType EnergyActiveLSumImportResettable; // relative_total_import_kwh
 	MeterRegisterType EnergyActiveLSumExportResettable; // relative_total_export_kwh
-} __attribute__((__packed__)) MeterRegisterSet;
+} MeterRegisterSet;
 
 
 extern Meter meter;
@@ -233,5 +239,14 @@ void meter_handle_register_set_read_done(void);
 void meter_handle_register_set_fast_read_done(void);
 void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *definition);
 uint8_t meter_get_register_size(uint16_t position);
+float meter_get_next_value();
+
+typedef struct {
+	TFPMessageHeader header;
+	uint16_t values_length;
+	uint16_t values_chunk_offset;
+	float values_chunk_data[15];
+} __attribute__((__packed__)) GenericMeterValues_Response;
+BootloaderHandleMessageResponse meter_fill_communication_values(GenericMeterValues_Response *response);
 
 #endif

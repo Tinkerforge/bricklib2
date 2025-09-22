@@ -222,6 +222,12 @@ bool meter_eltako_handle_register_set_read_done(uint8_t state) {
 		// S² = P² + Q²   => Q = sqrt(S² - P²)
 		// P = S * cos(φ) => φ = arccos(P / S)
 
+		// TODO: Use correct non-directional versions of the meter values.
+		//       While the power factor for the DSZ15DZMOD is signed according to the datasheet, it always seems to be positive.
+		//       Because of that we e.g. don't know if Power Reactive is inductive or capacitive.
+		// PowerReactiveLxIndCapDiff => PowerReactiveLxIndCapSum?
+		// PowerFactorLxDirectional  => PowerFactorLx?
+		// PhaseAngleLx              => Is this already non-directional? If it is, we need to change it for DSZ16DZE.
 		switch(state) {
 			case 1:  meter_register_set.PowerApparentL1ImExSum.f      = meter_register_set.PowerFactorL1Directional.f == 0.0f ? 0.0f : meter_register_set.PowerActiveL1ImExDiff.f / meter_register_set.PowerFactorL1Directional.f; break;
 			case 2:  meter_register_set.PowerApparentL2ImExSum.f      = meter_register_set.PowerFactorL2Directional.f == 0.0f ? 0.0f : meter_register_set.PowerActiveL2ImExDiff.f / meter_register_set.PowerFactorL2Directional.f; break;

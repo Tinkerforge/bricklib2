@@ -221,6 +221,8 @@ typedef struct {
 	MeterRegisterType EnergyActiveLSumImExSumResettable; // relative_total_kwh_sum
 	MeterRegisterType EnergyActiveLSumImportResettable; // relative_total_import_kwh
 	MeterRegisterType EnergyActiveLSumExportResettable; // relative_total_export_kwh
+	MeterRegisterType Temperature;
+	MeterRegisterType RunTime;
 } MeterRegisterSet;
 
 

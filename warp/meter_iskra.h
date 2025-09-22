@@ -28,8 +28,6 @@ typedef struct {
     MeterRegisterType energy_counter_exponent[2];
     MeterRegisterType energy_counter[2];
     MeterRegisterType energy_counter_1000x[2];
-    MeterRegisterType temperature;
-    MeterRegisterType uptime;
 } MeterIskra;
 
 extern MeterIskra meter_iskra;

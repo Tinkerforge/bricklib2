@@ -48,8 +48,8 @@
 {437, &meter_iskra.energy_counter_1000x[1], 1.0, METER_REGISTER_DATA_TYPE_T3, false},
 
 // Additional useful registers
-{5582, &meter_iskra.temperature, 1.0, METER_REGISTER_DATA_TYPE_T17, false},
-{5000, &meter_iskra.uptime, 1.0, METER_REGISTER_DATA_TYPE_T3, false},
+{5582, &meter_register_set.Temperature, 1.0, METER_REGISTER_DATA_TYPE_T17, false},
+{5000, &meter_register_set.RunTime, 1.0, METER_REGISTER_DATA_TYPE_T3, false},
 {0, NULL, 0.0, 0, false},
 
 // Add calculated values after stop marker

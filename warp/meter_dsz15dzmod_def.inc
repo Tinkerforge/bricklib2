@@ -34,6 +34,6 @@
 {0, &meter_register_set.PowerReactiveLSumIndCapDiff, 0, 0, false},
 {0, &meter_register_set.PhaseAngleLSum, 0, 0, false},
 {0, &meter_register_set.EnergyActiveLSumImExSum, 0, 0, false},
+{0, &meter_register_set.EnergyActiveLSumImExSumResettable, 0, 0, false},
 {0, &meter_register_set.EnergyActiveLSumImportResettable, 0, 0, false},
 {0, &meter_register_set.EnergyActiveLSumExportResettable, 0, 0, false},
-{0, &meter_register_set.EnergyActiveLSumImExSumResettable, 0, 0, false},

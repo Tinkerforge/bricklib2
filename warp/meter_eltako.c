@@ -222,19 +222,16 @@ bool meter_eltako_handle_register_set_read_done(uint8_t state) {
 		// S² = P² + Q²   => Q = sqrt(S² - P²)
 		// P = S * cos(φ) => φ = arccos(P / S)
 
-		// TODO: Use correct non-directional versions of the meter values.
-		//       While the power factor for the DSZ15DZMOD is signed according to the datasheet, it always seems to be positive.
-		//       Because of that we e.g. don't know if Power Reactive is inductive or capacitive.
-		// PowerReactiveLxIndCapDiff => PowerReactiveLxIndCapSum?
-		// PowerFactorLxDirectional  => PowerFactorLx?
-		// PhaseAngleLx              => Is this already non-directional? If it is, we need to change it for DSZ16DZE.
+		// We use PowerReactiveLxIndCapSum instead of PowerReactiveLxIndCapDiff for DSZ15DZMOD,
+		// since we can't calculate if the power is inductive or capacitive with the available data.
+
 		switch(state) {
 			case 1:  meter_register_set.PowerApparentL1ImExSum.f      = meter_register_set.PowerFactorL1Directional.f == 0.0f ? 0.0f : meter_register_set.PowerActiveL1ImExDiff.f / meter_register_set.PowerFactorL1Directional.f; break;
 			case 2:  meter_register_set.PowerApparentL2ImExSum.f      = meter_register_set.PowerFactorL2Directional.f == 0.0f ? 0.0f : meter_register_set.PowerActiveL2ImExDiff.f / meter_register_set.PowerFactorL2Directional.f; break;
 			case 3:  meter_register_set.PowerApparentL3ImExSum.f      = meter_register_set.PowerFactorL3Directional.f == 0.0f ? 0.0f : meter_register_set.PowerActiveL3ImExDiff.f / meter_register_set.PowerFactorL3Directional.f; break;
-			case 4:  meter_register_set.PowerReactiveL1IndCapDiff.f   = meter_register_set.PowerFactorL1Directional.f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.PowerApparentL1ImExSum.f * meter_register_set.PowerApparentL1ImExSum.f - meter_register_set.PowerActiveL1ImExDiff.f * meter_register_set.PowerActiveL1ImExDiff.f); break;
-			case 5:  meter_register_set.PowerReactiveL2IndCapDiff.f   = meter_register_set.PowerFactorL2Directional.f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.PowerApparentL2ImExSum.f * meter_register_set.PowerApparentL2ImExSum.f - meter_register_set.PowerActiveL2ImExDiff.f * meter_register_set.PowerActiveL2ImExDiff.f); break;
-			case 6:  meter_register_set.PowerReactiveL3IndCapDiff.f   = meter_register_set.PowerFactorL3Directional.f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.PowerApparentL3ImExSum.f * meter_register_set.PowerApparentL3ImExSum.f - meter_register_set.PowerActiveL3ImExDiff.f * meter_register_set.PowerActiveL3ImExDiff.f); break;
+			case 4:  meter_register_set.PowerReactiveL1IndCapSum.f    = meter_register_set.PowerFactorL1Directional.f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.PowerApparentL1ImExSum.f * meter_register_set.PowerApparentL1ImExSum.f - meter_register_set.PowerActiveL1ImExDiff.f * meter_register_set.PowerActiveL1ImExDiff.f); break;
+			case 5:  meter_register_set.PowerReactiveL2IndCapSum.f    = meter_register_set.PowerFactorL2Directional.f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.PowerApparentL2ImExSum.f * meter_register_set.PowerApparentL2ImExSum.f - meter_register_set.PowerActiveL2ImExDiff.f * meter_register_set.PowerActiveL2ImExDiff.f); break;
+			case 6:  meter_register_set.PowerReactiveL3IndCapSum.f    = meter_register_set.PowerFactorL3Directional.f == 0.0f ? 0.0f : simple_sqrtf(meter_register_set.PowerApparentL3ImExSum.f * meter_register_set.PowerApparentL3ImExSum.f - meter_register_set.PowerActiveL3ImExDiff.f * meter_register_set.PowerActiveL3ImExDiff.f); break;
 			case 7:  meter_register_set.PhaseAngleL1.f                = meter_register_set.PowerApparentL1ImExSum.f == 0.0f ? 0.0f : simple_acosf(meter_register_set.PowerActiveL1ImExDiff.f / meter_register_set.PowerApparentL1ImExSum.f); break;
 			case 8:  meter_register_set.PhaseAngleL2.f                = meter_register_set.PowerApparentL2ImExSum.f == 0.0f ? 0.0f : simple_acosf(meter_register_set.PowerActiveL2ImExDiff.f / meter_register_set.PowerApparentL2ImExSum.f); break;
 			case 9:  meter_register_set.PhaseAngleL3.f                = meter_register_set.PowerApparentL3ImExSum.f == 0.0f ? 0.0f : simple_acosf(meter_register_set.PowerActiveL3ImExDiff.f / meter_register_set.PowerApparentL3ImExSum.f); break;

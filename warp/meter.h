@@ -158,8 +158,11 @@ typedef struct {
 	MeterRegisterType PowerApparentL2ImExSum; // volt_amps[1]
 	MeterRegisterType PowerApparentL3ImExSum; // volt_amps[2]
 	MeterRegisterType PowerReactiveL1IndCapDiff; // volt_amps_reactive[0]
+	MeterRegisterType PowerReactiveL1IndCapSum;
 	MeterRegisterType PowerReactiveL2IndCapDiff; // volt_amps_reactive[1]
+	MeterRegisterType PowerReactiveL2IndCapSum;
 	MeterRegisterType PowerReactiveL3IndCapDiff; // volt_amps_reactive[2]
+	MeterRegisterType PowerReactiveL3IndCapSum;
 	MeterRegisterType PowerFactorL1Directional; // power_factor[0]
 	MeterRegisterType PowerFactorL2Directional; // power_factor[1]
 	MeterRegisterType PowerFactorL3Directional; // power_factor[2]

@@ -175,6 +175,7 @@ typedef struct {
 	MeterRegisterType PowerActiveLSumImExDiff; // total_system_power
 	MeterRegisterType PowerApparentLSumImExSum; // total_system_volt_amps
 	MeterRegisterType PowerReactiveLSumIndCapDiff; // total_system_var
+	MeterRegisterType PowerReactiveLSumIndCapSum;
 	MeterRegisterType PowerFactorLSumDirectional; // total_system_power_factor
 	MeterRegisterType PhaseAngleLSum; // total_system_phase_angle
 	MeterRegisterType FrequencyLAvg; // frequency_of_supply_voltages

@@ -97,14 +97,12 @@ typedef union {
 } MeterRegisterType;
 
 typedef struct {
-	uint32_t register_address;
+	uint16_t register_address;
 	MeterRegisterType *register_set_address;
 	float scale_factor;
 	MeterRegisterDataType register_data_type;
 	bool fast_read;
-//    uint8_t register_length;
-//    float offset;
-} MeterDefinition;
+} __attribute__((packed)) MeterDefinition;
 
 typedef struct {
 	MeterType type;

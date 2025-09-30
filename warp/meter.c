@@ -91,7 +91,7 @@ static void modbus_add_tx_frame_checksum(void) {
 	ringbuffer_add(&rs485.ringbuffer_tx, checksum >> 8);
 }
 
-void modbus_store_tx_header(const uint8_t slave_address, const uint8_t fc, const uint16_t starting_address) {
+static void modbus_store_tx_header(const uint8_t slave_address, const uint8_t fc, const uint16_t starting_address) {
 	modbus_store_tx_frame_data_bytes(&slave_address, 1);
 	modbus_store_tx_frame_data_bytes(&fc, 1);
 
@@ -100,7 +100,7 @@ void modbus_store_tx_header(const uint8_t slave_address, const uint8_t fc, const
 	modbus_store_tx_frame_data_shorts(&address, 1);
 }
 
-void modbus_start_tx(const uint16_t response_length) {
+static void modbus_start_tx(const uint16_t response_length) {
 	// Calculate checksum and put it at the end of the TX buffer
 	modbus_add_tx_frame_checksum();
 

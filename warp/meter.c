@@ -542,6 +542,9 @@ BootloaderHandleMessageResponse meter_fill_communication_values(GenericMeterValu
 	return HANDLE_MESSAGE_RESPONSE_NEW_MESSAGE;
 }
 
+bool meter_supports_eichrecht(void) {
+	return meter.type == METER_TYPE_WM3M4C;
+}
 
 void meter_tick(void) {
 	static uint8_t last_state = 255;

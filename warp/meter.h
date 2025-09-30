@@ -246,6 +246,7 @@ void meter_handle_register_set_fast_read_done(void);
 void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *definition);
 uint8_t meter_get_register_size(uint16_t position);
 float meter_get_next_value();
+bool meter_supports_eichrecht(void);
 
 typedef struct {
 	TFPMessageHeader header;

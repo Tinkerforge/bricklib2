@@ -238,6 +238,8 @@ void meter_read_registers(uint8_t fc, uint8_t slave_address, uint16_t starting_a
 void meter_write_register(uint8_t fc, uint8_t slave_address, uint16_t starting_address, MeterRegisterType *payload);
 bool meter_get_read_registers_response(uint8_t fc, void *data, uint8_t count);
 bool meter_get_write_register_response(uint8_t fc);
+void meter_write_string(uint8_t slave_address, uint16_t starting_address, char *payload, uint8_t payload_count);
+bool meter_get_read_registers_response_string(uint8_t fc, char *data, uint8_t count);
 void meter_handle_phases_connected(void);
 void meter_handle_register_set_read_done(void);
 void meter_handle_register_set_fast_read_done(void);

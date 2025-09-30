@@ -48,6 +48,7 @@
 Meter meter;
 MeterRegisterSet meter_register_set;
 
+// Note: These definitions use register numbers (1-based), not addresses (0-based).
 static const MeterDefinition meter_sdm630[] = {
 	#include "meter_sdm630_def.inc"
 };
@@ -90,6 +91,30 @@ static void modbus_add_tx_frame_checksum(void) {
 	ringbuffer_add(&rs485.ringbuffer_tx, checksum >> 8);
 }
 
+void modbus_store_tx_header(const uint8_t slave_address, const uint8_t fc, const uint16_t starting_address) {
+	modbus_store_tx_frame_data_bytes(&slave_address, 1);
+	modbus_store_tx_frame_data_bytes(&fc, 1);
+
+	// Since we use register numbers (1-based) in the definitions we need to convert to addresses (0-based)
+	const uint16_t address = starting_address - 1;
+	modbus_store_tx_frame_data_shorts(&address, 1);
+}
+
+void modbus_start_tx(const uint16_t response_length) {
+	// Calculate checksum and put it at the end of the TX buffer
+	modbus_add_tx_frame_checksum();
+
+	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, response_length);
+
+	// Start master request timeout timing
+	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
+
+	// Start TX
+	modbus_start_tx_from_buffer(&rs485);// Initialize new request
+	modbus_start_tx_from_buffer(&rs485);
+}
+
+
 void meter_reset_error_counter(void) {
 	rs485.modbus_common_error_counters.illegal_function     = 0;
 	rs485.modbus_common_error_counters.illegal_data_address = 0;
@@ -99,71 +124,51 @@ void meter_reset_error_counter(void) {
 }
 
 void meter_read_registers(uint8_t fc, uint8_t slave_address, uint16_t starting_address, uint16_t count) {
-	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, 10);
+	modbus_store_tx_header(slave_address, fc, starting_address);
 
-	// Fix endianness (LE->BE)
-	starting_address = HTONS(starting_address-1);
-	count = HTONS(count);
+	// Constructing the frame in the TX buffer
+	modbus_store_tx_frame_data_shorts(&count, 1);
 
-	// Constructing the frame in the TX buffer.
-	modbus_store_tx_frame_data_bytes(&slave_address, 1); // Slave address.
-	modbus_store_tx_frame_data_bytes(&fc, 1); // Function code.
-	modbus_store_tx_frame_data_bytes((uint8_t *)&starting_address, 2);
-	modbus_store_tx_frame_data_bytes((uint8_t *)&count, 2);
-
-	// Calculate checksum and put it at the end of the TX buffer.
-	modbus_add_tx_frame_checksum();
-
-	// Start master request timeout timing.
-	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
-
-	// Start TX.
-	modbus_start_tx_from_buffer(&rs485);
+	modbus_start_tx(10);
 }
 
 void meter_write_register(uint8_t fc, uint8_t slave_address, uint16_t starting_address, MeterRegisterType *payload) {
-	uint16_t count = HTONS(2);
-	uint8_t byte_count = 4;
+	modbus_store_tx_header(slave_address, fc, starting_address);
 
-	// Fix endianness (LE->BE).
-	starting_address = HTONS(starting_address-1);
-
-	// Constructing the frame in the TX buffer.
-	modbus_store_tx_frame_data_bytes(&slave_address, 1); // Slave address.
-	modbus_store_tx_frame_data_bytes(&fc, 1); // Function code.
-	modbus_store_tx_frame_data_bytes((uint8_t *)&starting_address, 2); // Starting address.
 	if(fc == MODBUS_FC_WRITE_MULTIPLE_REGISTERS) {
-		modbus_store_tx_frame_data_bytes((uint8_t *)&count, 2); // Count.
-		modbus_store_tx_frame_data_bytes((uint8_t *)&byte_count, 1); // Byte count.
+		uint16_t count = 2;
+		uint8_t byte_count = 4;
+		modbus_store_tx_frame_data_shorts(&count, 1);
+		modbus_store_tx_frame_data_bytes(&byte_count, 1);
 		modbus_store_tx_frame_data_shorts(&payload->u16[1], 1);
 		modbus_store_tx_frame_data_shorts(&payload->u16[0], 1);
 	} else if(fc == MODBUS_FC_WRITE_SINGLE_REGISTER) {
 		modbus_store_tx_frame_data_shorts(&payload->u16[0], 1);
 	}
-	modbus_add_tx_frame_checksum();
 
-	modbus_init_new_request(&rs485, MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE, 13);
-
-	// Start master request timeout timing.
-	rs485.modbus_rtu.request.time_ref_master_request_timeout = system_timer_get_ms();
-
-	modbus_start_tx_from_buffer(&rs485);
+	modbus_start_tx(13);
 }
 
-bool meter_get_read_registers_response(uint8_t fc, void *data, uint8_t count) {
-	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
-		(rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
-		(rs485.modbus_rtu.request.tx_frame[1] != fc) ||
-		!rs485.modbus_rtu.request.cb_invoke) {
-		return false; // don't increment state
-	}
 
-	// Check if the request has timed out.
+void meter_write_string(uint8_t slave_address, uint16_t starting_address, char *payload, uint8_t payload_count) {
+	modbus_store_tx_header(slave_address, MODBUS_FC_WRITE_MULTIPLE_REGISTERS, starting_address);
+
+	const uint16_t count = payload_count/2;
+	modbus_store_tx_frame_data_shorts(&count, 1);
+	modbus_store_tx_frame_data_bytes(&payload_count, 1);
+	modbus_store_tx_frame_data_bytes((uint8_t *)payload, payload_count);
+
+	modbus_start_tx(13);
+}
+
+
+bool meter_has_errors(void) {
+	// Check if the request has timed out
 	if(rs485.modbus_rtu.request.master_request_timed_out) {
 		meter.error_wait_time = system_timer_get_ms();
-		// Nothing
+		return true;
 	} else if(rs485.modbus_rtu.request.rx_frame[1] == rs485.modbus_rtu.request.tx_frame[1] + 0x80) {
-		// Check if the slave response is an exception.
+		// Check if the slave response is an exception
 		if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_FUNCTION) {
 			rs485.modbus_common_error_counters.illegal_function++;
 		} else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_DATA_ADDRESS) {
@@ -173,9 +178,29 @@ bool meter_get_read_registers_response(uint8_t fc, void *data, uint8_t count) {
 		} else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_SLAVE_DEVICE_FAILURE) {
 			rs485.modbus_common_error_counters.slave_device_failure++;
 		}
-	} else {
+		return true;
+	}
+	return false;
+}
+
+bool meter_is_response_ready(const uint8_t fc) {
+	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
+		(rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
+		(rs485.modbus_rtu.request.tx_frame[1] != fc) ||
+		!rs485.modbus_rtu.request.cb_invoke) {
+		return false;
+	}
+	return true;
+}
+
+bool meter_get_read_registers_response(uint8_t fc, void *data, uint8_t count) {
+	if(!meter_is_response_ready(fc)) {
+		return false; // don't increment state
+	}
+
+	if(!meter_has_errors()) {
 		// As soon as we were able to read our first package (including correct crc etc)
-		// we assume that a SDM is attached to the EVSE.
+		// we assume that a SDM is attached to the EVSE
 		meter.available = true;
 
 		uint8_t *d = &rs485.modbus_rtu.request.rx_frame[3];
@@ -193,30 +218,30 @@ bool meter_get_read_registers_response(uint8_t fc, void *data, uint8_t count) {
 	return true; // increment state
 }
 
-bool meter_get_write_register_response(uint8_t fc) {
-	if((rs485.mode != MODE_MODBUS_MASTER_RTU) ||
-	   (rs485.modbus_rtu.request.state != MODBUS_REQUEST_PROCESS_STATE_MASTER_WAITING_RESPONSE) ||
-	   (rs485.modbus_rtu.request.tx_frame[1] != fc) ||
-	   !rs485.modbus_rtu.request.cb_invoke) {
+bool meter_get_read_registers_response_string(uint8_t fc, char *data, uint8_t count) {
+	if(!meter_is_response_ready(fc)) {
 		return false; // don't increment state
 	}
 
-	// Check if the request has timed out.
-	if(rs485.modbus_rtu.request.master_request_timed_out) {
-		meter.error_wait_time = system_timer_get_ms();
-		// Nothing
-	} else if(rs485.modbus_rtu.request.rx_frame[1] == rs485.modbus_rtu.request.tx_frame[1] + 0x80) {
-		// Check if the slave response is an exception.
+	if(!meter_has_errors()) {
+		// As soon as we were able to read our first package (including correct crc etc)
+		// we assume that a SDM is attached to the EVSE
+		meter.available = true;
 
-		if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_FUNCTION) {
-			rs485.modbus_common_error_counters.illegal_function++;
-		} else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_DATA_ADDRESS) {
-			rs485.modbus_common_error_counters.illegal_data_address++;
-		} else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_ILLEGAL_DATA_VALUE) {
-			rs485.modbus_common_error_counters.illegal_data_value++;
-		} else if(rs485.modbus_rtu.request.rx_frame[2] == MODBUS_EC_SLAVE_DEVICE_FAILURE) {
-			rs485.modbus_common_error_counters.slave_device_failure++;
-		}
+		uint8_t *d = &rs485.modbus_rtu.request.rx_frame[3];
+		memcpy(data, d, count);
+	}
+
+	return true; // increment state
+}
+
+bool meter_get_write_register_response(uint8_t fc) {
+	if(!meter_is_response_ready(fc)) {
+		return false; // don't increment state
+	}
+
+	if(!meter_has_errors()) {
+		// Nothing to do here
 	}
 
 	return true; // increment state

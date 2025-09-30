@@ -28,6 +28,9 @@ typedef struct {
     MeterRegisterType energy_counter_exponent[2];
     MeterRegisterType energy_counter[2];
     MeterRegisterType energy_counter_1000x[2];
+
+    uint16_t measurement_status;
+    uint16_t signature_status;
 } MeterIskra;
 
 extern MeterIskra meter_iskra;

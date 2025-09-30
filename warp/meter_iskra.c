@@ -29,8 +29,9 @@
 #include "rs485.h"
 #include "modbus.h"
 
-#ifdef HAS_HARDWARE_VERSION
+#if defined(HAS_HARDWARE_VERSION) && defined(IS_CHARGER)
 #include "hardware_version.h"
+#include "eichrecht.h"
 #endif
 
 MeterIskra meter_iskra;
@@ -72,7 +73,7 @@ MeterType meter_iskra_is_connected(void) {
 	return METER_TYPE_UNKNOWN;
 }
 
-void meter_iskra_handle_register_set_read_done() {
+void meter_iskra_handle_register_set_read_done(void) {
 	// TODO: It is currently unclear how this works with the exponent and x1000.
 	//       We need to figure this out with real-world measurements.
 	meter_register_set.EnergyActiveLSumImport.f  = meter_iskra.energy_counter[0].f;
@@ -86,6 +87,14 @@ void meter_iskra_handle_register_set_read_done() {
 // The Iskra meter uses a baudrate of 115200, so we don't need the "fast-read" mechanic.
 // TODO: Measure read-time and read in blocks similar to Eltako if necessary
 void meter_iskra_tick(void) {
+#if defined(HAS_HARDWARE_VERSION) && defined(IS_CHARGER)
+	//  Check if eichrecht transaction is ongoing and pause meter reading if so
+	if(hardware_version.is_v4 && (meter.state == 0) && (eichrecht.transaction_state > 0)) {
+		eichrecht_iskra_tick();
+		return;
+	}
+#endif
+
 	switch(meter.state) {
 		case 0: { // request
 			meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, meter.current_meter[meter.register_full_position].register_address, meter_get_register_size(meter.register_full_position));
@@ -117,7 +126,40 @@ void meter_iskra_tick(void) {
 			}
 
 			meter_handle_phases_connected();
-			meter.state = 0;
+			meter.state++;
+			break;
+		}
+
+		// Once every full read cycle also read the important Eichrecht status registers
+		// We read this even if the Eichrecht functionality is not used,
+		// it doesn't hurt to get the status information anyway.
+		case 3: { // request measurement status from holding register
+			meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, meter.slave_address, 7000+1, 1);
+			meter.state++;
+			break;
+		}
+
+		case 4: { // read measurement status from holding register
+			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &eichrecht.measurement_status, 1);
+			if(ret) {
+				modbus_clear_request(&rs485);
+				meter.state++;
+			}
+			break;
+		}
+
+		case 5: { // request signature status from holding register
+			meter_read_registers(MODBUS_FC_READ_HOLDING_REGISTERS, meter.slave_address, 7052+1, 1);
+			meter.state++;
+			break;
+		}
+
+		case 6: { // read signature status from holding register
+			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &eichrecht.signature_status, 1);
+			if(ret) {
+				modbus_clear_request(&rs485);
+				meter.state++;
+			}
 			break;
 		}
 

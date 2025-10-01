@@ -22,8 +22,7 @@
 #include "ringbuffer.h"
 
 #include "bricklib2/utility/util_definitions.h"
-
-#include <stdio.h>
+#include "bricklib2/logging/logging.h"
 
 uint16_t ringbuffer_get_used(Ringbuffer *rb) {
 	if(rb->end < rb->start) {
@@ -111,17 +110,17 @@ void ringbuffer_print(Ringbuffer *rb) {
 		end += rb->size;
 	}
 
-	printf("Ringbuffer (start %d, end %d, size %d, low %d, overflows %d): [\n\r", rb->start, rb->end, rb->size, rb->low_watermark, rb->overflows);
+	logd("Ringbuffer (start %d, end %d, size %d, low %d, overflows %d): [\n\r", rb->start, rb->end, rb->size, rb->low_watermark, rb->overflows);
 	for(uint16_t i = 0; i < end; i++) {
 		if((i % 16) == 0) {
-			printf("    ");
+			logd("    ");
 		}
-		printf("%x, ", rb->buffer[(rb->start + i) % rb->size]);
+		logd("%x, ", rb->buffer[(rb->start + i) % rb->size]);
 		if((i % 16) == 15) {
-			printf("\n\r");
+			logd("\n\r");
 		}
 	}
-	printf("]\n\r");
+	logd("]\n\r");
 }
 #else
 void ringbuffer_print(Ringbuffer *rb) {

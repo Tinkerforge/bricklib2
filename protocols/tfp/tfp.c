@@ -26,19 +26,19 @@
 const char TFP_BASE58_STR[] = "123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ";
 
 bool tfp_is_return_expected(const void *message) {
-	return ((TFPMessageHeader*)message)->return_expected;
+	return ((const TFPMessageHeader*)message)->return_expected;
 }
 
 uint8_t tfp_get_length_from_message(const void *message) {
-	return ((TFPMessageHeader*)message)->length;
+	return ((const TFPMessageHeader*)message)->length;
 }
 
 uint8_t tfp_get_fid_from_message(const void *message) {
-	return ((TFPMessageHeader*)message)->fid;
+	return ((const TFPMessageHeader*)message)->fid;
 }
 
 uint32_t tfp_get_uid_from_message(const void *message) {
-	return ((TFPMessageHeader*)message)->uid;
+	return ((const TFPMessageHeader*)message)->uid;
 }
 
 void tfp_uid_uint32_to_base58(uint32_t value, char *str) {

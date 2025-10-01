@@ -35,5 +35,5 @@ file(GLOB_RECURSE XMCLIB_SOURCES
 
 # XMCLib throws some bogus array-bounds warnings, ignore them
 set_source_files_properties(${XMCLIB_SOURCES}
-    PROPERTIES COMPILE_FLAGS "-Wno-array-bounds"
+    PROPERTIES COMPILE_FLAGS "-Wno-array-bounds -Wno-sign-conversion"
 )

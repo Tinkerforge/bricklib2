@@ -273,7 +273,7 @@ void meter_handle_phases_connected(void) {
 	meter.phases_connected[2] = meter_register_set.VoltageL3N.f > 180.0f;
 }
 
-void meter_update_size() {
+void meter_update_size(void) {
 	if(meter.current_meter == NULL) {
 		meter.current_meter_size = 0;
 		meter.current_meter_definition_size = 0;
@@ -483,7 +483,7 @@ uint8_t meter_get_register_size(uint16_t position) {
 }
 
 // For get all meter values
-float meter_get_next_value() {
+float meter_get_next_value(void) {
 	const MeterRegisterType *start = &meter_register_set.VoltageL1N;
 	const MeterRegisterType *end   = start + sizeof(MeterRegisterSet)/sizeof(MeterRegisterType);
 

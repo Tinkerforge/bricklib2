@@ -52,6 +52,10 @@
 
 void logging_init(void);
 
+#ifndef DEBUG_STARTUP
+#define DEBUG_STARTUP 0
+#endif
+
 #ifdef COMPILE_FOR_RELEASE
 #define LOGGING_PRINT(...) \
 	do{ \

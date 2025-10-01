@@ -79,10 +79,10 @@ MeterType meter_eastron_is_connected(void) {
 						if(!hardware_version.is_v2) {
 							return METER_TYPE_UNKNOWN;
 						}
-						// else fall-through
+						__attribute__((fallthrough));
 					}
 #else
-					case 0x0000: // fall-through for energy manager
+					case 0x0000: __attribute__((fallthrough)); // fall-through for energy manager
 #endif
 					case 0x0070: return METER_TYPE_SDM630;
 					case 0x0079: return METER_TYPE_SDM630MCTV2;

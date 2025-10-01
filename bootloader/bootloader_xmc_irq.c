@@ -153,6 +153,8 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) SPI
 	__disable_irq();
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 	switch(length) {
 #if (SPITFP_TX_SIZE == XMC_USIC_CH_FIFO_SIZE_32WORDS)
 		case 32: SPITFP_USIC_IN_PTR[0] = *buffer_send_pointer; buffer_send_pointer++;
@@ -201,6 +203,7 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) SPI
 
 		default: case 0: break;
 	}
+#pragma GCC diagnostic pop
 
 #ifndef SPITFP_NOT_ALLOWED_TO_DISABLE_IRQ
 	__enable_irq();

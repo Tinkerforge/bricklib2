@@ -26,9 +26,9 @@
 #include "bricklib2/hal/system_timer/system_timer.h"
 #include "communication.h"
 
-const uint32_t end_of_regular_firmware_magic_number __attribute__ ((section(".end_of_regular_firmware_magic_number"))) = 0x12345678; // Put 0x12345678 at end of firmware, so the flash tools knows that it only has to flash up to here
-const uint32_t device_identifier __attribute__ ((section(".device_identifier"))) = BOOTLOADER_DEVICE_IDENTIFIER;
-const uint32_t firmware_version  __attribute__ ((section(".firmware_version")))  = (FIRMWARE_VERSION_MAJOR << 16) | (FIRMWARE_VERSION_MINOR << 8) | (FIRMWARE_VERSION_REVISION << 0);
+const uint32_t end_of_regular_firmware_magic_number __attribute__ ((used, section(".end_of_regular_firmware_magic_number"))) = 0x12345678; // Put 0x12345678 at end of firmware, so the flash tools knows that it only has to flash up to here
+const uint32_t device_identifier __attribute__ ((used, section(".device_identifier"))) = BOOTLOADER_DEVICE_IDENTIFIER;
+const uint32_t firmware_version  __attribute__ ((used, section(".firmware_version")))  = (FIRMWARE_VERSION_MAJOR << 16) | (FIRMWARE_VERSION_MINOR << 8) | (FIRMWARE_VERSION_REVISION << 0);
 
 const bootloader_firmware_entry_func_t bootloader_firmware_entry =  BOOTLOADER_FIRMWARE_ENTRY_FUNC;
 

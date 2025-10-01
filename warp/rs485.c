@@ -156,7 +156,8 @@ void rs485_init_hardware(void) {
 	config.stop_bits    = rs485.stopbits;
 	config.data_bits    = rs485.wordlength;
 	switch(rs485.parity) {
-		case PARITY_NONE: config.parity_mode = XMC_USIC_CH_PARITY_MODE_NONE; break;
+		case PARITY_NONE:
+		default:          config.parity_mode = XMC_USIC_CH_PARITY_MODE_NONE; break;
 		case PARITY_EVEN: config.parity_mode = XMC_USIC_CH_PARITY_MODE_EVEN; break;
 		case PARITY_ODD:  config.parity_mode = XMC_USIC_CH_PARITY_MODE_ODD;  break;
 	}

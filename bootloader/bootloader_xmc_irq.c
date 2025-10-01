@@ -44,8 +44,6 @@
 #define SPITFP_IRQ_TX_HANDLER IRQ_Hdlr_10
 #endif
 
-extern BootloaderStatus bootloader_status;
-
 // Save pointers for start and overhead end so we can use them in the interrupts
 // without the struct access overhead
 uint8_t * const buffer_send_pointer_start = bootloader_status.st.buffer_send;

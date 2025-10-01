@@ -68,6 +68,8 @@ typedef struct {
 	SPITFP st;
 } BootloaderStatus;
 
+extern BootloaderStatus bootloader_status;
+
 // Firmware stuff
 typedef struct {
 	uint32_t firmware_version;
@@ -176,7 +178,6 @@ typedef void (*bootloader_firmware_entry_func_t)(BootloaderFunctions *bf, Bootlo
 
 // If we are not in bootloader
 #ifdef STARTUP_SYSTEM_INIT_ALREADY_DONE
-extern BootloaderStatus bootloader_status;
 
 void bootloader_init(void);
 void bootloader_tick(void);

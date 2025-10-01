@@ -36,14 +36,14 @@ BootloaderStatus bootloader_status;
 BootloaderFunctions bootloader_functions;
 
 #ifdef BOOTLOADER_FUNCTION_SPITFP_TICK
-void bootloader_spitfp_tick(BootloaderStatus *bootloader_status) {
-	bootloader_functions.spitfp_tick(bootloader_status);
+void bootloader_spitfp_tick(BootloaderStatus *bootloader_status_ctx) {
+	bootloader_functions.spitfp_tick(bootloader_status_ctx);
 }
 #endif
 
 #ifdef BOOTLOADER_FUNCTION_SEND_ACK_AND_MESSAGE
-void bootloader_spitfp_send_ack_and_message(BootloaderStatus *bootloader_status, uint8_t *data, const uint8_t length) {
-	bootloader_functions.spitfp_send_ack_and_message(bootloader_status, data, length);
+void bootloader_spitfp_send_ack_and_message(BootloaderStatus *bootloader_status_ctx, uint8_t *data, const uint8_t length) {
+	bootloader_functions.spitfp_send_ack_and_message(bootloader_status_ctx, data, length);
 }
 #endif
 

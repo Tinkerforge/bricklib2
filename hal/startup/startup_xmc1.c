@@ -33,9 +33,9 @@
 #define DCO1_FREQUENCY 64000000U
 #elif UC_SERIES == XMC14
 
-#define DCO1_FREQUENCY  48000000
+#define DCO1_FREQUENCY  48000000U
 #ifndef OSCHP_FREQUENCY
-#define OSCHP_FREQUENCY 16000000 // External crystal frequency [Hz]
+#define OSCHP_FREQUENCY 16000000U // External crystal frequency [Hz]
 #endif
 
 // DCLK clock source selection: "Internal oscillator DCO1 (48MHz)" or "External crystal oscillator"

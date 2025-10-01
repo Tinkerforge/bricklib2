@@ -238,7 +238,7 @@ void spi_fifo_init(SPIFifo *spi_fifo) {
 #endif
 
 	// Set input source path
-	XMC_SPI_CH_SetInputSource(spi_fifo->channel, spi_fifo->miso_input, spi_fifo->miso_source);
+	XMC_SPI_CH_SetInputSource(spi_fifo->channel, (XMC_SPI_CH_INPUT_t)spi_fifo->miso_input, spi_fifo->miso_source);
 
 	// SPI Mode: CPOL=1 and CPHA=1
 	((USIC_CH_TypeDef *)spi_fifo->channel)->DX1CR |= USIC_CH_DX1CR_DPOL_Msk;

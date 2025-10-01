@@ -85,9 +85,9 @@
 #define CUSTOM_DISABLE_IRQ() __disable_irq()
 #endif
 
-static inline void uartbb_wait_1bit(uint32_t start) {
+static inline void uartbb_wait_1bit(int32_t start) {
 	while(true) {
-		int32_t current = UARTBB_COUNT_TO_IN_1MS - SysTick->VAL;
+		int32_t current = UARTBB_COUNT_TO_IN_1MS - (int32_t)SysTick->VAL;
 		int32_t result = current - start;
 		if(result < 0) {
 			result += UARTBB_COUNT_TO_IN_1MS;
@@ -169,7 +169,7 @@ void uartbb_tx(const uint8_t value) {
 
   uint16_t value16 = 0 | (value << 1) | 1 << 9;
 
-  uint32_t start;
+  int32_t start;
   uint8_t bit_count = 10;
 
 #if defined(__SAM0__)
@@ -178,7 +178,7 @@ void uartbb_tx(const uint8_t value) {
 	CUSTOM_DISABLE_IRQ();
 #endif
 
-  start = UARTBB_COUNT_TO_IN_1MS - SysTick->VAL;
+  start = UARTBB_COUNT_TO_IN_1MS - (int32_t)SysTick->VAL;
 
   do {
     if(value16 & 1) {
@@ -372,7 +372,7 @@ void uartbb_printf(char const *fmt, ...) {
 				}
 
 				case 'd': {
-					uint32_t value = va_arg(va, uint32_t);
+					int32_t value = va_arg(va, int32_t);
 
 					itoa(value, buffer, 10);
 #ifdef UARTBB_PRINTF_ADVANCED
@@ -386,7 +386,7 @@ void uartbb_printf(char const *fmt, ...) {
 				case 'x': {
 					uint32_t value = va_arg(va, uint32_t);
 
-					itoa(value, buffer, 16);
+					utoa(value, buffer, 16);
 #ifdef UARTBB_PRINTF_ADVANCED
 					uartbb_puts_advanced(buffer, zero_padding, grouping);
 #else

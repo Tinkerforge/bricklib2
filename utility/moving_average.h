@@ -92,7 +92,7 @@ typedef uint64_t moving_average_sum_t;
 #endif
 
 typedef struct {
-	int32_t length;
+	uint32_t length;
 	uint32_t index;
 
 	moving_average_sum_t sum;

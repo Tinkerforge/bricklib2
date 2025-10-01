@@ -29,11 +29,11 @@ moving_average_t moving_average_get(const MovingAverage *const moving_average) {
 #if MOVING_AVERAGE_SUM_TYPE == MOVING_AVERAGE_TYPE_INT8 || MOVING_AVERAGE_SUM_TYPE == MOVING_AVERAGE_TYPE_INT16 || MOVING_AVERAGE_SUM_TYPE == MOVING_AVERAGE_TYPE_INT32
 	// In the case that the sum can be negative we have to handle the negative case separately
 	if(moving_average->sum < 0) {
-		return (moving_average->sum - moving_average->length/2) / moving_average->length;
+		return (moving_average->sum - (int32_t)moving_average->length/2) / (int32_t)moving_average->length;
 	}
 #endif
 
-	return (moving_average->sum + moving_average->length/2) / moving_average->length;
+	return (moving_average->sum + (int32_t)moving_average->length/2) / (int32_t)moving_average->length;
 }
 
 void moving_average_new_length(MovingAverage *const moving_average, const uint32_t length) {
@@ -51,7 +51,7 @@ void moving_average_init(MovingAverage *const moving_average, const moving_avera
 	moving_average->index = 0;
 	moving_average->length = new_length;
 
-	moving_average->sum = start_value*new_length;
+	moving_average->sum = start_value*(int32_t)new_length;
 
 	for(uint32_t i = 0; i < new_length; i++) {
 		moving_average->values[i] = start_value;

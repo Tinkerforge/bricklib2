@@ -405,10 +405,11 @@ void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *defini
 		}
 		case METER_REGISTER_DATA_TYPE_T6: {  // Decade Exponent (Signed 8 bit), Binary Signed Value (24 bit), Example: -123456*10^(-3) stored as 0xFDFE 0x1DC0
 			const int8_t exponent = data.u32 >> 24;
-			int32_t value         = data.u32 & 0x00FFFFFF;
-			if(value & 0x00800000) { // sign extend negative number
-				value |= 0xFF000000;
+			uint32_t value_u      = data.u32 & 0x00FFFFFF;
+			if(value_u & 0x00800000) { // sign extend negative number
+				value_u |= 0xFF000000;
 			}
+			const int32_t value = (int32_t)value_u;
 			float scale = 1.0f;
 			if(exponent < 0) {
 				for(int8_t i = 0; i < -exponent; i++) {
@@ -423,8 +424,8 @@ void meter_handle_new_data(MeterRegisterType data, const MeterDefinition *defini
 			break;
 		}
 		case METER_REGISTER_DATA_TYPE_T7: { // Sign: Import/Export (00/FF), Sign: Inductive/Capacitive (00/FF), Unsigned Value (16 bit), 4 decimal places, Example: 0.9876 CAP stored as 0x00FF 0x2694
-			const int8_t sign_ie = (data.u32 >> 24) & 0xFF;
-			const int8_t sign_ic = (data.u32 >> 16) & 0xFF;
+			const uint8_t sign_ie = (data.u32 >> 24) & 0xFF;
+			const uint8_t sign_ic = (data.u32 >> 16) & 0xFF;
 			const uint16_t value = data.u32 & 0x0000FFFF;
 			definition->register_set_address->f = ((float)value) * 0.0001f * definition->scale_factor;
 			if(sign_ie == 0xFF) {

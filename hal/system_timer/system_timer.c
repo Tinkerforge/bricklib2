@@ -136,7 +136,8 @@ static void system_timer_sleep_us_internal(const uint32_t sleep) {
 	while(true) {
 		const uint16_t new_value = (SysTick->LOAD - SysTick->VAL);
 		if(new_value > start_value) {
-			if((new_value - start_value) > sleep_value) {
+			const uint16_t diff = new_value - start_value;
+			if(diff > sleep_value) {
 				return;
 			}
 		} else {

@@ -578,7 +578,7 @@ bool sd_read_energy_manager_data_point_old(uint8_t year, uint8_t month, uint8_t 
 		return false;
 	}
 
-	const uint16_t pos = 8 + (hour*12 + minute/5) * sizeof(EnergyManager5MinDataOld) + offset*sizeof(EnergyManager5MinDataOld);
+	const uint16_t pos = 8U + (hour*12U + minute/5U) * sizeof(EnergyManager5MinDataOld) + offset*sizeof(EnergyManager5MinDataOld);
 	lfs_ssize_t size   = lfs_file_seek(&sd.lfs, file, pos, LFS_SEEK_SET);
 	if(size != pos) {
 		logw("lfs_file_seek %d vs %d\n\r", pos, size);
@@ -588,7 +588,7 @@ bool sd_read_energy_manager_data_point_old(uint8_t year, uint8_t month, uint8_t 
 	}
 
 	size = lfs_file_read(&sd.lfs, file, data, amount*sizeof(EnergyManager5MinDataOld));
-	if(size != amount*sizeof(EnergyManager5MinDataOld)) {
+	if(size != (lfs_ssize_t)(amount*sizeof(EnergyManager5MinDataOld))) {
 		logw("lfs_file_read flags size %d vs %d\n\r", size, amount*sizeof(EnergyManager5MinDataOld));
 		err = sd_lfs_close_buffered_read();
 		logw("lfs_file_close %d\n\r", err);
@@ -758,7 +758,7 @@ bool sd_read_energy_manager_daily_data_point_old(uint8_t year, uint8_t month, ui
 	}
 
 	size = lfs_file_read(&sd.lfs, file, data, amount*sizeof(EnergyManager1DayDataOld));
-	if(size != amount*sizeof(EnergyManager1DayDataOld)) {
+	if(size != (lfs_ssize_t)(amount*sizeof(EnergyManager1DayDataOld))) {
 		logw("lfs_file_read flags size %d vs %d\n\r", size, amount*sizeof(EnergyManager1DayDataOld));
 		err = sd_lfs_close_buffered_read();
 		logd("lfs_file_close %d\n\r", err);

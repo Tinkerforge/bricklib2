@@ -178,7 +178,7 @@ void voltage_init(void) {
 
 void voltage_tick(void) {
 	uint32_t result = XMC_VADC_GROUP_GetDetailedResult(VOLTAGE_GROUP, VOLTAGE_RESULT_REG);
-	if(result & (1 << 31)) {
+	if(result & (1UL << 31)) {
 		voltage.value_sum += result & 0xFFFF;
 		voltage.value_sum_count++;
 	}

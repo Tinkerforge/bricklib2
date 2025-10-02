@@ -142,7 +142,7 @@ void sd_set_file_no_exist(uint32_t wallbox_id, uint8_t year, uint8_t month, uint
 bool sd_get_file_no_exist(uint32_t wallbox_id, uint8_t year, uint8_t month, uint8_t day, uint8_t postfix) {
 	for(uint8_t i = 0; i < SD_FILE_NO_EXIST_CACHE_LENGTH; i++) {
 		if((sd.file_no_exist_cache[i].wallbox_id == wallbox_id) &&
-		   (sd.file_no_exist_cache[i].ymdp == ((year << 24) | (month << 16) | (day << 8) | postfix))) {
+		   (sd.file_no_exist_cache[i].ymdp == (uint32_t)((year << 24) | (month << 16) | (day << 8) | postfix))) {
 			return true;
 		}
 	}
@@ -153,7 +153,7 @@ bool sd_get_file_no_exist(uint32_t wallbox_id, uint8_t year, uint8_t month, uint
 void sd_remove_file_no_exist(uint32_t wallbox_id, uint8_t year, uint8_t month, uint8_t day, uint8_t postfix) {
 	for(uint8_t i = 0; i < SD_FILE_NO_EXIST_CACHE_LENGTH; i++) {
 		if((sd.file_no_exist_cache[i].wallbox_id == wallbox_id) &&
-		   (sd.file_no_exist_cache[i].ymdp == ((year << 24) | (month << 16) | (day << 8) | postfix))) {
+		   (sd.file_no_exist_cache[i].ymdp == (uint32_t)((year << 24) | (month << 16) | (day << 8) | postfix))) {
 			sd.file_no_exist_cache[i].wallbox_id = 0;
 			sd.file_no_exist_cache[i].ymdp       = 0;
 		}
@@ -256,9 +256,9 @@ lfs_file_t* sd_lfs_open_buffered_read(uint32_t wallbox_id, uint8_t year, uint8_t
 			return &sd.buffered_read_file;
 		} else {
 			// File is open but not correct -> close file
-			int err = lfs_file_close(&sd.lfs, &sd.buffered_read_file);
-			if(err != LFS_ERR_OK) {
-				logd("lfs_file_close %d\n\r", err);
+			int lfs_err = lfs_file_close(&sd.lfs, &sd.buffered_read_file);
+			if(lfs_err != LFS_ERR_OK) {
+				logd("lfs_file_close %d\n\r", lfs_err);
 			}
 			sd.buffered_read_is_open = false;
 		}
@@ -333,7 +333,7 @@ bool sd_read_wallbox_data_point(uint32_t wallbox_id, uint8_t year, uint8_t month
 	}
 
 	size = lfs_file_read(&sd.lfs, file, data, amount*sizeof(Wallbox5MinData));
-	if(size != amount*sizeof(Wallbox5MinData)) {
+	if(size != (lfs_ssize_t)(amount*sizeof(Wallbox5MinData))) {
 		logw("lfs_file_read flags size %d vs %d\n\r", size, amount*sizeof(Wallbox5MinData));
 		err = sd_lfs_close_buffered_read();
 		logw("lfs_file_close %d\n\r", err);
@@ -444,7 +444,7 @@ bool sd_read_wallbox_daily_data_point(uint32_t wallbox_id, uint8_t year, uint8_t
 	}
 
 	size = lfs_file_read(&sd.lfs, file, data, amount*sizeof(Wallbox1DayData));
-	if(size != amount*sizeof(Wallbox1DayData)) {
+	if(size != (lfs_ssize_t)(amount*sizeof(Wallbox1DayData))) {
 		logw("lfs_file_read flags size %d vs %d\n\r", size, amount*sizeof(Wallbox1DayData));
 		err = sd_lfs_close_buffered_read();
 		logd("lfs_file_close %d\n\r", err);
@@ -648,7 +648,7 @@ bool sd_read_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day,
 	}
 
 	size = lfs_file_read(&sd.lfs, file, data, amount*sizeof(EnergyManager5MinData));
-	if(size != amount*sizeof(EnergyManager5MinData)) {
+	if(size != (lfs_ssize_t)(amount*sizeof(EnergyManager5MinData))) {
 		logw("lfs_file_read flags size %d vs %d\n\r", size, amount*sizeof(EnergyManager5MinData));
 		err = sd_lfs_close_buffered_read();
 		logw("lfs_file_close %d\n\r", err);
@@ -801,7 +801,7 @@ bool sd_read_energy_manager_daily_data_point(uint8_t year, uint8_t month, uint8_
 	}
 
 	size = lfs_file_read(&sd.lfs, file, data, amount*sizeof(EnergyManager1DayData));
-	if(size != amount*sizeof(EnergyManager1DayData)) {
+	if(size != (lfs_ssize_t)(amount*sizeof(EnergyManager1DayData))) {
 		logw("lfs_file_read flags size %d vs %d\n\r", size, amount*sizeof(EnergyManager1DayData));
 		err = sd_lfs_close_buffered_read();
 		logd("lfs_file_close %d\n\r", err);

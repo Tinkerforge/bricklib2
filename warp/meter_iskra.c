@@ -140,7 +140,7 @@ void meter_iskra_tick(void) {
 		}
 
 		case 4: { // read measurement status from holding register
-			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &eichrecht.measurement_status, 1);
+			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &meter_iskra.measurement_status, 1);
 			if(ret) {
 				modbus_clear_request(&rs485);
 				meter.state++;
@@ -155,7 +155,7 @@ void meter_iskra_tick(void) {
 		}
 
 		case 6: { // read signature status from holding register
-			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &eichrecht.signature_status, 1);
+			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_HOLDING_REGISTERS, &meter_iskra.signature_status, 1);
 			if(ret) {
 				modbus_clear_request(&rs485);
 				meter.state++;

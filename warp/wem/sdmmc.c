@@ -49,6 +49,8 @@ volatile uint16_t sdmmc_spi_data_length = 0;
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) sdmmc_miso_irq_handler(void) {
 	const uint8_t amount = XMC_USIC_CH_RXFIFO_GetLevel(SDMMC_USIC);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 	switch(amount) {
 		case 16: sdmmc_spi_buffer[sdmmc_spi_miso_index++] = SDMMC_USIC->OUTR;
 		case 15: sdmmc_spi_buffer[sdmmc_spi_miso_index++] = SDMMC_USIC->OUTR;
@@ -67,6 +69,7 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) sd
 		case  2: sdmmc_spi_buffer[sdmmc_spi_miso_index++] = SDMMC_USIC->OUTR;
 		case  1: sdmmc_spi_buffer[sdmmc_spi_miso_index++] = SDMMC_USIC->OUTR;
 	}
+#pragma GCC diagnostic pop
 }
 
 void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) sdmmc_mosi_irq_handler(void) {
@@ -76,6 +79,8 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) sd
 	const uint16_t to_send    = sdmmc_spi_data_length - sdmmc_spi_mosi_index;
 	const uint8_t  fifo_level = MIN(16 - XMC_USIC_CH_TXFIFO_GetLevel(SDMMC_USIC), 16 - XMC_USIC_CH_RXFIFO_GetLevel(SDMMC_USIC));
 	const uint8_t  amount     = MIN(to_send, fifo_level);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wimplicit-fallthrough"
 	switch(amount) {
 		case 16: SDMMC_USIC_IN_PTR[0] = sdmmc_spi_buffer[sdmmc_spi_mosi_index++];
 		case 15: SDMMC_USIC_IN_PTR[0] = sdmmc_spi_buffer[sdmmc_spi_mosi_index++];
@@ -94,6 +99,7 @@ void __attribute__((optimize("-O3"))) __attribute__ ((section (".ram_code"))) sd
 		case  2: SDMMC_USIC_IN_PTR[0] = sdmmc_spi_buffer[sdmmc_spi_mosi_index++];
 		case  1: SDMMC_USIC_IN_PTR[0] = sdmmc_spi_buffer[sdmmc_spi_mosi_index++];
 	}
+#pragma GCC diagnostic pop
 
 	if(sdmmc_spi_mosi_index >= sdmmc_spi_data_length) {
 		XMC_USIC_CH_TXFIFO_DisableEvent(SDMMC_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);

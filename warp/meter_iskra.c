@@ -88,10 +88,19 @@ void meter_iskra_handle_register_set_read_done(void) {
 // TODO: Measure read-time and read in blocks similar to Eltako if necessary
 void meter_iskra_tick(void) {
 #if defined(HAS_HARDWARE_VERSION) && defined(IS_CHARGER)
-	//  Check if eichrecht transaction is ongoing and pause meter reading if so
-	if(hardware_version.is_v4 && (meter.state == 0) && (eichrecht.transaction_state > 0)) {
-		eichrecht_iskra_tick();
-		return;
+	if(hardware_version.is_v4) {
+		// Initialize Eichrecht before initial meter value reading,
+		// so we can be sure that the public key is read before we
+		// announce the meter type to ESP.
+		if(!eichrecht.init_done) {
+			eichrecht_iskra_init_tick();
+			return;
+		}
+		// Check if eichrecht transaction is ongoing and pause meter reading if so
+		if((meter.state == 0) && (eichrecht.transaction_state > 0)) {
+			eichrecht_iskra_tick();
+			return;
+		}
 	}
 #endif
 

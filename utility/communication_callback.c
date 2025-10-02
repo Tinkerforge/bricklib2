@@ -23,6 +23,8 @@
 
 #include "bricklib2/hal/system_timer/system_timer.h"
 
+#if COMMUNICATION_CALLBACK_HANDLER_NUM > 0
+
 static communication_callback_handler_t communication_callbacks[COMMUNICATION_CALLBACK_HANDLER_NUM] = {
 	COMMUNICATION_CALLBACK_LIST_INIT
 };
@@ -49,6 +51,8 @@ void communication_callback_tick(void) {
 	}
 }
 
-void communication_callback_init(void) {
+#else
+void communication_callback_tick(void) {}
+#endif
 
-}
+void communication_callback_init(void) {}

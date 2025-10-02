@@ -217,7 +217,7 @@ bool sd_write_wallbox_data_point(uint32_t wallbox_id, uint8_t year, uint8_t mont
 		sd_remove_file_no_exist(wallbox_id, year, month, day, SD_POSTFIX_WB);
 	}
 
-	const uint16_t pos = sizeof(SDMetadata) + (hour*12 + minute/5) * sizeof(Wallbox5MinData);
+	const uint16_t pos = sizeof(SDMetadata) + (hour*12U + minute/5U) * sizeof(Wallbox5MinData);
 	lfs_ssize_t size   = lfs_file_seek(&sd.lfs, &file, pos, LFS_SEEK_SET);
 	if(size != pos) {
 		logw("lfs_file_seek %d vs %d\n\r", pos, size);
@@ -323,7 +323,7 @@ bool sd_read_wallbox_data_point(uint32_t wallbox_id, uint8_t year, uint8_t month
 		return false;
 	}
 
-	const uint16_t pos = 8 + (hour*12 + minute/5) * sizeof(Wallbox5MinData) + offset*sizeof(Wallbox5MinData);
+	const uint16_t pos = 8U + (hour*12U + minute/5U) * sizeof(Wallbox5MinData) + offset*sizeof(Wallbox5MinData);
 	lfs_ssize_t size   = lfs_file_seek(&sd.lfs, file, pos, LFS_SEEK_SET);
 	if(size != pos) {
 		logw("lfs_file_seek %d vs %d\n\r", pos, size);
@@ -534,7 +534,7 @@ bool sd_write_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day
 		sd_remove_file_no_exist(0, year, month, day, SD_POSTFIX_EM_W_PRICES);
 	}
 
-	const uint16_t pos = sizeof(SDMetadata) + (hour*12 + minute/5) * sizeof(EnergyManager5MinData);
+	const uint16_t pos = sizeof(SDMetadata) + (hour*12U + minute/5U) * sizeof(EnergyManager5MinData);
 	lfs_ssize_t size   = lfs_file_seek(&sd.lfs, &file, pos, LFS_SEEK_SET);
 	if(size != pos) {
 		logw("lfs_file_seek %d vs %d\n\r", pos, size);
@@ -638,7 +638,7 @@ bool sd_read_energy_manager_data_point(uint8_t year, uint8_t month, uint8_t day,
 		return false;
 	}
 
-	const uint16_t pos = 8 + (hour*12 + minute/5) * sizeof(EnergyManager5MinData) + offset*sizeof(EnergyManager5MinData);
+	const uint16_t pos = 8U + (hour*12U + minute/5U) * sizeof(EnergyManager5MinData) + offset*sizeof(EnergyManager5MinData);
 	lfs_ssize_t size   = lfs_file_seek(&sd.lfs, file, pos, LFS_SEEK_SET);
 	if(size != pos) {
 		logw("lfs_file_seek %d vs %d\n\r", pos, size);
@@ -946,7 +946,7 @@ void sd_init_task(void) {
 		logd("... done\n\r", err);
 		if(err != LFS_ERR_OK) {
 			logw("lfs_format %d\n\r", err);
-			sd.lfs_status = ABS(err);
+			sd.lfs_status = (uint32_t)ABS(err);
 			sd.sd_status = sdmmc_error;
 			return;
 		}
@@ -954,7 +954,7 @@ void sd_init_task(void) {
 
 	coop_task_yield();
 	err = lfs_mount(&sd.lfs, &sd.lfs_config);
-	sd.lfs_status = ABS(err);
+	sd.lfs_status = (uint32_t)ABS(err);
 	coop_task_yield();
 
 	if(err != LFS_ERR_OK) {
@@ -962,14 +962,14 @@ void sd_init_task(void) {
 		err = lfs_format(&sd.lfs, &sd.lfs_config);
 		if(err != LFS_ERR_OK) {
 			logw("lfs_format %d\n\r", err);
-			sd.lfs_status = ABS(err);
+			sd.lfs_status = (uint32_t)ABS(err);
 			sd.sd_status = sdmmc_error;
 			return;
 		}
 		err = lfs_mount(&sd.lfs, &sd.lfs_config);
 		if(err != LFS_ERR_OK) {
 			logw("lfs_mount 2nd try %d\n\r", err);
-			sd.lfs_status = ABS(err);
+			sd.lfs_status = (uint32_t)ABS(err);
 			sd.sd_status = sdmmc_error;
 			return;
 		}

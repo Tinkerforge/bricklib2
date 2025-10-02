@@ -24,7 +24,11 @@
 
 #define LFS_NO_MALLOC
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wsign-conversion"
 #include "lfs.h"
+#pragma GCC diagnostic pop
+
 #include "communication.h"
 #include "xmc_gpio.h"
 

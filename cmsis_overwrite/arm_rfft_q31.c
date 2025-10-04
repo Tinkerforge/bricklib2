@@ -29,6 +29,7 @@
 // We remove the complex conjugate output from the original CMSIS DSP lib to save 50% RAM
 
 #include "arm_math.h"
+#include "bricklib2/os/coop_task.h"
 
 /* ----------------------------------------------------------------------
  * Internal functions prototypes

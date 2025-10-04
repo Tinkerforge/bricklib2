@@ -22,7 +22,6 @@
 #include "ringbuffer.h"
 
 #include "bricklib2/utility/util_definitions.h"
-#include "bricklib2/logging/logging.h"
 
 uint16_t ringbuffer_get_used(Ringbuffer *rb) {
 	if(rb->end < rb->start) {
@@ -103,7 +102,7 @@ void ringbuffer_init(Ringbuffer *rb, const uint16_t size, uint8_t *buffer) {
 	rb->buffer        = buffer;
 }
 
-#if LOGGING_LEVEL != LOGGING_NONE
+#if 0
 void ringbuffer_print(Ringbuffer *rb) {
 	int32_t end = rb->end - rb->start;
 	if(end < 0) {

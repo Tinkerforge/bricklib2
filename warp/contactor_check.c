@@ -188,7 +188,8 @@ void contactor_check_tick(void) {
 		} else {
 			if(contactor_check.last_error_time == 0) {
 				contactor_check.last_error_time = system_timer_get_ms();
-			} else if(system_timer_is_time_elapsed_ms(contactor_check.last_error_time, 250)) { // 250ms error debounce
+			} else if((contactor  && system_timer_is_time_elapsed_ms(contactor_check.last_error_time, 250)) || // 250ms debounce if contactor is not active
+		              (!contactor && system_timer_is_time_elapsed_ms(contactor_check.last_error_time, 500))) { // 500ms debounce if contactor is active
 				contactor_check.error |= (error << 1);
 
 				// Make sure we reach here again if the error persists

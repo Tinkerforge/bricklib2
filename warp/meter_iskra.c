@@ -76,8 +76,8 @@ MeterType meter_iskra_is_connected(void) {
 void meter_iskra_handle_register_set_read_done(void) {
 	// TODO: It is currently unclear how this works with the exponent and x1000.
 	//       We need to figure this out with real-world measurements.
-	meter_register_set.EnergyActiveLSumImport.f  = meter_iskra.energy_counter[0].f;
-	meter_register_set.EnergyActiveLSumExport.f  = meter_iskra.energy_counter[1].f;
+	meter_register_set.EnergyActiveLSumImport.f  = meter_iskra.energy_counter[0].f/1000.0f;
+	meter_register_set.EnergyActiveLSumExport.f  = meter_iskra.energy_counter[1].f/1000.0f;
 	meter_register_set.EnergyActiveLSumImExSum.f = meter_register_set.EnergyActiveLSumImport.f - meter_register_set.EnergyActiveLSumExport.f;
 
 	meter_handle_register_set_read_done();

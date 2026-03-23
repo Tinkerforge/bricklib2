@@ -40,6 +40,7 @@
 
 #ifdef HAS_HARDWARE_VERSION
 #include "hardware_version.h"
+#include "frequency.h"
 #endif
 
 
@@ -244,6 +245,11 @@ bool meter_eltako_handle_register_set_read_done(uint8_t state) {
 			case 16: meter_register_set.PowerReactiveLSumIndCapSum.f = meter_register_set.PowerReactiveL1IndCapDiff.f + meter_register_set.PowerReactiveL2IndCapDiff.f + meter_register_set.PowerReactiveL3IndCapDiff.f; break;
 			case 17: meter_register_set.PhaseAngleLSum.f             = meter_register_set.PhaseAngleL1.f + meter_register_set.PhaseAngleL2.f + meter_register_set.PhaseAngleL3.f; break;
 			case 18: meter_register_set.EnergyActiveLSumImExSum.f    = meter_register_set.EnergyActiveLSumImport.f + meter_register_set.EnergyActiveLSumExport.f; break;
+#ifdef HAS_HARDWARE_VERSION
+			case 19: meter_register_set.FrequencyLAvg.f              = frequency.valid ? ((float)frequency.frequency) * 0.001f : NAN; break;
+#else
+			case 19: meter_register_set.FrequencyLAvg.f              = NAN; break;
+#endif
 			default: return false;
 		}
 	} else if(meter.type == METER_TYPE_DSZ16DZE) {

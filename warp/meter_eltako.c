@@ -129,13 +129,14 @@ MeterType meter_eltako_is_connected(void) {
 				modbus_clear_request(&rs485);
 				switch(meter_code) {
 					case 0x00000001: return METER_TYPE_DSZ15DZMOD;
-					case 0x00000003: break; // For DSZ16DZE we have to configure direction
+					case 0x00000002:        // For DSZ16D(E) and
+					case 0x00000003: break; // DSZ16DZ(E) we have to configure direction
 					// Assume DSZ15DZMOD as default
 					default:         return METER_TYPE_DSZ15DZMOD;
-				}
+					}
 
-				find_meter_state++;
-			}
+					find_meter_state++;
+				}
 			return METER_TYPE_DETECTION;
 		}
 

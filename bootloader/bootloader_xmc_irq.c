@@ -80,10 +80,16 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) SPI
 			// we were able to come up with.
 
 			// This check will rarely be true, so the time penalty is acceptable.
+#ifndef SPITFP_NOT_ALLOWED_TO_DISABLE_IRQ
+			__disable_irq();
+#endif
 			while(XMC_USIC_CH_TXFIFO_IsFull(SPITFP_USIC)) {
 				__NOP();
 			}
 			SPITFP_USIC->IN[0] = *buffer_send_pointer;
+#ifndef SPITFP_NOT_ALLOWED_TO_DISABLE_IRQ
+			__enable_irq();
+#endif
 #endif
 
 			// If message is ACK we don't re-send it automatically
@@ -203,10 +209,6 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) SPI
 	}
 #pragma GCC diagnostic pop
 
-#ifndef SPITFP_NOT_ALLOWED_TO_DISABLE_IRQ
-	__enable_irq();
-#endif
-
 	if(buffer_send_pointer == buffer_send_pointer_end) {
 #ifndef BOOTLOADER_FIX_POINTER_END
 		// In the bootloader we check for buffer_send_pointer == buffer_send_pointer_end as a condition
@@ -223,6 +225,10 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) SPI
 		SPITFP_USIC_IN_PTR[0] = *buffer_send_pointer;
 #endif
 
+#ifndef SPITFP_NOT_ALLOWED_TO_DISABLE_IRQ
+		__enable_irq();
+#endif
+
 		// If message is ACK we don't re-send it automatically
 		if(buffer_send_pointer_end == buffer_send_pointer_protocol_overhead_end) {
 			buffer_send_pointer_end = buffer_send_pointer_start;
@@ -231,6 +237,10 @@ void __attribute__((optimize("-O3"))) __attribute__((section (".ram_code"))) SPI
 		XMC_USIC_CH_TXFIFO_DisableEvent(SPITFP_USIC, XMC_USIC_CH_TXFIFO_EVENT_CONF_STANDARD);
 		XMC_USIC_CH_TXFIFO_ClearEvent(SPITFP_USIC, USIC_CH_TRBSCR_CSTBI_Msk);
 		NVIC_ClearPendingIRQ(SPITFP_IRQ_TX);
+	} else {
+#ifndef SPITFP_NOT_ALLOWED_TO_DISABLE_IRQ
+		__enable_irq();
+#endif
 	}
 
 	// Save local pointer again

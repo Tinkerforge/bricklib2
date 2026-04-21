@@ -34,7 +34,8 @@
 
 #include <string.h>
 
-#define CONTACTOR_CHECK_INTERVAL 250
+#define CONTACTOR_CHECK_INTERVAL     250 // contactor and pe check
+#define CONTACTOR_CHECK_INTERVAL_V3 1000 // only pe check
 
 ContactorCheck contactor_check;
 
@@ -138,13 +139,13 @@ void contactor_check_tick(void) {
 			contactor_check.pe_last_value = check_pe;
 			contactor_check.pe_edge_count++;
 		}
-		if(system_timer_is_time_elapsed_ms(contactor_check.last_check, CONTACTOR_CHECK_INTERVAL)) {
+		if(system_timer_is_time_elapsed_ms(contactor_check.last_check, CONTACTOR_CHECK_INTERVAL_V3)) {
 			contactor_check.last_check = system_timer_get_ms();
 
 			if(contactor_check.invalid_counter > 0) {
 				contactor_check.invalid_counter--;
 			} else {
-				// Check for edge count of 10. We expect an edge count of 25,
+				// Check for edge count of 10. We expect an edge count of 250,
 				// but an edge count > 0 should already be enough to detect the 230V.
 				// To make sure that we don't see any random glitches we check for > 10 as a compromise.
 				contactor_check.error = contactor_check.pe_edge_count > 10 ? 0 : 1;

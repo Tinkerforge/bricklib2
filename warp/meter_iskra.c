@@ -44,22 +44,27 @@ MeterType meter_iskra_is_connected(void) {
 			XMC_USIC_CH_SetBaudrate(RS485_USIC, 115200, RS485_OVERSAMPLING);
 
 			// Read model number register with slave address 0x21 (Iskra)
-			meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, 0x21, METER_ISKRA_INPUT_REG_MODEL_NUMBER, 2);
+			meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, 0x21, METER_ISKRA_INPUT_REG_MODEL_NUMBER, 4);
 			find_meter_state++;
 			return METER_TYPE_DETECTION;
 		}
 
 
 		case 1: { // Check for wm3m4c
-			uint32_t model_number = 0xFFFFFFFF;
-			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_INPUT_REGISTERS, &model_number, 2);
+			uint32_t model_number[2] = {0xFFFFFFFF, 0xFFFFFFFF};
+			bool ret = meter_get_read_registers_response(MODBUS_FC_READ_INPUT_REGISTERS, &model_number, 4);
 			if(ret) {
 				find_meter_state = 0;
 				modbus_clear_request(&rs485);
-				switch(model_number) {
-					case ('W' << 24) | ('M' << 16) | ('3' << 8) | 'M': return METER_TYPE_WM3M4C;
-					default: return METER_TYPE_UNKNOWN;
+				if(model_number[0] == (('W' << 24) | ('M' << 16) | ('3' << 8) | 'M')) {
+					if((model_number[1] & 0xFFFF0000) == (('4' << 24) | ('C' << 16))) {
+						return METER_TYPE_WM3M4C;
+					} else if((model_number[1] & 0xFF000000) == ('4' << 24)) {
+						return METER_TYPE_WM3M4;
+					}
 				}
+
+				return METER_TYPE_UNKNOWN;
 			}
 			return METER_TYPE_DETECTION;
 		}

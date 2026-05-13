@@ -289,6 +289,7 @@ void meter_update_size(void) {
 		case METER_TYPE_DMED341MID7ER: meter.current_meter_definition_size = sizeof(meter_dmed341mid7er) / sizeof(MeterDefinition); break;
 		case METER_TYPE_DSZ16DZE:      meter.current_meter_definition_size = sizeof(meter_dsz16dze)      / sizeof(MeterDefinition); break;
 		case METER_TYPE_WM3M4C:        meter.current_meter_definition_size = sizeof(meter_wm3m4c)        / sizeof(MeterDefinition); break;
+		case METER_TYPE_WM3M4:         meter.current_meter_definition_size = sizeof(meter_wm3m4c)        / sizeof(MeterDefinition); break;
 		default:                       meter.current_meter_definition_size = 0;                                                     break;
 	}
 
@@ -330,6 +331,7 @@ void meter_set_meter_type(MeterType type) {
 		case METER_TYPE_DMED341MID7ER: meter.slave_address = 0x01; meter.current_meter = &meter_dmed341mid7er[0]; break;
 		case METER_TYPE_DSZ16DZE:      meter.slave_address = 0x01; meter.current_meter = &meter_dsz16dze[0];      break;
 		case METER_TYPE_WM3M4C:        meter.slave_address = 0x21; meter.current_meter = &meter_wm3m4c[0];        break;
+		case METER_TYPE_WM3M4:         meter.slave_address = 0x21; meter.current_meter = &meter_wm3m4c[0];        break;
 		default:                       meter.slave_address = 0;    meter.current_meter = NULL;                    break;
 	}
 	meter_update_size();
@@ -598,6 +600,7 @@ void meter_tick(void) {
 			meter_generic_tick();
 			break;
 		case METER_TYPE_WM3M4C:
+		case METER_TYPE_WM3M4:
 			meter_iskra_tick();
 			break;
 		case METER_TYPE_DSZ15DZMOD:

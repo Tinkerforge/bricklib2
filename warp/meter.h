@@ -69,7 +69,8 @@ typedef enum {
 	METER_TYPE_DEM4A         = 7, // YTL
 	METER_TYPE_DMED341MID7ER = 8, // Lovato
 	METER_TYPE_DSZ16DZE      = 9, // Eltako
-	METER_TYPE_WM3M4C        = 10 // Iskra
+	METER_TYPE_WM3M4C        = 10, // Iskra
+	METER_TYPE_WM3M4         = 11 // Iskra
 } MeterType;
 
 typedef enum {

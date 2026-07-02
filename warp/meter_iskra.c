@@ -36,6 +36,90 @@
 
 MeterIskra meter_iskra;
 
+#define METER_ISKRA_FAST_READ_ENABLED 1
+
+// Fast-read of the R37-critical registers. Two contiguous Modbus blocks cover
+// all seven values:
+//   - FrequencyLAvg (106) + VoltageL1N/L2N/L3N (108..113) -> registers 106..113
+//   - CurrentL1/L2/L3 ImExSum (127..132)                  -> registers 127..132
+#define METER_ISKRA_FAST_INTERVAL_MS  100
+#define METER_ISKRA_FAST_REG_VF_START 106
+#define METER_ISKRA_FAST_REG_VF_COUNT 8
+#define METER_ISKRA_FAST_REG_I_START  127
+#define METER_ISKRA_FAST_REG_I_COUNT  6
+
+#if METER_ISKRA_FAST_READ_ENABLED
+static const MeterDefinition meter_wm3m4c_fast[] = {
+	{106, &meter_register_set.FrequencyLAvg,    1.0, METER_REGISTER_DATA_TYPE_T5, false},
+	{108, &meter_register_set.VoltageL1N,       1.0, METER_REGISTER_DATA_TYPE_T5, false},
+	{110, &meter_register_set.VoltageL2N,       1.0, METER_REGISTER_DATA_TYPE_T5, false},
+	{112, &meter_register_set.VoltageL3N,       1.0, METER_REGISTER_DATA_TYPE_T5, false},
+	{127, &meter_register_set.CurrentL1ImExSum, 1.0, METER_REGISTER_DATA_TYPE_T5, false},
+	{129, &meter_register_set.CurrentL2ImExSum, 1.0, METER_REGISTER_DATA_TYPE_T5, false},
+	{131, &meter_register_set.CurrentL3ImExSum, 1.0, METER_REGISTER_DATA_TYPE_T5, false},
+};
+
+static bool meter_iskra_response_had_error(void) {
+	return rs485.modbus_rtu.request.master_request_timed_out || (rs485.modbus_rtu.request.rx_frame[1] == (rs485.modbus_rtu.request.tx_frame[1] + 0x80));
+}
+
+static void meter_iskra_fast_tick(void) {
+	switch(meter_iskra.fast_state) {
+		case 0: { // request frequency + 3 voltages
+			meter_iskra.fast_active     = true;
+			meter_iskra.fast_start_time = system_timer_get_ms();
+			meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, METER_ISKRA_FAST_REG_VF_START, METER_ISKRA_FAST_REG_VF_COUNT);
+			meter_iskra.fast_state++;
+			break;
+		}
+
+		case 1: { // read frequency + 3 voltages
+			MeterRegisterType data[METER_ISKRA_FAST_REG_VF_COUNT / 2];
+			if(meter_get_read_registers_response(MODBUS_FC_READ_INPUT_REGISTERS, &data, METER_ISKRA_FAST_REG_VF_COUNT)) {
+				if(!meter_iskra_response_had_error()) {
+					meter_handle_new_data(data[0], &meter_wm3m4c_fast[0]); // FrequencyLAvg
+					meter_handle_new_data(data[1], &meter_wm3m4c_fast[1]); // VoltageL1N
+					meter_handle_new_data(data[2], &meter_wm3m4c_fast[2]); // VoltageL2N
+					meter_handle_new_data(data[3], &meter_wm3m4c_fast[3]); // VoltageL3N
+					meter_handle_phases_connected();
+					meter.register_fast_time = system_timer_get_ms();
+				}
+				modbus_clear_request(&rs485);
+				meter_iskra.fast_state++;
+			}
+			break;
+		}
+
+		case 2: { // request 3 currents
+			meter_read_registers(MODBUS_FC_READ_INPUT_REGISTERS, meter.slave_address, METER_ISKRA_FAST_REG_I_START, METER_ISKRA_FAST_REG_I_COUNT);
+			meter_iskra.fast_state++;
+			break;
+		}
+
+		case 3: { // read 3 currents
+			MeterRegisterType data[METER_ISKRA_FAST_REG_I_COUNT / 2];
+			if(meter_get_read_registers_response(MODBUS_FC_READ_INPUT_REGISTERS, &data, METER_ISKRA_FAST_REG_I_COUNT)) {
+				if(!meter_iskra_response_had_error()) {
+					meter_handle_new_data(data[0], &meter_wm3m4c_fast[4]); // CurrentL1ImExSum
+					meter_handle_new_data(data[1], &meter_wm3m4c_fast[5]); // CurrentL2ImExSum
+					meter_handle_new_data(data[2], &meter_wm3m4c_fast[6]); // CurrentL3ImExSum
+				}
+				modbus_clear_request(&rs485);
+				meter_iskra.fast_state  = 0;
+				meter_iskra.fast_active = false;
+			}
+			break;
+		}
+
+		default: {
+			meter_iskra.fast_state  = 0;
+			meter_iskra.fast_active = false;
+			break;
+		}
+	}
+}
+#endif
+
 MeterType meter_iskra_is_connected(void) {
 	static uint8_t find_meter_state = 0;
 
@@ -89,8 +173,11 @@ void meter_iskra_handle_register_set_read_done(void) {
 	meter_handle_register_set_fast_read_done();
 }
 
-// The Iskra meter uses a baudrate of 115200, so we don't need the "fast-read" mechanic.
-// TODO: Measure read-time and read in blocks similar to Eltako if necessary
+// The full register set is read one register at a time in a round-robin (the
+// switch below). On top of that, the R37-critical registers (3 phase voltages
+// + frequency + 3 phase currents) are read in two contiguous blocks at ~10 Hz,
+// interleaved with the full cycle, so the OVE R37 grid-support checks get fresh
+// values fast enough (see meter_iskra_fast_tick()).
 void meter_iskra_tick(void) {
 #if defined(HAS_HARDWARE_VERSION) && defined(IS_CHARGER)
 	if(hardware_version.is_v4) {
@@ -106,6 +193,14 @@ void meter_iskra_tick(void) {
 			eichrecht_iskra_tick();
 			return;
 		}
+	}
+#endif
+
+	// Interleave the high-priority fast read of the R37-critical registers.
+#if METER_ISKRA_FAST_READ_ENABLED
+	if(meter_iskra.fast_active || ((meter.state == 0) && system_timer_is_time_elapsed_ms(meter_iskra.fast_start_time, METER_ISKRA_FAST_INTERVAL_MS))) {
+		meter_iskra_fast_tick();
+		return;
 	}
 #endif
 

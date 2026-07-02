@@ -31,6 +31,10 @@ typedef struct {
 
     uint16_t measurement_status;
     uint16_t signature_status;
+
+    uint8_t fast_state;
+    bool fast_active;
+    uint32_t fast_start_time;
 } MeterIskra;
 
 extern MeterIskra meter_iskra;

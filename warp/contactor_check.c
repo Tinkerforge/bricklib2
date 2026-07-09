@@ -30,7 +30,6 @@
 
 #ifdef HAS_HARDWARE_VERSION
 #include "hardware_version.h"
-#include "ove_r37.h"
 #endif
 
 #include <string.h>
@@ -149,14 +148,7 @@ void contactor_check_tick(void) {
 				// Check for edge count of 10. We expect an edge count of 250,
 				// but an edge count > 0 should already be enough to detect the 230V.
 				// To make sure that we don't see any random glitches we check for > 10 as a compromise.
-				if(ove_r37.state == OVE_R37_STATE_DISABLED) {
-					contactor_check.error = contactor_check.pe_edge_count > 10 ? 0 : 1;
-				} else {
-					// Turn PE check off if OVE R 37 mode is enabled
-					// For OVE R 37 we need to be able to allow voltages below 0.9 pu, which may not be stable if the PE check runs.
-					// TODO: Maybe it would make more sense to turn PE check off if voltage measured by meter is below 220V or similar.
-					contactor_check.error = 0;
-				}
+				contactor_check.error = contactor_check.pe_edge_count > 10 ? 0 : 1;
 			}
 			contactor_check.pe_edge_count = 0;
 		}

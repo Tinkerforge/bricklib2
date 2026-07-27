@@ -32,6 +32,7 @@
 #if defined(HAS_HARDWARE_VERSION) && defined(IS_CHARGER)
 #include "hardware_version.h"
 #include "eichrecht.h"
+#include "iskra_display.h"
 #endif
 
 MeterIskra meter_iskra;
@@ -193,6 +194,11 @@ void meter_iskra_tick(void) {
 			eichrecht_iskra_tick();
 			return;
 		}
+	}
+
+	if((meter.state == 0) && iskra_display_has_work()) {
+		iskra_display_modbus_tick();
+		return;
 	}
 #endif
 
